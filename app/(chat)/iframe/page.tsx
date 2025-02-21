@@ -1,9 +1,10 @@
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
-import { AdminChatConfig, ChatConfig, EndpointConfig } from '@/lib/config/ChatConfig';
+import { AdminChatConfig, ChatConfig, type EndpointConfig } from '@/lib/config/ChatConfig';
 import { EncryptionHelper } from '@/lib/config/EncryptionHelper';
 import { generateUUID } from '@/lib/utils';
 import { determineBackendEndpoint } from '@/lib/utils/endpointUtils';
+import Image from "next/image"
 
 const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 
@@ -18,6 +19,14 @@ export default async function Page({searchParams} : {searchParams: {endpoint: st
 
   return (
     <>
+		{chatConfig.backgroundImg && 
+		<div className="fixed left-0 top-0 z-[-1] size-full blur-0">
+			<div
+				className="absolute left-0 top-0 size-full bg-gray-50 bg-opacity-[85%] dark:bg-slate-900 dark:bg-opacity-[90%]"
+			/>
+			<Image src={chatConfig.backgroundImg} className="size-full min-h-screen object-cover" alt="" />
+		</div>
+		}
       <Chat
         key={id}
         id={id}
