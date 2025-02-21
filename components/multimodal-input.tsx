@@ -51,9 +51,10 @@ interface PureMultimodalInputProps{
     chatRequestOptions?: ChatRequestOptions,
   ) => void;
   className?: string;
-  isIframe: boolean;
-  enableFileUpload: boolean;
+  showFileUpload: boolean;
   startPrompts?: string[];
+  inputPlaceholder?: string;
+  isIframe: boolean;
 }
 
 function PureMultimodalInput({
@@ -70,8 +71,9 @@ function PureMultimodalInput({
   handleSubmit,
   className,
   isIframe,
-  enableFileUpload,
-  startPrompts
+  showFileUpload: enableFileUpload,
+  startPrompts,
+  inputPlaceholder
 }: PureMultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -235,7 +237,7 @@ function PureMultimodalInput({
 
       <Textarea
         ref={textareaRef}
-        placeholder="Send a message..."
+        placeholder={inputPlaceholder || 'How can i help ?'}
         value={input}
         onChange={handleInput}
         className={cx(

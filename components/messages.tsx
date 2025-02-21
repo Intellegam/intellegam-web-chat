@@ -1,9 +1,9 @@
-import { ChatRequestOptions, Message } from 'ai';
+import type { ChatRequestOptions, Message } from 'ai';
 import { PreviewMessage, ThinkingMessage } from './message';
 import { useScrollToBottom } from './use-scroll-to-bottom';
 import { Overview } from './overview';
 import { memo } from 'react';
-import { Vote } from '@/lib/db/schema';
+import type { Vote } from '@/lib/db/schema';
 import equal from 'fast-deep-equal';
 
 interface MessagesProps {
@@ -20,6 +20,8 @@ interface MessagesProps {
   isReadonly: boolean;
   isArtifactVisible: boolean;
   startMessage?: string;
+  chatLogo?: string;
+  enableFeedback: boolean;
 }
 
 function PureMessages({
@@ -30,7 +32,9 @@ function PureMessages({
   setMessages,
   reload,
   isReadonly,
-  startMessage
+  startMessage,
+  chatLogo,
+  enableFeedback
 }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
@@ -40,7 +44,6 @@ function PureMessages({
       ref={messagesContainerRef}
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
     >
-      <ThinkingMessage></ThinkingMessage>
       {messages.length === 0 && startMessage && <Overview startMessage={startMessage}  />}
 
       {messages.map((message, index) => (
@@ -57,12 +60,13 @@ function PureMessages({
           setMessages={setMessages}
           reload={reload}
           isReadonly={isReadonly}
+          enableFeedback={enableFeedback}
         />
       ))}
 
       {isLoading &&
         messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+        messages[messages.length - 1].role === 'user' && <ThinkingMessage chatLogo={chatLogo} />}
 
 
       <div

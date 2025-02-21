@@ -3,29 +3,27 @@
 import type { ChatRequestOptions, Message } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
-import { memo, useMemo, useState } from 'react';
 import Image from 'next/image';
+import { memo, useEffect, useState } from 'react';
 
 import type { Vote } from '@/lib/db/schema';
 
+import { cn } from '@/lib/utils';
+import equal from 'fast-deep-equal';
 import { DocumentToolCall, DocumentToolResult } from './document';
+import { DocumentPreview } from './document-preview';
 import {
-  ChevronDownIcon,
-  LoaderIcon,
   PencilEditIcon,
-  SparklesIcon,
+  SparklesIcon
 } from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
+import { MessageEditor } from './message-editor';
+import { MessageReasoning } from './message-reasoning';
 import { PreviewAttachment } from './preview-attachment';
-import { Weather } from './weather';
-import equal from 'fast-deep-equal';
-import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { MessageEditor } from './message-editor';
-import { DocumentPreview } from './document-preview';
-import { MessageReasoning } from './message-reasoning';
+import { Weather } from './weather';
 
 const PurePreviewMessage = ({
   chatId,
@@ -35,6 +33,7 @@ const PurePreviewMessage = ({
   setMessages,
   reload,
   isReadonly,
+  enableFeedback
 }: {
   chatId: string;
   message: Message;
@@ -47,6 +46,7 @@ const PurePreviewMessage = ({
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
+  enableFeedback: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
 
@@ -210,6 +210,7 @@ const PurePreviewMessage = ({
                 message={message}
                 vote={vote}
                 isLoading={isLoading}
+                enableFeedback={enableFeedback}
               />
             )}
           </div>
@@ -241,6 +242,10 @@ export const PreviewMessage = memo(
 
 export const ThinkingMessage = ({chatLogo}: {chatLogo?: string}) => {
   const role = 'assistant';
+  useEffect(() => {
+    console.log(chatLogo);
+    
+  })
 
   return (
     <motion.div
@@ -258,8 +263,8 @@ export const ThinkingMessage = ({chatLogo}: {chatLogo?: string}) => {
         )}
       >
         <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-         {!chatLogo && <Image className="size-6" width={10} height={10} src="/images/intellegam_logo_light.svg" alt="intellegam logo"></Image>}
-         {chatLogo && <Image className="size-6" width={10} height={10} src={chatLogo} alt="chat logo"></Image>}
+         {!chatLogo && <Image className="size-6" width={10} height={10} src="/images/intellegam_logo_light.svg" alt="intellegam logo" />}
+         {chatLogo && <Image className="size-6" width={10} height={10} src={chatLogo} alt="chat logo" />}
         </div>
 
         <div className="flex flex-col gap-2 w-full">

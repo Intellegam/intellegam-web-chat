@@ -21,11 +21,13 @@ export function PureMessageActions({
   message,
   vote,
   isLoading,
+  enableFeedback
 }: {
   chatId: string;
   message: Message;
   vote: Vote | undefined;
   isLoading: boolean;
+  enableFeedback: boolean;
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
@@ -54,6 +56,8 @@ export function PureMessageActions({
           <TooltipContent>Copy</TooltipContent>
         </Tooltip>
 
+        {enableFeedback &&
+        <>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -157,6 +161,8 @@ export function PureMessageActions({
           </TooltipTrigger>
           <TooltipContent>Downvote Response</TooltipContent>
         </Tooltip>
+        </>
+        }
       </div>
     </TooltipProvider>
   );

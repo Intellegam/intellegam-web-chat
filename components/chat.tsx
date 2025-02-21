@@ -13,9 +13,9 @@ import { toast } from 'sonner';
 import { Artifact } from './artifact';
 import { Messages } from './messages';
 import { MultimodalInput } from './multimodal-input';
-import { VisibilityType } from './visibility-selector';
+import type { VisibilityType } from './visibility-selector';
 import { useChat } from '@ai-sdk/react';
-import { AdminChatConfig, ChatConfig, EndpointConfig } from '@/lib/config/ChatConfig';
+import type { AdminChatConfig, ChatConfig, EndpointConfig } from '@/lib/config/ChatConfig';
 
 export function Chat({
   id,
@@ -89,6 +89,7 @@ export function Chat({
         <Messages
           chatId={id}
           startMessage={chatConfig.startMessage}
+          chatLogo={chatConfig.chatLogo}
           isLoading={isLoading}
           votes={votes}
           messages={messages}
@@ -96,6 +97,7 @@ export function Chat({
           reload={reload}
           isReadonly={isReadonly}
           isArtifactVisible={isArtifactVisible}
+          enableFeedback={adminChatConfig.enableFeedback}
         />
 
         <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
@@ -114,7 +116,9 @@ export function Chat({
               append={append}
               isIframe={isIframe}
               startPrompts={chatConfig.startPrompts}
-              enableFileUpload={adminChatConfig.showFileUpload}
+              showFileUpload={adminChatConfig.showFileUpload}
+              showWebSearch={adminChatConfig.showWebSearch}
+              poweredBy={adminChatConfig.poweredBy}
             />
           )}
         </form>
