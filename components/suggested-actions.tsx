@@ -21,7 +21,7 @@ function PureSuggestedActions({ chatId, append, startPrompts }: SuggestedActions
   }
 
   return (
-    <div className="grid sm:grid-cols-2 gap-2 w-full">
+    <div className="flex flex-row flex-wrap gap-1 w-full">
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -42,12 +42,12 @@ function PureSuggestedActions({ chatId, append, startPrompts }: SuggestedActions
                 content: suggestedAction.action,
               });
             }}
-            className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
+            className="text-left border rounded-xl px-3 py-2 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
-            <span className="font-medium">{suggestedAction.title}</span>
-            <span className="text-muted-foreground">
+            <span className="font-medium text-muted-foreground">{suggestedAction.title}</span>
+            {/* <span className="text-muted-foreground">
               {suggestedAction.label}
-            </span>
+            </span> */}
           </Button>
         </motion.div>
       ))}
