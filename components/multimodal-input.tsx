@@ -29,6 +29,7 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
+import { PoweredBy } from './powered-by';
 
 interface PureMultimodalInputProps{
   chatId: string;
@@ -55,6 +56,8 @@ interface PureMultimodalInputProps{
   startPrompts?: string[];
   inputPlaceholder?: string;
   isIframe: boolean;
+  showWebSearch: boolean;
+  poweredBy?: string;
 }
 
 function PureMultimodalInput({
@@ -73,7 +76,8 @@ function PureMultimodalInput({
   isIframe,
   showFileUpload: enableFileUpload,
   startPrompts,
-  inputPlaceholder
+  inputPlaceholder,
+  poweredBy
 }: PureMultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -264,6 +268,10 @@ function PureMultimodalInput({
         <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
       </div>
       }
+
+      <div className="absolute bottom-0 p-2 left-1/2 -translate-x-1/2 sm:translate-y-1">
+        <PoweredBy poweredByName={poweredBy} />
+      </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
         {isLoading ? (
