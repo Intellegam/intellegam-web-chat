@@ -17,7 +17,7 @@ interface SuggestedActionsProps {
 function PureSuggestedActions({ chatId, append, startPrompts }: SuggestedActionsProps) {
   let suggestedActions: {title: string, label: string, action: string}[] = []
   if (startPrompts){
-    suggestedActions = startPrompts.map(p => ({title: p, label:p, action:p}))
+    suggestedActions = startPrompts.sort((a, b) => b.length - a.length).map(p => ({title: p, label:p, action:p}))
   }
 
   return (
