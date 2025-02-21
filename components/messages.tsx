@@ -19,6 +19,7 @@ interface MessagesProps {
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
   isArtifactVisible: boolean;
+  startMessage?: string;
 }
 
 function PureMessages({
@@ -29,6 +30,7 @@ function PureMessages({
   setMessages,
   reload,
   isReadonly,
+  startMessage
 }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
@@ -38,7 +40,8 @@ function PureMessages({
       ref={messagesContainerRef}
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
     >
-      {messages.length === 0 && <Overview />}
+      <ThinkingMessage></ThinkingMessage>
+      {messages.length === 0 && startMessage && <Overview startMessage={startMessage}  />}
 
       {messages.map((message, index) => (
         <PreviewMessage
@@ -60,6 +63,7 @@ function PureMessages({
       {isLoading &&
         messages.length > 0 &&
         messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+
 
       <div
         ref={messagesEndRef}

@@ -42,7 +42,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         <Chat
           id={chat.id}
           initialMessages={convertToUIMessages(messagesFromDb)}
-          selectedChatModel={DEFAULT_CHAT_MODEL}
+          isIframe={false}
           selectedVisibilityType={chat.visibility}
           isReadonly={session?.user?.id !== chat.userId}
         />
@@ -56,7 +56,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
       <Chat
         id={chat.id}
         initialMessages={convertToUIMessages(messagesFromDb)}
-        selectedChatModel={chatModelFromCookie.value}
+        isIframe={false}
         selectedVisibilityType={chat.visibility}
         isReadonly={session?.user?.id !== chat.userId}
       />

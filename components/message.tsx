@@ -4,6 +4,7 @@ import type { ChatRequestOptions, Message } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useMemo, useState } from 'react';
+import Image from 'next/image';
 
 import type { Vote } from '@/lib/db/schema';
 
@@ -238,7 +239,7 @@ export const PreviewMessage = memo(
   },
 );
 
-export const ThinkingMessage = () => {
+export const ThinkingMessage = ({chatLogo}: {chatLogo?: string}) => {
   const role = 'assistant';
 
   return (
@@ -257,12 +258,13 @@ export const ThinkingMessage = () => {
         )}
       >
         <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-          <SparklesIcon size={14} />
+         {!chatLogo && <Image className="size-6" width={10} height={10} src="/images/intellegam_logo_light.svg" alt="intellegam logo"></Image>}
+         {chatLogo && <Image className="size-6" width={10} height={10} src={chatLogo} alt="chat logo"></Image>}
         </div>
 
         <div className="flex flex-col gap-2 w-full">
           <div className="flex flex-col gap-4 text-muted-foreground">
-            Thinking...
+           ...
           </div>
         </div>
       </div>
