@@ -40,13 +40,13 @@ export class EncryptionHelper {
 
 	static async encryptURL(url: URL, fields: string[]): Promise<URL> {
 		const encryptedParams = await EncryptionHelper.encryptURLSearchParams(url.searchParams, fields);
-		const encryptedURL = new URL(url.origin + url.pathname + '?' + encryptedParams.toString());
+		const encryptedURL = new URL(`${url.origin + url.pathname}?${encryptedParams.toString()}`);
 		return encryptedURL;
 	}
 
 	static async decryptURL(url: URL, fields: string[]): Promise<URL> {
 		const decryptedParams = await EncryptionHelper.decryptURLSearchParams(url.searchParams, fields);
-		const decryptedURL = new URL(url.origin + url.pathname + '?' + decryptedParams.toString());
+		const decryptedURL = new URL(`${url.origin + url.pathname}?${decryptedParams.toString()}`);
 		return decryptedURL;
 	}
 

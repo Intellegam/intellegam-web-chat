@@ -1,4 +1,4 @@
-import { Environment, AppEnvironment } from "../types/environment";
+import { type Environment, AppEnvironment } from "../types/environment";
 
 function validateEnvironment(env: string): env is Environment {
 	return Object.values(AppEnvironment).includes(env as AppEnvironment);

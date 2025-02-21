@@ -11,7 +11,9 @@ export const Overview = ({ startMessage }: { startMessage: string }) => {
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ delay: 0.5 }}
     >
-    <Markdown>{startMessage}</Markdown>
+      <div>
+        <Markdown>{startMessage}</Markdown>
+      </div>
     </motion.div>
   );
 };

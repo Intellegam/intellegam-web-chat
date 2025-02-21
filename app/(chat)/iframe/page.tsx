@@ -1,7 +1,6 @@
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { AdminChatConfig, ChatConfig, type EndpointConfig } from '@/lib/config/ChatConfig';
-import { EncryptionHelper } from '@/lib/config/EncryptionHelper';
 import { generateUUID } from '@/lib/utils';
 import { determineBackendEndpoint } from '@/lib/utils/endpointUtils';
 import Image from "next/image"

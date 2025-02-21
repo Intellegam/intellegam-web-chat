@@ -4,7 +4,7 @@ import { queryStringToJSON } from "../utils/queryParamUtils";
 export abstract class BaseConfig {
 	static fromJSON<T extends BaseConfig>(this: new (data: Partial<T>) => T, jsonString: string): T {
 		const obj = JSON.parse(jsonString);
-		return new this(obj);
+		return new BaseConfig(obj);
 	}
 
 	toJSON(): string {
@@ -32,7 +32,7 @@ export abstract class BaseConfig {
 		const searchParams = url instanceof URL ? url.searchParams : new URLSearchParams(url);
 
 		// @ts-ignore
-		return this.fromSearchParams(searchParams);
+		return BaseConfig.fromSearchParams(searchParams);
 	}
 
 	static fromSearchParams<T extends BaseConfig>(
@@ -49,7 +49,7 @@ export abstract class BaseConfig {
 		const jsonString = queryStringToJSON(searchParamString);
 		const obj = JSON.parse(jsonString);
 		const camelCaseObj = convertToCamelCase(obj);
-		return new this(camelCaseObj as any);
+		return new BaseConfig(camelCaseObj as any);
 	}
 
 	toObject(): Record<string, any> {
