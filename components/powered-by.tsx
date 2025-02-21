@@ -8,10 +8,10 @@ export function PoweredBy({ poweredByName = 'Intellegam' }: PoweredByProps) {
       Powered by{' '}
       <a
         target="_blank"
-        className="font-semibold text-white"
+        className="font-semibold text-muted-foreground"
         href="https://www.intellegam.com"
       >
-      	{poweredByName}
+        {poweredByName}
       </a>
     </p>
   );
