@@ -1,9 +1,7 @@
 import { motion } from 'framer-motion';
-import Link from 'next/link';
+import { Markdown } from './markdown';
 
-import { MessageIcon, VercelIcon } from './icons';
-
-export const Overview = ({startMessage}: {startMessage :string}) => {
+export const Overview = ({ startMessage }: { startMessage: string }) => {
   return (
     <motion.div
       key="overview"
@@ -13,9 +11,7 @@ export const Overview = ({startMessage}: {startMessage :string}) => {
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ delay: 0.5 }}
     >
-      <div className="rounded-xl p-6 flex flex-col gap-8 leading-relaxed text-center max-w-xl">
-        {startMessage}
-      </div>
+    <Markdown>{startMessage}</Markdown>
     </motion.div>
   );
 };
