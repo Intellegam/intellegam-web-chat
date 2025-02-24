@@ -23,6 +23,7 @@ import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { sanitizeUIMessages } from '@/lib/utils';
 
+import { processFilesForUpload } from '@/lib/utils/fileUploadUtils';
 import equal from 'fast-deep-equal';
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { PoweredBy } from './powered-by';
@@ -30,7 +31,6 @@ import { PreviewAttachment } from './preview-attachment';
 import { SuggestedActions } from './suggested-actions';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { convertFileToDataUri } from '@/lib/utils/fileUtils';
 
 interface PureMultimodalInputProps {
   chatId: string;
@@ -61,6 +61,10 @@ interface PureMultimodalInputProps {
   showWebSearch: boolean;
   poweredBy?: string;
 }
+
+const MAX_ATTACHMENTS = 5;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB in bytes
+const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 function PureMultimodalInput({
   chatId,
@@ -189,16 +193,7 @@ function PureMultimodalInput({
   const handleFileChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
-      const convertedFiles = await Promise.all(
-        files.map(
-          async (f) =>
-            ({
-              name: f.name,
-              contentType: f.type,
-              url: await convertFileToDataUri(f),
-            }) as Attachment,
-        ),
-      );
+      if (files.length === 0) return;
 
       setUploadQueue(files.map((file) => file.name));
 
@@ -208,18 +203,34 @@ function PureMultimodalInput({
         // const successfullyUploadedAttachments = uploadedAttachments.filter(
         //   (attachment) => attachment !== undefined,
         // );
-
-        setAttachments((currentAttachments) => [
-          ...currentAttachments,
-          ...convertedFiles,
-        ]);
+        const newAttachments = await processFilesForUpload(files, attachments, {
+          maxAttachments: MAX_ATTACHMENTS,
+          maxFileSize: MAX_FILE_SIZE,
+          validTypes: VALID_FILE_TYPES,
+          onError: (error) => {
+            // Display appropriate error message with toast
+            if (error.affectedFiles && error.affectedFiles.length > 0) {
+              toast.error(
+                `${error.message}: ${error.affectedFiles.join(', ')}`,
+              );
+            } else {
+              toast.error(error.message);
+            }
+          },
+        });
+        if (newAttachments.length > 0) {
+          setAttachments((currentAttachments) => [
+            ...currentAttachments,
+            ...newAttachments,
+          ]);
+        }
       } catch (error) {
         console.error('Error uploading files!', error);
       } finally {
         setUploadQueue([]);
       }
     },
-    [setAttachments],
+    [attachments, setAttachments],
   );
 
   return (
@@ -241,13 +252,21 @@ function PureMultimodalInput({
         multiple
         onChange={handleFileChange}
         tabIndex={-1}
-        accept="image/jpeg, image/png, image/webp, image/gif "
+        accept={VALID_FILE_TYPES.join(',')}
       />
 
       {(attachments.length > 0 || uploadQueue.length > 0) && (
         <div className="flex flex-row gap-2 overflow-x-scroll items-end">
           {attachments.map((attachment) => (
-            <PreviewAttachment key={attachment.url} attachment={attachment} />
+            <PreviewAttachment
+              key={attachment.url}
+              attachment={attachment}
+              removeAttachmentCallback={() =>
+                setAttachments((currentAttachments) => [
+                  ...currentAttachments.filter((f) => f !== attachment),
+                ])
+              }
+            />
           ))}
 
           {uploadQueue.map((filename) => (
