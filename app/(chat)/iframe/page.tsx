@@ -29,7 +29,7 @@ export default async function Page({
     <>
       {chatConfig.backgroundImg && (
         <div className="fixed left-0 top-0 z-[-1] size-full blur-0">
-          <div className="absolute left-0 top-0 size-full bg-background/90" />
+          <div className="absolute left-0 top-0 size-full bg-background/95" />
           <Image
             width={0}
             height={0}

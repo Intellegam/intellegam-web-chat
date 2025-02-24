@@ -9,29 +9,30 @@ import type {
 import cx from 'classnames';
 import type React from 'react';
 import {
-  useRef,
-  useEffect,
-  useState,
+  memo,
   useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
   type Dispatch,
   type SetStateAction,
-  type ChangeEvent,
-  memo,
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { sanitizeUIMessages } from '@/lib/utils';
 
+import equal from 'fast-deep-equal';
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
+import { PoweredBy } from './powered-by';
 import { PreviewAttachment } from './preview-attachment';
+import { SuggestedActions } from './suggested-actions';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { SuggestedActions } from './suggested-actions';
-import equal from 'fast-deep-equal';
-import { PoweredBy } from './powered-by';
+import { convertFileToDataUri } from '@/lib/utils/fileUtils';
 
-interface PureMultimodalInputProps{
+interface PureMultimodalInputProps {
   chatId: string;
   input: string;
   setInput: (value: string) => void;
@@ -39,6 +40,7 @@ interface PureMultimodalInputProps{
   stop: () => void;
   attachments: Array<Attachment>;
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
+
   messages: Array<Message>;
   setMessages: Dispatch<SetStateAction<Array<Message>>>;
   append: (
@@ -77,7 +79,7 @@ function PureMultimodalInput({
   showFileUpload: enableFileUpload,
   startPrompts,
   inputPlaceholder,
-  poweredBy
+  poweredBy,
 }: PureMultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -132,9 +134,9 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    if(!isIframe) {
-      window.history.replaceState({}, '', `/chat/${chatId}`)
-    };
+    if (!isIframe) {
+      window.history.replaceState({}, '', `/chat/${chatId}`);
+    }
 
     handleSubmit(undefined, {
       experimental_attachments: attachments,
@@ -147,7 +149,15 @@ function PureMultimodalInput({
     if (width && width > 768) {
       textareaRef.current?.focus();
     }
-  }, [isIframe, chatId, handleSubmit, attachments, setAttachments, setLocalStorageInput, width]);
+  }, [
+    isIframe,
+    chatId,
+    handleSubmit,
+    attachments,
+    setAttachments,
+    setLocalStorageInput,
+    width,
+  ]);
 
   const uploadFile = async (file: File) => {
     const formData = new FormData();
@@ -179,19 +189,29 @@ function PureMultimodalInput({
   const handleFileChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
+      const convertedFiles = await Promise.all(
+        files.map(
+          async (f) =>
+            ({
+              name: f.name,
+              contentType: f.type,
+              url: await convertFileToDataUri(f),
+            }) as Attachment,
+        ),
+      );
 
       setUploadQueue(files.map((file) => file.name));
 
       try {
-        const uploadPromises = files.map((file) => uploadFile(file));
-        const uploadedAttachments = await Promise.all(uploadPromises);
-        const successfullyUploadedAttachments = uploadedAttachments.filter(
-          (attachment) => attachment !== undefined,
-        );
+        // const uploadPromises = files.map((file) => uploadFile(file));
+        // const uploadedAttachments = await Promise.all(uploadPromises);
+        // const successfullyUploadedAttachments = uploadedAttachments.filter(
+        //   (attachment) => attachment !== undefined,
+        // );
 
         setAttachments((currentAttachments) => [
           ...currentAttachments,
-          ...successfullyUploadedAttachments,
+          ...convertedFiles,
         ]);
       } catch (error) {
         console.error('Error uploading files!', error);
@@ -207,7 +227,11 @@ function PureMultimodalInput({
       {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
-          <SuggestedActions append={append} chatId={chatId} startPrompts={startPrompts}/>
+          <SuggestedActions
+            append={append}
+            chatId={chatId}
+            startPrompts={startPrompts}
+          />
         )}
 
       <input
@@ -217,6 +241,7 @@ function PureMultimodalInput({
         multiple
         onChange={handleFileChange}
         tabIndex={-1}
+        accept="image/jpeg, image/png, image/webp, image/gif "
       />
 
       {(attachments.length > 0 || uploadQueue.length > 0) && (
@@ -263,11 +288,14 @@ function PureMultimodalInput({
         }}
       />
 
-      {enableFileUpload && 
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
-      </div>
-      }
+      {enableFileUpload && (
+        <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+          <AttachmentsButton
+            fileInputRef={fileInputRef}
+            isLoading={isLoading}
+          />
+        </div>
+      )}
 
       <div className="absolute bottom-0 p-2 left-1/2 -translate-x-1/2 sm:translate-y-1">
         <PoweredBy poweredByName={poweredBy} />
