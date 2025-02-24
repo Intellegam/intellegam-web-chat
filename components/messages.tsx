@@ -34,7 +34,7 @@ function PureMessages({
   isReadonly,
   startMessage,
   chatLogo,
-  enableFeedback
+  enableFeedback,
 }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
@@ -44,7 +44,9 @@ function PureMessages({
       ref={messagesContainerRef}
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
     >
-      {messages.length === 0 && startMessage && <Overview startMessage={startMessage}  />}
+      {messages.length === 0 && startMessage && (
+        <Overview startMessage={startMessage} />
+      )}
 
       {messages.map((message, index) => (
         <PreviewMessage
@@ -61,13 +63,15 @@ function PureMessages({
           reload={reload}
           isReadonly={isReadonly}
           enableFeedback={enableFeedback}
+          chatLogo={chatLogo}
         />
       ))}
 
       {isLoading &&
         messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage chatLogo={chatLogo} />}
-
+        messages[messages.length - 1].role === 'user' && (
+          <ThinkingMessage chatLogo={chatLogo} />
+        )}
 
       <div
         ref={messagesEndRef}

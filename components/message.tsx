@@ -3,19 +3,16 @@
 import type { ChatRequestOptions, Message } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
-import Image from 'next/image';
 import { memo, useEffect, useState } from 'react';
 
 import type { Vote } from '@/lib/db/schema';
 
 import { cn } from '@/lib/utils';
 import equal from 'fast-deep-equal';
+import AssistantAvatar from './assistant-avatar';
 import { DocumentToolCall, DocumentToolResult } from './document';
 import { DocumentPreview } from './document-preview';
-import {
-  PencilEditIcon,
-  SparklesIcon
-} from './icons';
+import { PencilEditIcon } from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
 import { MessageEditor } from './message-editor';
@@ -33,7 +30,8 @@ const PurePreviewMessage = ({
   setMessages,
   reload,
   isReadonly,
-  enableFeedback
+  enableFeedback,
+  chatLogo,
 }: {
   chatId: string;
   message: Message;
@@ -47,6 +45,7 @@ const PurePreviewMessage = ({
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
   enableFeedback: boolean;
+  chatLogo?: string;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
 
@@ -68,11 +67,7 @@ const PurePreviewMessage = ({
           )}
         >
           {message.role === 'assistant' && (
-            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-              <div className="translate-y-px">
-                <SparklesIcon size={14} />
-              </div>
-            </div>
+            <AssistantAvatar chatLogo={chatLogo} />
           )}
 
           <div className="flex flex-col gap-4 w-full">
@@ -240,12 +235,11 @@ export const PreviewMessage = memo(
   },
 );
 
-export const ThinkingMessage = ({chatLogo}: {chatLogo?: string}) => {
+export const ThinkingMessage = ({ chatLogo }: { chatLogo?: string }) => {
   const role = 'assistant';
   useEffect(() => {
     console.log(chatLogo);
-    
-  })
+  });
 
   return (
     <motion.div
@@ -262,15 +256,10 @@ export const ThinkingMessage = ({chatLogo}: {chatLogo?: string}) => {
           },
         )}
       >
-        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-         {!chatLogo && <Image className="size-6" width={10} height={10} src="/images/intellegam_logo_light.svg" alt="intellegam logo" />}
-         {chatLogo && <Image className="size-6" width={10} height={10} src={chatLogo} alt="chat logo" />}
-        </div>
+        <AssistantAvatar chatLogo={chatLogo} />
 
         <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 text-muted-foreground">
-           ...
-          </div>
+          <div className="flex flex-col gap-4 text-muted-foreground">...</div>
         </div>
       </div>
     </motion.div>
