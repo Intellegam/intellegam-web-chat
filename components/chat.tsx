@@ -1,7 +1,7 @@
 'use client';
 
 import type { Attachment, Message } from 'ai';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 
 import { ChatHeader } from '@/components/chat-header';
@@ -9,13 +9,17 @@ import type { Vote } from '@/lib/db/schema';
 import { fetcher, generateUUID } from '@/lib/utils';
 
 import { useArtifactSelector } from '@/hooks/use-artifact';
+import type {
+  AdminChatConfig,
+  ChatConfig,
+  EndpointConfig,
+} from '@/lib/config/ChatConfig';
+import { useChat } from '@ai-sdk/react';
 import { toast } from 'sonner';
 import { Artifact } from './artifact';
 import { Messages } from './messages';
 import { MultimodalInput } from './multimodal-input';
 import type { VisibilityType } from './visibility-selector';
-import { useChat } from '@ai-sdk/react';
-import type { AdminChatConfig, ChatConfig, EndpointConfig } from '@/lib/config/ChatConfig';
 
 export function Chat({
   id,
@@ -23,16 +27,18 @@ export function Chat({
   selectedVisibilityType,
   isReadonly,
   isIframe,
-  config: {
-    chatConfig, endpointConfig, adminChatConfig
-  },
+  config: { chatConfig, endpointConfig, adminChatConfig },
 }: {
   id: string;
   initialMessages?: Array<Message>;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
   isIframe: boolean;
-  config: {chatConfig: ChatConfig, endpointConfig: EndpointConfig, adminChatConfig: AdminChatConfig};
+  config: {
+    chatConfig: ChatConfig;
+    endpointConfig: EndpointConfig;
+    adminChatConfig: AdminChatConfig;
+  };
 }) {
   const { mutate } = useSWRConfig();
 
@@ -48,43 +54,45 @@ export function Chat({
     reload,
   } = useChat({
     id,
-    body: { id},
+    body: { id },
+    api: endpointConfig.endpoint,
+    headers: {
+      ...(endpointConfig.subscriptionKey
+        ? { 'Subscription-Key': endpointConfig.subscriptionKey }
+        : {}),
+    },
     initialMessages,
     experimental_throttle: 100,
     sendExtraMessageFields: true,
     generateId: generateUUID,
     onFinish: () => {
-      //TODO: nicht im iframe oder dummy werte
-      mutate('/api/history');
+      //TODO: currently no history/ chat persistence in the backend
+      // mutate('/api/history');
     },
     onError: (error) => {
       toast.error('An error occured, please try again!');
     },
   });
 
-  const { data: votes } = useSWR<Array<Vote>>(
-    `/api/vote?chatId=${id}`,
-    fetcher,
-    //TODO: remove this when voting system is implemented
-    {revalidateOnMount: false}
-  );
+  const voteUrl = isIframe ? null : `/api/vote?chatId=${id}`;
+  const { data: votes } = useSWR<Array<Vote>>(voteUrl, fetcher);
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
-  useEffect(() => {
-    console.log(chatConfig);
-    
-  })
-
 
   return (
     <>
-      <div className="flex flex-col min-w-0 h-dvh bg-background">
-        {!isIframe && <ChatHeader
+      <div
+        className={`flex flex-col min-w-0 h-dvh ${chatConfig.backgroundImg ? '' : 'bg-background'} py-1 px-2`}
+      >
+        <ChatHeader
           chatId={id}
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
-        />}
+          isIframe={isIframe}
+          titleLogo={chatConfig.titleLogo}
+          title={chatConfig.title}
+        />
 
         <Messages
           chatId={id}
@@ -100,7 +108,7 @@ export function Chat({
           enableFeedback={adminChatConfig.enableFeedback}
         />
 
-        <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-4xl">
+        <form className="flex mx-auto px-4 pb-4 md:pb-6 gap-2 w-full md:max-w-4xl">
           {!isReadonly && (
             <MultimodalInput
               chatId={id}

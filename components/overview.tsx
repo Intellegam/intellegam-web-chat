@@ -11,7 +11,7 @@ export const Overview = ({ startMessage }: { startMessage: string }) => {
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ delay: 0.3 }}
     >
-      <div>
+      <div className="p-5">
         <Markdown>{startMessage}</Markdown>
       </div>
     </motion.div>

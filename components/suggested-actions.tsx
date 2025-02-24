@@ -11,13 +11,19 @@ interface SuggestedActionsProps {
     message: Message | CreateMessage,
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
-  startPrompts?: string[]
+  startPrompts?: string[];
 }
 
-function PureSuggestedActions({ chatId, append, startPrompts }: SuggestedActionsProps) {
-  let suggestedActions: {title: string, label: string, action: string}[] = []
-  if (startPrompts){
-    suggestedActions = startPrompts.sort((a, b) => b.length - a.length).map(p => ({title: p, label:p, action:p}))
+function PureSuggestedActions({
+  chatId,
+  append,
+  startPrompts,
+}: SuggestedActionsProps) {
+  let suggestedActions: { title: string; label: string; action: string }[] = [];
+  if (startPrompts) {
+    suggestedActions = startPrompts
+      .sort((a, b) => b.length - a.length)
+      .map((p) => ({ title: p, label: p, action: p }));
   }
 
   return (
@@ -44,7 +50,9 @@ function PureSuggestedActions({ chatId, append, startPrompts }: SuggestedActions
             }}
             className="text-left border rounded-xl px-3 py-2 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
-            <span className="font-medium text-muted-foreground">{suggestedAction.title}</span>
+            <span className="font-medium text-muted-foreground">
+              {suggestedAction.title}
+            </span>
             {/* <span className="text-muted-foreground">
               {suggestedAction.label}
             </span> */}

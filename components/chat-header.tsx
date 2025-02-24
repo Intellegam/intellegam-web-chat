@@ -10,15 +10,22 @@ import { PlusIcon } from './icons';
 import { useSidebar } from './ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { VisibilitySelector, type VisibilityType } from './visibility-selector';
+import Image from 'next/image';
 
 function PureChatHeader({
   chatId,
   selectedVisibilityType,
   isReadonly,
+  isIframe,
+  titleLogo,
+  title,
 }: {
   chatId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
+  isIframe: boolean;
+  titleLogo?: string;
+  title?: string;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -26,36 +33,48 @@ function PureChatHeader({
   const { width: windowWidth } = useWindowSize();
 
   return (
-    <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-2 gap-2">
-      <SidebarToggle />
+    <header className="flex sticky top-0 py-1.5 items-center px-2 md:px-2 gap-2">
+      {!isIframe && <SidebarToggle />}
 
       {(!open || windowWidth < 768) && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="outline"
-              className="order-2 md:order-1 md:px-2 px-2 md:h-fit ml-auto md:ml-0"
+              className="order-2 md:order-1 px-2 md:h-fit ml-auto"
               onClick={() => {
-                router.push('/');
+                if (!isIframe) {
+                  router.push('/');
+                }
                 router.refresh();
               }}
             >
               <PlusIcon />
-              <span className="md:sr-only">New Chat</span>
+              <span>New Chat</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>New Chat</TooltipContent>
         </Tooltip>
       )}
 
-      {!isReadonly && (
+      {!isReadonly && !isIframe && (
         <VisibilitySelector
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}
-          className="order-1 md:order-3"
+          className="order-1 md:order-2"
         />
       )}
-
+      <div className="flex absolute right-1/2 translate-x-1/2 items-center justify-between gap-x-3">
+        <Image
+          //TODO:
+          width={36}
+          height={36}
+          src={titleLogo || '/images/intellegam_logo_light.svg'}
+          alt="title logo"
+          className="size-9"
+        />
+        <div className="text-lg font-semibold hidden sm:block">{title}</div>
+      </div>
     </header>
   );
 }
