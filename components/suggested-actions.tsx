@@ -27,7 +27,7 @@ function PureSuggestedActions({
   }
 
   return (
-    <div className="flex flex-row flex-wrap gap-1 w-full">
+    <div className='flex w-full flex-row flex-wrap gap-1'>
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -48,9 +48,9 @@ function PureSuggestedActions({
                 content: suggestedAction.action,
               });
             }}
-            className="text-left border rounded-xl px-3 py-2 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
+            className="h-auto w-full flex-1 items-start justify-start gap-1 rounded-xl border px-3 py-2 text-left text-sm sm:flex-col"
           >
-            <span className="font-medium text-muted-foreground">
+            <span className="text-wrap font-medium text-muted-foreground text-xs md:text-sm">
               {suggestedAction.title}
             </span>
             {/* <span className="text-muted-foreground">
