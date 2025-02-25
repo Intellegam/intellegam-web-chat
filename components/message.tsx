@@ -3,7 +3,7 @@
 import type { ChatRequestOptions, Message } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
-import { memo, useEffect, useState } from 'react';
+import { memo, useState } from 'react';
 
 import type { Vote } from '@/lib/db/schema';
 
@@ -162,9 +162,7 @@ const PurePreviewMessage = ({
                             result={result}
                             isReadonly={isReadonly}
                           />
-                        ) : (
-                          <pre>{JSON.stringify(result, null, 2)}</pre>
-                        )}
+                        ) : null}
                       </div>
                     );
                   }

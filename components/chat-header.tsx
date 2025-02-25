@@ -66,12 +66,11 @@ function PureChatHeader({
       )}
       <div className="flex absolute right-1/2 translate-x-1/2 items-center justify-between gap-x-3">
         <Image
-          //TODO:
-          width={36}
-          height={36}
+          width={0}
+          height={0}
           src={titleLogo || '/images/intellegam_logo_light.svg'}
           alt="title logo"
-          className="size-9"
+          className="h-9 w-auto"
         />
         <div className="text-lg font-semibold hidden sm:block">{title}</div>
       </div>
