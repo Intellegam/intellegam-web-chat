@@ -6,6 +6,7 @@ import {
   type EndpointConfig,
 } from '@/lib/config/ChatConfig';
 import { generateUUID } from '@/lib/utils';
+import { fetchConfig } from '@/lib/utils/configUtils';
 import { determineBackendEndpoint } from '@/lib/utils/endpointUtils';
 import Image from 'next/image';
 
@@ -15,15 +16,15 @@ const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 export default async function Page({
   searchParams,
 }: { searchParams: { endpoint: string } }) {
+  const params = new URLSearchParams(await searchParams);
   const id = generateUUID();
-  //   const decryptedUrl = await EncryptionHelper.decryptURLSearchParams(searchParams, ENCRYPTED_PARAMS);
-  const endpointConfig = await determineBackendEndpoint(await searchParams);
+  //const decryptedUrl = await EncryptionHelper.decryptURLSearchParams(searchParams, ENCRYPTED_PARAMS);
+  const endpointConfig = await determineBackendEndpoint(params);
   const backendConfig = await fetchConfig(endpointConfig);
   const chatConfig =
-    backendConfig?.chatConfig || ChatConfig.fromSearchParams(searchParams);
+    backendConfig?.chatConfig || ChatConfig.fromSearchParams(params);
   const adminChatConfig =
-    backendConfig?.adminChatConfig ||
-    AdminChatConfig.fromSearchParams(searchParams);
+    backendConfig?.adminChatConfig || AdminChatConfig.fromSearchParams(params);
 
   return (
     <>
@@ -56,58 +57,4 @@ export default async function Page({
       <DataStreamHandler id={id} />
     </>
   );
-}
-
-/**
- * Attempts to fetch configuration from backend /config endpoint.
- * Returns null if fetch fails or response is invalid.
- *
- * @param endpointConfig - The endpoint configuration to use for fetching the config.
- */
-export async function fetchConfig(endpointConfig: EndpointConfig): Promise<{
-  endpointConfig: EndpointConfig;
-  chatConfig: ChatConfig;
-  adminChatConfig: AdminChatConfig;
-} | null> {
-  if (!endpointConfig.endpoint) {
-    return null;
-  }
-
-  try {
-    // Construct config endpoint URL
-    const configUrl = new URL(endpointConfig.endpoint);
-    configUrl.pathname = `${configUrl.pathname}/config`.replace(/\/+/g, '/');
-
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-    if (endpointConfig.subscriptionKey) {
-      headers['Subscription-Key'] = endpointConfig.subscriptionKey;
-    }
-
-    const response = await fetch(configUrl.toString(), { headers });
-    if (!response?.ok) {
-      return null;
-    }
-
-    const data = await response.json();
-    if (!data.interface) {
-      return null;
-    }
-
-    // Create config instances with backend data and include endpoint/subscription key
-    const configData = {
-      endpoint: endpointConfig.endpoint,
-      subscriptionKey: endpointConfig.subscriptionKey,
-      ...data.interface,
-    };
-
-    return {
-      endpointConfig: endpointConfig,
-      chatConfig: new ChatConfig(configData),
-      adminChatConfig: new AdminChatConfig(configData),
-    };
-  } catch {
-    return null;
-  }
 }

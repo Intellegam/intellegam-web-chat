@@ -27,25 +27,21 @@ export async function isBackendReachable(url: string): Promise<boolean> {
  * is in development or preview mode and no query parameters are present, it returns the sample app
  * endpoint. Otherwise, it extracts the endpoint from the provided URL.
  *
- * @param {URL} queryParamsUrl - The URL containing the query parameters to determine the endpoint.
+ * @param {URL} queryParams - The URL containing the query parameters to determine the endpoint.
  * @returns {Promise<EndpointConfig>} - A promise that resolves to the selected EndpointConfig.
  */
-//TODO: dont use Object?
 export async function determineBackendEndpoint(
-  searchParams?: Object
+  queryParams: URLSearchParams
 ): Promise<EndpointConfig> {
   // Use the local endpoint
   if (isDevelopment && (await isBackendReachable(LOCAL_BACKEND_URL))) {
     return new EndpointConfig({ endpoint: `${LOCAL_BACKEND_URL}/chat` });
   }
   // Use the deployed intellegam sample app
-  else if ((isDevelopment || isPreview) && searchParams) {
+  else if ((isDevelopment || isPreview) && !queryParams.toString()) {
     return new EndpointConfig({ endpoint: SAMPLE_APP_URL });
   }
 
-  if (searchParams) {
-    return EndpointConfig.fromSearchParams(searchParams);
-  } else {
-    throw new Error("searchParams is undefined");
-  }
+  // Use the endpoint from the URL
+  return EndpointConfig.fromSearchParams(queryParams);
 }
