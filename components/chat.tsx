@@ -8,13 +8,9 @@ import { ChatHeader } from '@/components/chat-header';
 import type { Vote } from '@/lib/db/schema';
 import { fetcher, generateUUID } from '@/lib/utils';
 
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
 import { useArtifactSelector } from '@/hooks/use-artifact';
-import type {
-  AdminChatConfig,
-  ChatConfig,
-  EndpointConfig,
-} from '@/lib/config/ChatConfig';
 import { useChat } from '@ai-sdk/react';
 import { toast } from 'sonner';
 import { Artifact } from './artifact';
@@ -27,19 +23,22 @@ export function Chat({
   initialMessages,
   selectedVisibilityType,
   isReadonly,
-  config: { chatConfig, endpointConfig, adminChatConfig },
 }: {
   id: string;
   initialMessages?: Array<Message>;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
-  config: {
-    chatConfig: ChatConfig;
-    endpointConfig: EndpointConfig;
-    adminChatConfig: AdminChatConfig;
-  };
 }) {
   const { mutate } = useSWRConfig();
+
+  const viewConfig = useViewConfig();
+  const { chatConfig, endpointConfig, adminChatConfig } =
+    useChatSettingsContext();
+  const voteUrl = viewConfig.isIframe ? null : `/api/vote?chatId=${id}`;
+  const { data: votes } = useSWR<Array<Vote>>(voteUrl, fetcher);
+
+  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
+  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
   const {
     messages,
@@ -73,13 +72,6 @@ export function Chat({
     },
   });
 
-  const viewConfig = useViewConfig();
-  const voteUrl = viewConfig.isIframe ? null : `/api/vote?chatId=${id}`;
-  const { data: votes } = useSWR<Array<Vote>>(voteUrl, fetcher);
-
-  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
-  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
-
   return (
     <>
       <div
@@ -89,14 +81,10 @@ export function Chat({
           chatId={id}
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
-          titleLogo={chatConfig.titleLogo}
-          title={chatConfig.title}
         />
 
         <Messages
           chatId={id}
-          startMessage={chatConfig.startMessage}
-          chatLogo={chatConfig.chatLogo}
           isLoading={isLoading}
           votes={votes}
           messages={messages}
@@ -104,7 +92,6 @@ export function Chat({
           reload={reload}
           isReadonly={isReadonly}
           isArtifactVisible={isArtifactVisible}
-          enableFeedback={adminChatConfig.enableFeedback}
         />
 
         <form className="flex mx-auto px-4 pb-4 md:pb-6 gap-2 w-full md:max-w-4xl">
@@ -121,10 +108,6 @@ export function Chat({
               messages={messages}
               setMessages={setMessages}
               append={append}
-              startPrompts={chatConfig.startPrompts}
-              showFileUpload={adminChatConfig.showFileUpload}
-              showWebSearch={adminChatConfig.showWebSearch}
-              poweredBy={adminChatConfig.poweredBy}
             />
           )}
         </form>

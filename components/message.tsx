@@ -7,6 +7,7 @@ import { memo, useState } from 'react';
 
 import type { Vote } from '@/lib/db/schema';
 
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { cn } from '@/lib/utils';
 import equal from 'fast-deep-equal';
 import AssistantAvatar from './assistant-avatar';
@@ -30,8 +31,6 @@ const PurePreviewMessage = ({
   setMessages,
   reload,
   isReadonly,
-  enableFeedback,
-  chatLogo,
 }: {
   chatId: string;
   message: Message;
@@ -44,10 +43,9 @@ const PurePreviewMessage = ({
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
-  enableFeedback: boolean;
-  chatLogo?: string;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+  const { chatConfig, adminChatConfig } = useChatSettingsContext();
 
   return (
     <AnimatePresence>
@@ -67,7 +65,7 @@ const PurePreviewMessage = ({
           )}
         >
           {message.role === 'assistant' && (
-            <AssistantAvatar chatLogo={chatLogo} />
+            <AssistantAvatar chatLogo={chatConfig.chatLogo} />
           )}
 
           <div className="flex flex-col gap-4 w-full">
@@ -211,7 +209,7 @@ const PurePreviewMessage = ({
                 message={message}
                 vote={vote}
                 isLoading={isLoading}
-                enableFeedback={enableFeedback}
+                enableFeedback={adminChatConfig.enableFeedback}
               />
             )}
           </div>

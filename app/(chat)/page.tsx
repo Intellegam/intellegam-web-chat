@@ -1,5 +1,6 @@
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
+import { ChatSettingsProvider } from '@/contexts/chat-config-context';
 import type {
   AdminChatConfig,
   ChatConfig,
@@ -19,18 +20,21 @@ export default async function Page({
 
   return (
     <>
-      <Chat
-        key={id}
-        id={id}
-        initialMessages={[]}
-        selectedVisibilityType="private"
-        isReadonly={false}
+      <ChatSettingsProvider
         config={{
           adminChatConfig: adminChatConfig.toObject() as AdminChatConfig,
           endpointConfig: endpointConfig.toObject() as EndpointConfig,
           chatConfig: chatConfig.toObject() as ChatConfig,
         }}
-      />
+      >
+        <Chat
+          key={id}
+          id={id}
+          initialMessages={[]}
+          selectedVisibilityType="private"
+          isReadonly={false}
+        />
+      </ChatSettingsProvider>
       <DataStreamHandler id={id} />
     </>
   );

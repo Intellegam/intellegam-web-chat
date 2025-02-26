@@ -5,6 +5,7 @@ import { Overview } from './overview';
 import { memo } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import equal from 'fast-deep-equal';
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
 
 interface MessagesProps {
   chatId: string;
@@ -19,9 +20,6 @@ interface MessagesProps {
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
   isArtifactVisible: boolean;
-  startMessage?: string;
-  chatLogo?: string;
-  enableFeedback: boolean;
 }
 
 function PureMessages({
@@ -32,20 +30,18 @@ function PureMessages({
   setMessages,
   reload,
   isReadonly,
-  startMessage,
-  chatLogo,
-  enableFeedback,
 }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
+  const { chatConfig } = useChatSettingsContext();
 
   return (
     <div
       ref={messagesContainerRef}
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
     >
-      {messages.length === 0 && startMessage && (
-        <Overview startMessage={startMessage} />
+      {messages.length === 0 && chatConfig.startMessage && (
+        <Overview startMessage={chatConfig.startMessage} />
       )}
 
       {messages.map((message, index) => (
@@ -62,15 +58,13 @@ function PureMessages({
           setMessages={setMessages}
           reload={reload}
           isReadonly={isReadonly}
-          enableFeedback={enableFeedback}
-          chatLogo={chatLogo}
         />
       ))}
 
       {isLoading &&
         messages.length > 0 &&
         messages[messages.length - 1].role === 'user' && (
-          <ThinkingMessage chatLogo={chatLogo} />
+          <ThinkingMessage chatLogo={chatConfig.chatLogo} />
         )}
 
       <div

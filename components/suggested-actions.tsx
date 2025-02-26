@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from './ui/button';
 import type { ChatRequestOptions, CreateMessage, Message } from 'ai';
 import { memo } from 'react';
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
 
 interface SuggestedActionsProps {
   chatId: string;
@@ -11,23 +12,19 @@ interface SuggestedActionsProps {
     message: Message | CreateMessage,
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
-  startPrompts?: string[];
 }
 
-function PureSuggestedActions({
-  chatId,
-  append,
-  startPrompts,
-}: SuggestedActionsProps) {
+function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   let suggestedActions: { title: string; label: string; action: string }[] = [];
-  if (startPrompts) {
-    suggestedActions = startPrompts
+  const { chatConfig } = useChatSettingsContext();
+  if (chatConfig.startPrompts) {
+    suggestedActions = chatConfig.startPrompts
       .sort((a, b) => b.length - a.length)
       .map((p) => ({ title: p, label: p, action: p }));
   }
 
   return (
-    <div className='flex w-full flex-row flex-wrap gap-1'>
+    <div className="flex w-full flex-row flex-wrap gap-1">
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}

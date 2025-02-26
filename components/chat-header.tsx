@@ -12,25 +12,23 @@ import { PlusIcon } from './icons';
 import { useSidebar } from './ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { VisibilitySelector, type VisibilityType } from './visibility-selector';
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
 
 function PureChatHeader({
   chatId,
   selectedVisibilityType,
   isReadonly,
-  titleLogo,
-  title,
 }: {
   chatId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
-  titleLogo?: string;
-  title?: string;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
   const viewConfig = useViewConfig();
 
   const { width: windowWidth } = useWindowSize();
+  const { chatConfig } = useChatSettingsContext();
 
   return (
     <header className="flex sticky top-0 py-1.5 items-center px-2 md:px-2 gap-2">
@@ -68,11 +66,13 @@ function PureChatHeader({
         <Image
           width={0}
           height={0}
-          src={titleLogo || '/images/intellegam_logo_light.svg'}
+          src={chatConfig.titleLogo || '/images/intellegam_logo_light.svg'}
           alt="title logo"
           className="h-9 w-auto"
         />
-        <div className="text-lg font-semibold hidden sm:block">{title}</div>
+        <div className="text-lg font-semibold hidden sm:block">
+          {chatConfig.title}
+        </div>
       </div>
     </header>
   );

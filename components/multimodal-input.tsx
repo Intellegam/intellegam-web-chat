@@ -23,6 +23,7 @@ import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { sanitizeUIMessages } from '@/lib/utils';
 
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
 import { processFilesForUpload } from '@/lib/utils/fileUploadUtils';
 import equal from 'fast-deep-equal';
@@ -55,11 +56,6 @@ interface PureMultimodalInputProps {
     chatRequestOptions?: ChatRequestOptions,
   ) => void;
   className?: string;
-  showFileUpload: boolean;
-  startPrompts?: string[];
-  inputPlaceholder?: string;
-  showWebSearch: boolean;
-  poweredBy?: string;
 }
 
 const MAX_ATTACHMENTS = 5;
@@ -79,14 +75,11 @@ function PureMultimodalInput({
   append,
   handleSubmit,
   className,
-  showFileUpload: enableFileUpload,
-  startPrompts,
-  inputPlaceholder,
-  poweredBy,
 }: PureMultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
   const viewConfig = useViewConfig();
+  const { chatConfig, adminChatConfig } = useChatSettingsContext();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -238,11 +231,7 @@ function PureMultimodalInput({
       {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
-          <SuggestedActions
-            append={append}
-            chatId={chatId}
-            startPrompts={startPrompts}
-          />
+          <SuggestedActions append={append} chatId={chatId} />
         )}
 
       <input
@@ -285,7 +274,7 @@ function PureMultimodalInput({
 
       <Textarea
         ref={textareaRef}
-        placeholder={inputPlaceholder || 'How can i help ?'}
+        placeholder={chatConfig.inputPlaceholder || 'How can i help ?'}
         value={input}
         onChange={handleInput}
         className={cx(
@@ -307,7 +296,7 @@ function PureMultimodalInput({
         }}
       />
 
-      {enableFileUpload && (
+      {adminChatConfig.showFileUpload && (
         <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
           <AttachmentsButton
             fileInputRef={fileInputRef}
@@ -317,7 +306,7 @@ function PureMultimodalInput({
       )}
 
       <div className="absolute bottom-0 p-2 left-1/2 -translate-x-1/2 sm:translate-y-1">
-        <PoweredBy poweredByName={poweredBy} />
+        <PoweredBy poweredByName={adminChatConfig.poweredBy} />
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
