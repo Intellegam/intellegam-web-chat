@@ -6,6 +6,7 @@ import type {
   ChatConfig,
   EndpointConfig,
 } from '@/lib/config/ChatConfig';
+import { EncryptionHelper } from '@/lib/config/EncryptionHelper';
 import { generateUUID } from '@/lib/utils';
 import { getChatConfigs } from '@/lib/utils/configUtils';
 import Image from 'next/image';
@@ -17,10 +18,14 @@ export default async function Page({
   searchParams,
 }: { searchParams: { endpoint: string } }) {
   const id = generateUUID();
-  const params = new URLSearchParams(await searchParams);
-  //const decryptedUrl = await EncryptionHelper.decryptURLSearchParams(searchParams, ENCRYPTED_PARAMS);
-  const { endpointConfig, chatConfig, adminChatConfig } =
-    await getChatConfigs(params);
+  const chatParams = new URLSearchParams(await searchParams);
+  const decryptedSearchParams = await EncryptionHelper.decryptURLSearchParams(
+    chatParams,
+    ENCRYPTED_PARAMS,
+  );
+  const { endpointConfig, chatConfig, adminChatConfig } = await getChatConfigs(
+    decryptedSearchParams,
+  );
 
   return (
     <>
