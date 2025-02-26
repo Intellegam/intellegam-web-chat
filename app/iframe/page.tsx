@@ -1,13 +1,12 @@
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
-import {
+import type {
   AdminChatConfig,
   ChatConfig,
-  type EndpointConfig,
+  EndpointConfig,
 } from '@/lib/config/ChatConfig';
 import { generateUUID } from '@/lib/utils';
-import { fetchConfig } from '@/lib/utils/configUtils';
-import { determineBackendEndpoint } from '@/lib/utils/endpointUtils';
+import { getChatConfigs } from '@/lib/utils/configUtils';
 import Image from 'next/image';
 
 const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
@@ -16,15 +15,11 @@ const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 export default async function Page({
   searchParams,
 }: { searchParams: { endpoint: string } }) {
-  const params = new URLSearchParams(await searchParams);
   const id = generateUUID();
+  const params = new URLSearchParams(await searchParams);
   //const decryptedUrl = await EncryptionHelper.decryptURLSearchParams(searchParams, ENCRYPTED_PARAMS);
-  const endpointConfig = await determineBackendEndpoint(params);
-  const backendConfig = await fetchConfig(endpointConfig);
-  const chatConfig =
-    backendConfig?.chatConfig || ChatConfig.fromSearchParams(params);
-  const adminChatConfig =
-    backendConfig?.adminChatConfig || AdminChatConfig.fromSearchParams(params);
+  const { endpointConfig, chatConfig, adminChatConfig } =
+    await getChatConfigs(params);
 
   return (
     <>
@@ -47,7 +42,6 @@ export default async function Page({
         initialMessages={[]}
         selectedVisibilityType="private"
         isReadonly={false}
-        isIframe={true}
         config={{
           adminChatConfig: adminChatConfig.toObject() as AdminChatConfig,
           endpointConfig: endpointConfig.toObject() as EndpointConfig,

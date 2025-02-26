@@ -5,36 +5,36 @@ import { useWindowSize } from 'usehooks-ts';
 
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
+import { useViewConfig } from '@/contexts/view-config-context';
+import Image from 'next/image';
 import { memo } from 'react';
 import { PlusIcon } from './icons';
 import { useSidebar } from './ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { VisibilitySelector, type VisibilityType } from './visibility-selector';
-import Image from 'next/image';
 
 function PureChatHeader({
   chatId,
   selectedVisibilityType,
   isReadonly,
-  isIframe,
   titleLogo,
   title,
 }: {
   chatId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
-  isIframe: boolean;
   titleLogo?: string;
   title?: string;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
+  const viewConfig = useViewConfig();
 
   const { width: windowWidth } = useWindowSize();
 
   return (
     <header className="flex sticky top-0 py-1.5 items-center px-2 md:px-2 gap-2">
-      {!isIframe && <SidebarToggle />}
+      {viewConfig.showSidebar && <SidebarToggle />}
 
       {(!open || windowWidth < 768) && (
         <Tooltip>
@@ -43,7 +43,7 @@ function PureChatHeader({
               variant="outline"
               className="order-2 md:order-1 px-2 md:h-fit ml-auto"
               onClick={() => {
-                if (!isIframe) {
+                if (!viewConfig.isIframe) {
                   router.push('/');
                 }
                 router.refresh();
@@ -57,7 +57,7 @@ function PureChatHeader({
         </Tooltip>
       )}
 
-      {!isReadonly && !isIframe && (
+      {!isReadonly && !viewConfig.isIframe && (
         <VisibilitySelector
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}

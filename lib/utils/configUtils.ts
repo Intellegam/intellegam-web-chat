@@ -3,6 +3,31 @@ import {
   ChatConfig,
   type EndpointConfig,
 } from "../config/ChatConfig";
+import { determineBackendEndpoint } from "./endpointUtils";
+
+/**
+ * Retrieves chat configurations based on the provided URL search parameters.
+ *
+ * This function determines the backend endpoint using the provided parameters,
+ * fetches the configuration from the backend, and constructs the chat and admin
+ * chat configurations. If the backend configuration is not available, it falls
+ * back to creating configurations from the search parameters.
+ *
+ * @param {URLSearchParams} params - The URL search parameters used to determine
+ * the backend endpoint and to create chat configurations if necessary.
+ * @returns {Promise<{ endpointConfig: EndpointConfig, chatConfig: ChatConfig, adminChatConfig: AdminChatConfig }>}
+ * An object containing the endpoint configuration, chat configuration, and admin chat configuration.
+ */
+export async function getChatConfigs(params: URLSearchParams) {
+  const endpointConfig = await determineBackendEndpoint(params);
+  const backendConfig = await fetchConfig(endpointConfig);
+  const chatConfig =
+    backendConfig?.chatConfig || ChatConfig.fromSearchParams(params);
+  const adminChatConfig =
+    backendConfig?.adminChatConfig || AdminChatConfig.fromSearchParams(params);
+
+  return { endpointConfig, chatConfig, adminChatConfig };
+}
 
 /**
  * Attempts to fetch configuration from backend /config endpoint.

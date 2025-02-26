@@ -8,6 +8,7 @@ import { ChatHeader } from '@/components/chat-header';
 import type { Vote } from '@/lib/db/schema';
 import { fetcher, generateUUID } from '@/lib/utils';
 
+import { useViewConfig } from '@/contexts/view-config-context';
 import { useArtifactSelector } from '@/hooks/use-artifact';
 import type {
   AdminChatConfig,
@@ -26,14 +27,12 @@ export function Chat({
   initialMessages,
   selectedVisibilityType,
   isReadonly,
-  isIframe,
   config: { chatConfig, endpointConfig, adminChatConfig },
 }: {
   id: string;
   initialMessages?: Array<Message>;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
-  isIframe: boolean;
   config: {
     chatConfig: ChatConfig;
     endpointConfig: EndpointConfig;
@@ -74,7 +73,8 @@ export function Chat({
     },
   });
 
-  const voteUrl = isIframe ? null : `/api/vote?chatId=${id}`;
+  const viewConfig = useViewConfig();
+  const voteUrl = viewConfig.isIframe ? null : `/api/vote?chatId=${id}`;
   const { data: votes } = useSWR<Array<Vote>>(voteUrl, fetcher);
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
@@ -89,7 +89,6 @@ export function Chat({
           chatId={id}
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
-          isIframe={isIframe}
           titleLogo={chatConfig.titleLogo}
           title={chatConfig.title}
         />
@@ -122,7 +121,6 @@ export function Chat({
               messages={messages}
               setMessages={setMessages}
               append={append}
-              isIframe={isIframe}
               startPrompts={chatConfig.startPrompts}
               showFileUpload={adminChatConfig.showFileUpload}
               showWebSearch={adminChatConfig.showWebSearch}

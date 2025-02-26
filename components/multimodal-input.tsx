@@ -23,6 +23,7 @@ import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { sanitizeUIMessages } from '@/lib/utils';
 
+import { useViewConfig } from '@/contexts/view-config-context';
 import { processFilesForUpload } from '@/lib/utils/fileUploadUtils';
 import equal from 'fast-deep-equal';
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
@@ -57,7 +58,6 @@ interface PureMultimodalInputProps {
   showFileUpload: boolean;
   startPrompts?: string[];
   inputPlaceholder?: string;
-  isIframe: boolean;
   showWebSearch: boolean;
   poweredBy?: string;
 }
@@ -79,7 +79,6 @@ function PureMultimodalInput({
   append,
   handleSubmit,
   className,
-  isIframe,
   showFileUpload: enableFileUpload,
   startPrompts,
   inputPlaceholder,
@@ -87,6 +86,7 @@ function PureMultimodalInput({
 }: PureMultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+  const viewConfig = useViewConfig();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -138,7 +138,7 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    if (!isIframe) {
+    if (!viewConfig.isIframe) {
       window.history.replaceState({}, '', `/chat/${chatId}`);
     }
 
@@ -154,7 +154,7 @@ function PureMultimodalInput({
       textareaRef.current?.focus();
     }
   }, [
-    isIframe,
+    viewConfig.isIframe,
     chatId,
     handleSubmit,
     attachments,
