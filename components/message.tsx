@@ -135,14 +135,19 @@ const PurePreviewMessage = ({
 
             {message.toolInvocations && message.toolInvocations.length > 0 && (
               <div className="flex flex-col gap-4">
-                {message.toolInvocations.map((toolInvocation) => {
+                {message.toolInvocations.map((toolInvocation, index) => {
                   const { toolName, toolCallId, state, args } = toolInvocation;
 
                   if (state === 'result') {
                     const { result } = toolInvocation;
 
                     return (
-                      <div key={toolCallId}>
+                      <div
+                        key={`${toolCallId}-${
+                          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                          index
+                        }`}
+                      >
                         {toolName === 'getWeather' ? (
                           <Weather weatherAtLocation={result} />
                         ) : toolName === 'createDocument' ? (
@@ -168,7 +173,10 @@ const PurePreviewMessage = ({
                   }
                   return (
                     <div
-                      key={toolCallId}
+                      key={`${toolCallId}-${
+                        // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                        index
+                      }`}
                       className={cx({
                         skeleton: ['getWeather'].includes(toolName),
                       })}
