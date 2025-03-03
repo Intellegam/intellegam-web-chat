@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import Citation from './citation';
 import { CodeBlock } from './code-block';
 import Link from 'next/link';
+import ImagePopup from './image-popup';
 
 const components: Partial<Components> = {
   // @ts-expect-error
@@ -96,6 +97,9 @@ const components: Partial<Components> = {
         {children}
       </h6>
     );
+  },
+  img: ({ src, alt }) => {
+    return <ImagePopup src={src} alt={alt} />;
   },
 };
 
