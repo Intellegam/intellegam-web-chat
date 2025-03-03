@@ -7,7 +7,7 @@ export default function Citation({
 }: { title: string; href?: string }) {
   return (
     <sup>
-      <HoverCard>
+      <HoverCard openDelay={300} closeDelay={100}>
         <HoverCardTrigger asChild>
           <Link
             target="_blank"
