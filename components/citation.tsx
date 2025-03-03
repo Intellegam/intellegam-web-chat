@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
+import { HoverCardPortal } from '@radix-ui/react-hover-card';
 
 export default function Citation({
   title,
@@ -18,13 +19,16 @@ export default function Citation({
             {title}
           </Link>
         </HoverCardTrigger>
-        <HoverCardContent
-          side="top"
-          align="start"
-          className="w-64 p-1 text-sm shadow-lg text-ellipsis overflow-x-auto"
-        >
-          {href}
-        </HoverCardContent>
+        <HoverCardPortal>
+          <HoverCardContent
+            asChild
+            side="top"
+            align="start"
+            className="w-64 p-1 text-sm shadow-lg text-ellipsis overflow-x-auto"
+          >
+            <p>{href}</p>
+          </HoverCardContent>
+        </HoverCardPortal>
       </HoverCard>
     </sup>
   );

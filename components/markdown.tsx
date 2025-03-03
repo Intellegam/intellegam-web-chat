@@ -97,7 +97,6 @@ const components: Partial<Components> = {
       </h6>
     );
   },
-  p: 'span',
 };
 
 const remarkPlugins = [remarkGfm];
