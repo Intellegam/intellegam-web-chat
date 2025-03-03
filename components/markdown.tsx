@@ -3,6 +3,7 @@ import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Citation from './citation';
 import { CodeBlock } from './code-block';
+import Link from 'next/link';
 
 const components: Partial<Components> = {
   // @ts-expect-error
@@ -37,7 +38,22 @@ const components: Partial<Components> = {
     );
   },
   a: ({ children, href }) => {
-    return <Citation href={href}>{children}</Citation>;
+    // If the markdown is in the custom Citation format render the Citation else render a Link
+    const textContent = children?.toString().match(/\d+/)?.[0];
+    if (textContent) {
+      return <Citation href={href} title={textContent} />;
+    } else {
+      return (
+        <Link
+          className="text-primary dark:text-primary-light hover:underline font-medium"
+          target="_blank"
+          rel="noreferrer"
+          href={href || ''}
+        >
+          {children}
+        </Link>
+      );
+    }
   },
   h1: ({ node, children, ...props }) => {
     return (

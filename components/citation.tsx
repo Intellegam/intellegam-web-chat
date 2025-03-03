@@ -1,13 +1,10 @@
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from './ui/hover-card';
 
 export default function Citation({
-  children,
+  title,
   href,
-}: { children: ReactNode; href?: string }) {
-  const textContent = children?.toString().match(/\d+/)?.[0] || '';
-
+}: { title: string; href?: string }) {
   return (
     <sup>
       <HoverCard>
@@ -18,7 +15,7 @@ export default function Citation({
             className="cursor-pointer text-xs text-primary py-0.5 px-2 m-0 bg-neutral-200 dark:bg-neutral-700 rounded-full no-underline font-medium"
             href={href || ''}
           >
-            {textContent}
+            {title}
           </Link>
         </HoverCardTrigger>
         <HoverCardContent
