@@ -1,8 +1,9 @@
-import Link from 'next/link';
-import React, { memo } from 'react';
+import { memo } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import Citation from './citation';
 import { CodeBlock } from './code-block';
+import Link from 'next/link';
 
 const components: Partial<Components> = {
   // @ts-expect-error
@@ -36,18 +37,23 @@ const components: Partial<Components> = {
       </span>
     );
   },
-  a: ({ node, children, ...props }) => {
-    return (
-      // @ts-expect-error
-      <Link
-        className="text-blue-500 hover:underline"
-        target="_blank"
-        rel="noreferrer"
-        {...props}
-      >
-        {children}
-      </Link>
-    );
+  a: ({ children, href }) => {
+    // If the markdown is in the custom Citation format render the Citation else render a Link
+    const textContent = children?.toString().match(/\d+/)?.[0];
+    if (textContent) {
+      return <Citation href={href} title={textContent} />;
+    } else {
+      return (
+        <Link
+          className="text-primary dark:text-primary-light hover:underline font-medium"
+          target="_blank"
+          rel="noreferrer"
+          href={href || ''}
+        >
+          {children}
+        </Link>
+      );
+    }
   },
   h1: ({ node, children, ...props }) => {
     return (
