@@ -36,7 +36,7 @@ const components: Partial<Components> = {
       </span>
     );
   },
-  a: ({ node, children, href }) => {
+  a: ({ children, href }) => {
     return <Citation href={href}>{children}</Citation>;
   },
   h1: ({ node, children, ...props }) => {
@@ -81,6 +81,7 @@ const components: Partial<Components> = {
       </h6>
     );
   },
+  p: 'span',
 };
 
 const remarkPlugins = [remarkGfm];

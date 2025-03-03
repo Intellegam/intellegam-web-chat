@@ -9,24 +9,26 @@ export default function Citation({
   const textContent = children?.toString().match(/\d+/)?.[0] || '';
 
   return (
-    <HoverCard>
-      <HoverCardTrigger asChild>
-        <Link
-          target="_blank"
-          rel="noopener noreferrer"
-          className="cursor-pointer text-sm text-primary py-0.5 px-1.5 m-0 bg-neutral-200 dark:bg-neutral-700 rounded-full no-underline"
-          href={href || ''}
+    <sup>
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <Link
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cursor-pointer text-xs text-primary py-0.5 px-2 m-0 bg-neutral-200 dark:bg-neutral-700 rounded-full no-underline font-medium"
+            href={href || ''}
+          >
+            {textContent}
+          </Link>
+        </HoverCardTrigger>
+        <HoverCardContent
+          side="top"
+          align="start"
+          className="w-64 p-1 text-sm shadow-lg text-ellipsis overflow-x-auto"
         >
-          {textContent}
-        </Link>
-      </HoverCardTrigger>
-      <HoverCardContent
-        side="top"
-        align="start"
-        className=" w-64 p-1 shadow-lg text-ellipsis overflow-x-auto"
-      >
-        {href}
-      </HoverCardContent>
-    </HoverCard>
+          {href}
+        </HoverCardContent>
+      </HoverCard>
+    </sup>
   );
 }
