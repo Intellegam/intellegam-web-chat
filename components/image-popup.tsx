@@ -5,7 +5,13 @@ import {
   DialogHeader,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { DialogPortal, DialogTitle } from '@radix-ui/react-dialog';
+import {
+  DialogDescription,
+  DialogPortal,
+  DialogTitle,
+} from '@radix-ui/react-dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+
 import { useState } from 'react';
 
 export default function ImagePopup({
@@ -13,7 +19,6 @@ export default function ImagePopup({
   alt,
 }: { src?: string; alt?: string }) {
   const [isOpen, setIsOpen] = useState(false);
-  console.log(alt);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -27,11 +32,14 @@ export default function ImagePopup({
               <span>{alt}</span>
             </DialogTitle>
           </DialogHeader>
+          <VisuallyHidden>
+            <DialogDescription>{alt}</DialogDescription>
+          </VisuallyHidden>
           <div className="relative w-full">
             <img
               src={src || ''}
               alt={alt || ''}
-              className="w-full h-auto max-h-[90vh] object-contain"
+              className="w-full h-auto max-h-[85vh] object-contain"
             />
           </div>
         </DialogContent>
