@@ -33,6 +33,7 @@ import { PreviewAttachment } from './preview-attachment';
 import { SuggestedActions } from './suggested-actions';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
+import WebToggleButton from './web-toggle-button';
 
 interface PureMultimodalInputProps {
   chatId: string;
@@ -296,14 +297,17 @@ function PureMultimodalInput({
         }}
       />
 
-      {adminChatConfig.showFileUpload && (
-        <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-          <AttachmentsButton
-            fileInputRef={fileInputRef}
-            isLoading={isLoading}
-          />
+      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+        <div className="flex gap-x-2 items-center">
+          {adminChatConfig.showFileUpload && (
+            <AttachmentsButton
+              fileInputRef={fileInputRef}
+              isLoading={isLoading}
+            />
+          )}
+          {adminChatConfig.showWebSearch && <WebToggleButton />}
         </div>
-      )}
+      </div>
 
       <div className="absolute bottom-0 p-2 left-1/2 -translate-x-1/2 sm:translate-y-1">
         <PoweredBy poweredByName={adminChatConfig.poweredBy} />
