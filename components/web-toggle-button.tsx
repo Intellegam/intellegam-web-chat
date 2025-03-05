@@ -12,7 +12,7 @@ export default function WebToggleButton() {
 
   return (
     <Button
-      className={`p-[7px] h-fit rounded-md ${isActive ? 'bg-blue-600/40' : ''} dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200`}
+      className={`p-[7px] h-fit rounded-md ${isActive ? 'bg-blue-400/40 dark:bg-blue-600/40 hover:bg-blue-300/40 hover:dark:bg-blue-700/40' : 'hover:dark:bg-zinc-900 hover:bg-zinc-300'} dark:border-zinc-700`}
       onClick={(event) => {
         event.preventDefault();
         handleButtonClick();
@@ -20,7 +20,7 @@ export default function WebToggleButton() {
       variant="ghost"
     >
       <Globe
-        className={`transition-color ${isActive ? 'text-blue-400' : ''}`}
+        className={`transition-color ${isActive ? 'text-blue-600 dark:text-blue-400' : ''}`}
       />
       {isActive && (
         <motion.span
