@@ -50,6 +50,8 @@ export function Chat({
     isLoading,
     stop,
     reload,
+    data,
+    setData,
   } = useChat({
     id,
     body: { id },
@@ -88,6 +90,8 @@ export function Chat({
           isLoading={isLoading}
           votes={votes}
           messages={messages}
+          data={data}
+          setData={setData}
           setMessages={setMessages}
           reload={reload}
           isReadonly={isReadonly}
