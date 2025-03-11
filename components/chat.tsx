@@ -30,10 +30,8 @@ export function Chat({
   isReadonly: boolean;
 }) {
   const { mutate } = useSWRConfig();
-
   const viewConfig = useViewConfig();
-  const { chatConfig, endpointConfig, adminChatConfig } =
-    useChatSettingsContext();
+  const { chatConfig, endpointConfig } = useChatSettingsContext();
   const voteUrl = viewConfig.isIframe ? null : `/api/vote?chatId=${id}`;
   const { data: votes } = useSWR<Array<Vote>>(voteUrl, fetcher);
 
