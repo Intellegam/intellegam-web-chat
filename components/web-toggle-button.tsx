@@ -1,13 +1,17 @@
-import { Globe } from 'lucide-react';
-import { Button } from './ui/button';
-import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Globe } from 'lucide-react';
+import { type Dispatch, type SetStateAction, useState } from 'react';
+import { Button } from './ui/button';
 
-export default function WebToggleButton() {
+export default function WebToggleButton({
+  setSearchWeb,
+}: { setSearchWeb: Dispatch<SetStateAction<boolean>> }) {
   const [isActive, setActive] = useState(false);
 
   function handleButtonClick() {
-    setActive(!isActive);
+    const newValue = !isActive;
+    setActive(newValue);
+    setSearchWeb(newValue);
   }
 
   return (
@@ -27,7 +31,6 @@ export default function WebToggleButton() {
           className="flex items-center h-4 text-blue-600 dark:text-blue-400"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          exit={{ scale: 0, transition: { delay: 0.4 } }}
         >
           Web
         </motion.span>

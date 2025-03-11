@@ -43,9 +43,9 @@ interface PureMultimodalInputProps {
   stop: () => void;
   attachments: Array<Attachment>;
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
-
   messages: Array<Message>;
   setMessages: Dispatch<SetStateAction<Array<Message>>>;
+  setSearchWeb: Dispatch<SetStateAction<boolean>>;
   append: (
     message: Message | CreateMessage,
     chatRequestOptions?: ChatRequestOptions,
@@ -76,6 +76,7 @@ function PureMultimodalInput({
   append,
   handleSubmit,
   className,
+  setSearchWeb,
 }: PureMultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -305,7 +306,9 @@ function PureMultimodalInput({
               isLoading={isLoading}
             />
           )}
-          {adminChatConfig.showWebSearch && <WebToggleButton />}
+          {adminChatConfig.showWebSearch && (
+            <WebToggleButton setSearchWeb={setSearchWeb} />
+          )}
         </div>
       </div>
 
