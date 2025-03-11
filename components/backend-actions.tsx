@@ -1,8 +1,15 @@
+import { motion } from 'framer-motion';
+
 function BackendAction({ action }: { action: string }) {
   return (
-    <div className="text-center ml-10 text-sm text-gray-500 italic">
+    <motion.div
+      className="text-center ml-10 text-sm text-muted-foreground"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       {action}
-    </div>
+    </motion.div>
   );
 }
 
