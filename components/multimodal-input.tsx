@@ -45,7 +45,6 @@ interface PureMultimodalInputProps {
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
   messages: Array<Message>;
   setMessages: Dispatch<SetStateAction<Array<Message>>>;
-  setSearchWeb: Dispatch<SetStateAction<boolean>>;
   append: (
     message: Message | CreateMessage,
     chatRequestOptions?: ChatRequestOptions,
@@ -76,12 +75,12 @@ function PureMultimodalInput({
   append,
   handleSubmit,
   className,
-  setSearchWeb,
 }: PureMultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
   const viewConfig = useViewConfig();
   const { chatConfig, adminChatConfig } = useChatSettingsContext();
+  const [searchWeb, setSearchWeb] = useState(false);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -139,6 +138,7 @@ function PureMultimodalInput({
 
     handleSubmit(undefined, {
       experimental_attachments: attachments,
+      body: { enableWebSearch: searchWeb },
     });
 
     setAttachments([]);
@@ -150,12 +150,13 @@ function PureMultimodalInput({
     }
   }, [
     viewConfig.isIframe,
-    chatId,
     handleSubmit,
     attachments,
+    searchWeb,
     setAttachments,
     setLocalStorageInput,
     width,
+    chatId,
   ]);
 
   const uploadFile = async (file: File) => {

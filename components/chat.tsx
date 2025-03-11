@@ -30,8 +30,6 @@ export function Chat({
   isReadonly: boolean;
 }) {
   const { mutate } = useSWRConfig();
-  const [searchWeb, setSearchWeb] = useState(false);
-
   const viewConfig = useViewConfig();
   const { chatConfig, endpointConfig } = useChatSettingsContext();
   const voteUrl = viewConfig.isIframe ? null : `/api/vote?chatId=${id}`;
@@ -52,7 +50,7 @@ export function Chat({
     reload,
   } = useChat({
     id,
-    body: { id, enableWebSearch: searchWeb },
+    body: { id },
     api: endpointConfig.endpoint,
     headers: {
       ...(endpointConfig.subscriptionKey
@@ -108,7 +106,6 @@ export function Chat({
               messages={messages}
               setMessages={setMessages}
               append={append}
-              setSearchWeb={setSearchWeb}
             />
           )}
         </form>
