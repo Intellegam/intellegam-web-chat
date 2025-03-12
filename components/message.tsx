@@ -13,7 +13,7 @@ import equal from 'fast-deep-equal';
 import AssistantAvatar from './assistant-avatar';
 import { DocumentToolCall, DocumentToolResult } from './document';
 import { DocumentPreview } from './document-preview';
-import { PencilEditIcon } from './icons';
+import { LoaderIcon, PencilEditIcon } from './icons';
 import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
 import { MessageEditor } from './message-editor';
@@ -258,8 +258,10 @@ export const ThinkingMessage = ({ chatLogo }: { chatLogo?: string }) => {
       >
         <AssistantAvatar chatLogo={chatLogo} />
 
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 text-muted-foreground">...</div>
+        <div className="flex flex-col justify-center gap-2">
+          <div className="animate-spin">
+            <LoaderIcon />
+          </div>
         </div>
       </div>
     </motion.div>
