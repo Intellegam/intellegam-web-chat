@@ -3,7 +3,7 @@
 import type { ChatRequestOptions, Message } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
-import { memo, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 
 import type { Vote } from '@/lib/db/schema';
 
@@ -46,6 +46,7 @@ const PurePreviewMessage = ({
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const { chatConfig, adminChatConfig } = useChatSettingsContext();
+  const messageRef = useRef<HTMLDivElement>(null);
 
   return (
     <AnimatePresence>
@@ -111,6 +112,7 @@ const PurePreviewMessage = ({
                     'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
                       message.role === 'user',
                   })}
+                  ref={messageRef}
                 >
                   <Markdown>{message.content as string}</Markdown>
                 </div>
@@ -205,6 +207,7 @@ const PurePreviewMessage = ({
             {!isReadonly && (
               <MessageActions
                 key={`action-${message.id}`}
+                messageRef={messageRef}
                 chatId={chatId}
                 message={message}
                 vote={vote}
