@@ -48,6 +48,7 @@ function PureMessages({
     [messageId: string]: string[];
   }>({});
 
+  //TODO: this definitely needs a refactor and proper parsing of the data
   useEffect(() => {
     if (data && data?.length > 0) {
       const actions = data
@@ -72,10 +73,14 @@ function PureMessages({
             [lastUserMessage.id]: actions,
           }));
         }
+        // reset Data
         setData([
           ...data.filter(
             (item) =>
-              item !== null && typeof item === 'object' && !('action' in item),
+              (item !== null &&
+                typeof item === 'object' &&
+                !('action' in item)) ||
+              typeof item !== 'object',
           ),
         ]);
       }
