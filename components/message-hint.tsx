@@ -10,11 +10,14 @@ export default function MessageDisclaimer() {
   }
 
   return (
-    <div className="flex align-center justify-between bg-slate-500 rounded-t-md w-[90%] sm:w-[95%] px-2 py-1 m-auto">
-      <div className="text-sm">
-        Tip: Shorter chats help the assistant to focus.
-      </div>
-      <Button variant="ghost" onClick={handleNewChat}>
+    <div className="flex justify-between items-center bg-neutral-200 dark:bg-neutral-900  border border-b-0 border-input dark:border-zinc-700  rounded-t-md w-[90%] sm:w-[96%] px-2 py-1 m-auto">
+      <p className="text-xs">Tip: Shorter chats help the assistant to focus.</p>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-xs"
+        onClick={handleNewChat}
+      >
         New Chat
       </Button>
     </div>
