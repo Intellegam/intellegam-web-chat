@@ -17,7 +17,7 @@ import { Artifact } from './artifact';
 import { Messages } from './messages';
 import { MultimodalInput } from './multimodal-input';
 import type { VisibilityType } from './visibility-selector';
-import MessageDisclaimer from './message-hint';
+import ChatHint from './chat-hint';
 
 export function Chat({
   id,
@@ -96,7 +96,11 @@ export function Chat({
         />
 
         <form className="flex flex-col mx-auto px-4 pb-4 md:pb-6 w-full md:max-w-4xl">
-          <MessageDisclaimer />
+          <ChatHint
+            assistantMessageCount={
+              messages.filter((m) => m.role === 'assistant').length
+            }
+          />
 
           {!isReadonly && (
             <MultimodalInput
