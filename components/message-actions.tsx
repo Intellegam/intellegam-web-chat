@@ -1,10 +1,13 @@
-import type { Message } from 'ai';
+import type { ChatRequestOptions, Message } from 'ai';
 import { toast } from 'sonner';
 import { useSWRConfig } from 'swr';
 import { useCopyToClipboard } from 'usehooks-ts';
 
 import type { Vote } from '@/lib/db/schema';
 
+import equal from 'fast-deep-equal';
+import { RefreshCw } from 'lucide-react';
+import { memo } from 'react';
 import { CopyIcon, ThumbDownIcon, ThumbUpIcon } from './icons';
 import { Button } from './ui/button';
 import {
@@ -13,21 +16,27 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from './ui/tooltip';
-import { memo } from 'react';
-import equal from 'fast-deep-equal';
 
 export function PureMessageActions({
   chatId,
   message,
+  setMessages,
   vote,
   isLoading,
-  enableFeedback
+  enableFeedback,
+  reload,
 }: {
   chatId: string;
   message: Message;
+  setMessages: (
+    messages: Message[] | ((messages: Message[]) => Message[]),
+  ) => void;
   vote: Vote | undefined;
   isLoading: boolean;
   enableFeedback: boolean;
+  reload: (
+    chatRequestOptions?: ChatRequestOptions,
+  ) => Promise<string | null | undefined>;
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
@@ -56,113 +65,141 @@ export function PureMessageActions({
           <TooltipContent>Copy</TooltipContent>
         </Tooltip>
 
-        {enableFeedback &&
-        <>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
-              disabled={vote?.isUpvoted}
+              className="py-1 px-2 h-fit text-muted-foreground"
               variant="outline"
-              onClick={async () => {
-                const upvote = fetch('/api/vote', {
-                  method: 'PATCH',
-                  body: JSON.stringify({
-                    chatId,
-                    messageId: message.id,
-                    type: 'up',
-                  }),
+              onClick={() => {
+                //TODO: this will be needed for message persistance
+                //     await deleteTrailingMessages({
+                //   id: message.id,
+                // });
+
+                setMessages((messages) => {
+                  const index = messages.findIndex((m) => m.id === message.id);
+                  if (index !== -1) {
+                    return [...messages.slice(0, index)];
+                  }
+                  return messages;
                 });
 
-                toast.promise(upvote, {
-                  loading: 'Upvoting Response...',
-                  success: () => {
-                    mutate<Array<Vote>>(
-                      `/api/vote?chatId=${chatId}`,
-                      (currentVotes) => {
-                        if (!currentVotes) return [];
-
-                        const votesWithoutCurrent = currentVotes.filter(
-                          (vote) => vote.messageId !== message.id,
-                        );
-
-                        return [
-                          ...votesWithoutCurrent,
-                          {
-                            chatId,
-                            messageId: message.id,
-                            isUpvoted: true,
-                          },
-                        ];
-                      },
-                      { revalidate: false },
-                    );
-
-                    return 'Upvoted Response!';
-                  },
-                  error: 'Failed to upvote response.',
-                });
+                reload();
               }}
             >
-              <ThumbUpIcon />
+              <RefreshCw />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Upvote Response</TooltipContent>
+          <TooltipContent>Retry</TooltipContent>
         </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
-              variant="outline"
-              disabled={vote && !vote.isUpvoted}
-              onClick={async () => {
-                const downvote = fetch('/api/vote', {
-                  method: 'PATCH',
-                  body: JSON.stringify({
-                    chatId,
-                    messageId: message.id,
-                    type: 'down',
-                  }),
-                });
+        {enableFeedback && (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
+                  disabled={vote?.isUpvoted}
+                  variant="outline"
+                  onClick={async () => {
+                    const upvote = fetch('/api/vote', {
+                      method: 'PATCH',
+                      body: JSON.stringify({
+                        chatId,
+                        messageId: message.id,
+                        type: 'up',
+                      }),
+                    });
 
-                toast.promise(downvote, {
-                  loading: 'Downvoting Response...',
-                  success: () => {
-                    mutate<Array<Vote>>(
-                      `/api/vote?chatId=${chatId}`,
-                      (currentVotes) => {
-                        if (!currentVotes) return [];
+                    toast.promise(upvote, {
+                      loading: 'Upvoting Response...',
+                      success: () => {
+                        mutate<Array<Vote>>(
+                          `/api/vote?chatId=${chatId}`,
+                          (currentVotes) => {
+                            if (!currentVotes) return [];
 
-                        const votesWithoutCurrent = currentVotes.filter(
-                          (vote) => vote.messageId !== message.id,
+                            const votesWithoutCurrent = currentVotes.filter(
+                              (vote) => vote.messageId !== message.id,
+                            );
+
+                            return [
+                              ...votesWithoutCurrent,
+                              {
+                                chatId,
+                                messageId: message.id,
+                                isUpvoted: true,
+                              },
+                            ];
+                          },
+                          { revalidate: false },
                         );
 
-                        return [
-                          ...votesWithoutCurrent,
-                          {
-                            chatId,
-                            messageId: message.id,
-                            isUpvoted: false,
-                          },
-                        ];
+                        return 'Upvoted Response!';
                       },
-                      { revalidate: false },
-                    );
+                      error: 'Failed to upvote response.',
+                    });
+                  }}
+                >
+                  <ThumbUpIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Upvote Response</TooltipContent>
+            </Tooltip>
 
-                    return 'Downvoted Response!';
-                  },
-                  error: 'Failed to downvote response.',
-                });
-              }}
-            >
-              <ThumbDownIcon />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Downvote Response</TooltipContent>
-        </Tooltip>
-        </>
-        }
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
+                  variant="outline"
+                  disabled={vote && !vote.isUpvoted}
+                  onClick={async () => {
+                    const downvote = fetch('/api/vote', {
+                      method: 'PATCH',
+                      body: JSON.stringify({
+                        chatId,
+                        messageId: message.id,
+                        type: 'down',
+                      }),
+                    });
+
+                    toast.promise(downvote, {
+                      loading: 'Downvoting Response...',
+                      success: () => {
+                        mutate<Array<Vote>>(
+                          `/api/vote?chatId=${chatId}`,
+                          (currentVotes) => {
+                            if (!currentVotes) return [];
+
+                            const votesWithoutCurrent = currentVotes.filter(
+                              (vote) => vote.messageId !== message.id,
+                            );
+
+                            return [
+                              ...votesWithoutCurrent,
+                              {
+                                chatId,
+                                messageId: message.id,
+                                isUpvoted: false,
+                              },
+                            ];
+                          },
+                          { revalidate: false },
+                        );
+
+                        return 'Downvoted Response!';
+                      },
+                      error: 'Failed to downvote response.',
+                    });
+                  }}
+                >
+                  <ThumbDownIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Downvote Response</TooltipContent>
+            </Tooltip>
+          </>
+        )}
       </div>
     </TooltipProvider>
   );
