@@ -1,10 +1,11 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Button } from './ui/button';
-import type { ChatRequestOptions, CreateMessage, Message } from 'ai';
-import { memo } from 'react';
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
+import type { ChatRequestOptions, CreateMessage, Message } from 'ai';
+import { motion } from 'framer-motion';
+import { memo } from 'react';
+import { Button } from './ui/button';
+import { useViewConfig } from '@/contexts/view-config-context';
 
 interface SuggestedActionsProps {
   chatId: string;
@@ -12,13 +13,27 @@ interface SuggestedActionsProps {
     message: Message | CreateMessage,
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
+  showStartPrompts: boolean;
+  showFollowUpPrompts: boolean;
 }
 
-function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
+function PureSuggestedActions({
+  chatId,
+  append,
+  showStartPrompts,
+  showFollowUpPrompts,
+}: SuggestedActionsProps) {
+  const { chatConfig, adminChatConfig } = useChatSettingsContext();
+  const viewConfig = useViewConfig();
   let suggestedActions: { title: string; label: string; action: string }[] = [];
-  const { chatConfig } = useChatSettingsContext();
-  if (chatConfig.startPrompts) {
+
+  if (showStartPrompts) {
     suggestedActions = chatConfig.startPrompts
+      .sort((a, b) => b.length - a.length)
+      .map((p) => ({ title: p, label: p, action: p }));
+  }
+  if (showFollowUpPrompts) {
+    suggestedActions = adminChatConfig.followUpPrompts
       .sort((a, b) => b.length - a.length)
       .map((p) => ({ title: p, label: p, action: p }));
   }
@@ -37,8 +52,9 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
           <Button
             variant="ghost"
             onClick={async () => {
-              //TODO: check for iframe here
-              // window.history.replaceState({}, '', `/chat/${chatId}`);
+              if (!viewConfig.isIframe) {
+                window.history.replaceState({}, '', `/chat/${chatId}`);
+              }
 
               append({
                 role: 'user',
