@@ -1,25 +1,19 @@
-import type { ChatRequestOptions, JSONValue, Message } from 'ai';
-import { PreviewMessage, ThinkingMessage } from './message';
-import { useScrollToBottom } from './use-scroll-to-bottom';
-import { Overview } from './overview';
-import React, { memo, useEffect, useState } from 'react';
-import type { Vote } from '@/lib/db/schema';
-import equal from 'fast-deep-equal';
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
+import type { Vote } from '@/lib/db/schema';
+import type { ActionItem } from '@/lib/types/custom-data';
+import type { ChatRequestOptions, JSONValue, Message } from 'ai';
+import equal from 'fast-deep-equal';
+import React, { memo, useEffect, useState } from 'react';
 import BackendActions from './backend-actions';
+import { PreviewMessage, ThinkingMessage } from './message';
+import { Overview } from './overview';
+import { useScrollToBottom } from './use-scroll-to-bottom';
 
 interface MessagesProps {
   chatId: string;
   isLoading: boolean;
   votes: Array<Vote> | undefined;
   messages: Array<Message>;
-  data?: Array<JSONValue>;
-  setData: (
-    data:
-      | JSONValue[]
-      | undefined
-      | ((data: JSONValue[] | undefined) => JSONValue[] | undefined),
-  ) => void;
   setMessages: (
     messages: Message[] | ((messages: Message[]) => Message[]),
   ) => void;
@@ -35,8 +29,6 @@ function PureMessages({
   isLoading,
   votes,
   messages,
-  data,
-  setData,
   setMessages,
   reload,
   isReadonly,
@@ -48,44 +40,30 @@ function PureMessages({
     [messageId: string]: string[];
   }>({});
 
-  //TODO: this definitely needs a refactor and proper parsing of the data
-  useEffect(() => {
-    if (data && data?.length > 0) {
-      const actions = data
-        .filter(
-          (item): item is { action: string } =>
-            item !== null &&
-            typeof item === 'object' &&
-            'action' in item &&
-            typeof item.action === 'string',
-        )
-        .map((item) => item.action);
-
-      if (actions.length > 0) {
-        // Find the last user message ID
-        const lastUserMessage = [...messages]
-          .reverse()
-          .find((msg) => msg.role === 'user');
-
-        if (lastUserMessage?.id) {
-          setBackendActions((prev) => ({
-            ...prev,
-            [lastUserMessage.id]: actions,
-          }));
-        }
-        // reset Data
-        setData([
-          ...data.filter(
-            (item) =>
-              (item !== null &&
-                typeof item === 'object' &&
-                !('action' in item)) ||
-              typeof item !== 'object',
-          ),
-        ]);
-      }
+  function safelyParseBackendAction(data: JSONValue): ActionItem | null {
+    // Check if it's an object (not null, array, or primitive)
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      return null;
     }
-  }, [data, isLoading, messages, setData]);
+
+    // Try to destructure the action property
+    const { action } = data;
+
+    // Validate the action property is a string
+    if (typeof action !== 'string') {
+      return null;
+    }
+
+    // Return the destructured and validated action
+    return { action };
+  }
+  useEffect(() => {
+    console.log(
+      messages.forEach((m) =>
+        console.log(m.annotations?.map((a) => safelyParseBackendAction(a))),
+      ),
+    );
+  });
 
   return (
     <div
@@ -98,6 +76,14 @@ function PureMessages({
 
       {messages.map((message, index) => (
         <React.Fragment key={message.id}>
+          {message.annotations && (
+            <BackendActions
+              actions={message.annotations
+                .map((a) => safelyParseBackendAction(a))
+                .filter((a) => a !== null)}
+              messageId={message.id}
+            />
+          )}
           <PreviewMessage
             key={message.id}
             chatId={chatId}
@@ -112,12 +98,6 @@ function PureMessages({
             reload={reload}
             isReadonly={isReadonly}
           />
-          {message.role === 'user' && backendActions[message.id] && (
-            <BackendActions
-              actions={backendActions[message.id]}
-              messageId={message.id}
-            />
-          )}
         </React.Fragment>
       ))}
 

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
+import type { ActionItem } from '@/lib/types/custom-data';
 
-function BackendAction({ action }: { action: string }) {
+function BackendAction({ action }: { action: ActionItem }) {
   return (
     <motion.div
       className="text-center ml-10 text-sm text-muted-foreground"
@@ -8,7 +9,7 @@ function BackendAction({ action }: { action: string }) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {action}
+      {action.action}
     </motion.div>
   );
 }
@@ -16,7 +17,7 @@ function BackendAction({ action }: { action: string }) {
 export default function BackendActions({
   actions,
   messageId,
-}: { actions: string[]; messageId: string }) {
+}: { actions: ActionItem[]; messageId: string }) {
   return (
     <>
       {actions.map((action, actionIndex) => (
