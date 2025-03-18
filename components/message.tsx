@@ -22,6 +22,7 @@ import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Weather } from './weather';
+import BackendActions from './backend-actions';
 
 const PurePreviewMessage = ({
   chatId,
@@ -84,6 +85,13 @@ const PurePreviewMessage = ({
               <MessageReasoning
                 isLoading={isLoading}
                 reasoning={message.reasoning}
+              />
+            )}
+
+            {message.annotations && (
+              <BackendActions
+                annotations={message.annotations}
+                messageId={message.id}
               />
             )}
 
@@ -226,6 +234,8 @@ export const PreviewMessage = memo(
     if (prevProps.message.reasoning !== nextProps.message.reasoning)
       return false;
     if (prevProps.message.content !== nextProps.message.content) return false;
+    if (prevProps.message.annotations !== nextProps.message.annotations)
+      return false;
     if (
       !equal(
         prevProps.message.toolInvocations,

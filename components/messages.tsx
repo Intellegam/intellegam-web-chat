@@ -1,10 +1,8 @@
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import type { Vote } from '@/lib/db/schema';
-import type { ActionItem } from '@/lib/types/custom-data';
-import type { ChatRequestOptions, JSONValue, Message } from 'ai';
+import type { ChatRequestOptions, Message } from 'ai';
 import equal from 'fast-deep-equal';
-import React, { memo, useEffect, useState } from 'react';
-import BackendActions from './backend-actions';
+import React, { memo } from 'react';
 import { PreviewMessage, ThinkingMessage } from './message';
 import { Overview } from './overview';
 import { useScrollToBottom } from './use-scroll-to-bottom';
@@ -36,34 +34,6 @@ function PureMessages({
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
   const { chatConfig } = useChatSettingsContext();
-  const [backendActions, setBackendActions] = useState<{
-    [messageId: string]: string[];
-  }>({});
-
-  function safelyParseBackendAction(data: JSONValue): ActionItem | null {
-    // Check if it's an object (not null, array, or primitive)
-    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-      return null;
-    }
-
-    // Try to destructure the action property
-    const { action } = data;
-
-    // Validate the action property is a string
-    if (typeof action !== 'string') {
-      return null;
-    }
-
-    // Return the destructured and validated action
-    return { action };
-  }
-  useEffect(() => {
-    console.log(
-      messages.forEach((m) =>
-        console.log(m.annotations?.map((a) => safelyParseBackendAction(a))),
-      ),
-    );
-  });
 
   return (
     <div
@@ -75,30 +45,20 @@ function PureMessages({
       )}
 
       {messages.map((message, index) => (
-        <React.Fragment key={message.id}>
-          {message.annotations && (
-            <BackendActions
-              actions={message.annotations
-                .map((a) => safelyParseBackendAction(a))
-                .filter((a) => a !== null)}
-              messageId={message.id}
-            />
-          )}
-          <PreviewMessage
-            key={message.id}
-            chatId={chatId}
-            message={message}
-            isLoading={isLoading && messages.length - 1 === index}
-            vote={
-              votes
-                ? votes.find((vote) => vote.messageId === message.id)
-                : undefined
-            }
-            setMessages={setMessages}
-            reload={reload}
-            isReadonly={isReadonly}
-          />
-        </React.Fragment>
+        <PreviewMessage
+          key={message.id}
+          chatId={chatId}
+          message={message}
+          isLoading={isLoading && messages.length - 1 === index}
+          vote={
+            votes
+              ? votes.find((vote) => vote.messageId === message.id)
+              : undefined
+          }
+          setMessages={setMessages}
+          reload={reload}
+          isReadonly={isReadonly}
+        />
       ))}
 
       {isLoading &&
