@@ -33,6 +33,7 @@ import { PreviewAttachment } from './preview-attachment';
 import { SuggestedActions } from './suggested-actions';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
+import WebToggleButton from './web-toggle-button';
 
 interface PureMultimodalInputProps {
   chatId: string;
@@ -42,7 +43,6 @@ interface PureMultimodalInputProps {
   stop: () => void;
   attachments: Array<Attachment>;
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
-
   messages: Array<Message>;
   setMessages: Dispatch<SetStateAction<Array<Message>>>;
   append: (
@@ -80,6 +80,7 @@ function PureMultimodalInput({
   const { width } = useWindowSize();
   const viewConfig = useViewConfig();
   const { chatConfig, adminChatConfig } = useChatSettingsContext();
+  const [searchWeb, setSearchWeb] = useState(false);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -137,6 +138,7 @@ function PureMultimodalInput({
 
     handleSubmit(undefined, {
       experimental_attachments: attachments,
+      body: { enableWebSearch: searchWeb },
     });
 
     setAttachments([]);
@@ -148,12 +150,13 @@ function PureMultimodalInput({
     }
   }, [
     viewConfig.isIframe,
-    chatId,
     handleSubmit,
     attachments,
+    searchWeb,
     setAttachments,
     setLocalStorageInput,
     width,
+    chatId,
   ]);
 
   const uploadFile = async (file: File) => {
@@ -296,14 +299,19 @@ function PureMultimodalInput({
         }}
       />
 
-      {adminChatConfig.showFileUpload && (
-        <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-          <AttachmentsButton
-            fileInputRef={fileInputRef}
-            isLoading={isLoading}
-          />
+      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+        <div className="flex gap-x-2 items-center">
+          {adminChatConfig.showFileUpload && (
+            <AttachmentsButton
+              fileInputRef={fileInputRef}
+              isLoading={isLoading}
+            />
+          )}
+          {adminChatConfig.showWebSearch && (
+            <WebToggleButton setSearchWeb={setSearchWeb} />
+          )}
         </div>
-      )}
+      </div>
 
       <div className="absolute bottom-0 p-2 left-1/2 -translate-x-1/2 sm:translate-y-1">
         <PoweredBy poweredByName={adminChatConfig.poweredBy} />
