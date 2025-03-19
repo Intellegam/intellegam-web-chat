@@ -25,16 +25,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { sanitizeUIMessages } from '@/lib/utils';
 
-import {
-  ArrowUpIcon,
-  StopIcon,
-  SummarizeIcon,
-} from './icons';
+import { ArrowUpIcon, StopIcon, SummarizeIcon } from './icons';
 import { artifactDefinitions, type ArtifactKind } from './artifact';
 import type { ArtifactToolbarItem } from './create-artifact';
-import type { UseChatHelpers } from 'ai/react';
+import type { UseChatHelpers } from '@ai-sdk/react';
 
 type ToolProps = {
   description: string;
@@ -131,7 +126,7 @@ const Tool = ({
       <TooltipContent
         side="left"
         sideOffset={16}
-        className="bg-foreground text-background rounded-2xl p-3 px-4"
+        className="bg-foreground p-3 px-4 rounded-2xl text-background"
       >
         {description}
       </TooltipContent>
@@ -184,13 +179,13 @@ const ReadingLevelSelector = ({
       {randomArr.map((id) => (
         <motion.div
           key={id}
-          className="size-[40px] flex flex-row items-center justify-center"
+          className="flex flex-row justify-center items-center size-[40px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <div className="size-2 rounded-full bg-muted-foreground/40" />
+          <div className="bg-muted-foreground/40 rounded-full size-2" />
         </motion.div>
       ))}
 
@@ -240,7 +235,7 @@ const ReadingLevelSelector = ({
           <TooltipContent
             side="left"
             sideOffset={16}
-            className="bg-foreground text-background text-sm rounded-2xl p-3 px-4"
+            className="bg-foreground p-3 px-4 rounded-2xl text-background text-sm"
           >
             {LEVELS[currentLevel]}
           </TooltipContent>
@@ -314,19 +309,16 @@ const PureToolbar = ({
   isToolbarVisible,
   setIsToolbarVisible,
   append,
-  isLoading,
+  status,
   stop,
   setMessages,
   artifactKind,
 }: {
   isToolbarVisible: boolean;
   setIsToolbarVisible: Dispatch<SetStateAction<boolean>>;
-  isLoading: boolean;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
-  stop: () => void;
+  status: UseChatHelpers['status'];
+  append: UseChatHelpers['append'];
+  stop: UseChatHelpers['stop'];
   setMessages: Dispatch<SetStateAction<Message[]>>;
   artifactKind: ArtifactKind;
 }) => {
@@ -367,10 +359,10 @@ const PureToolbar = ({
   }, []);
 
   useEffect(() => {
-    if (isLoading) {
+    if (status === 'streaming') {
       setIsToolbarVisible(false);
     }
-  }, [isLoading, setIsToolbarVisible]);
+  }, [status, setIsToolbarVisible]);
 
   const artifactDefinition = artifactDefinitions.find(
     (definition) => definition.kind === artifactKind,
@@ -389,7 +381,7 @@ const PureToolbar = ({
   return (
     <TooltipProvider delayDuration={0}>
       <motion.div
-        className="cursor-pointer absolute right-6 bottom-6 p-1.5 border rounded-full shadow-lg bg-background flex flex-col justify-end"
+        className="right-6 bottom-6 absolute flex flex-col justify-end bg-background shadow-lg p-1.5 border rounded-full cursor-pointer"
         initial={{ opacity: 0, y: -20, scale: 1 }}
         animate={
           isToolbarVisible
@@ -413,13 +405,13 @@ const PureToolbar = ({
         exit={{ opacity: 0, y: -20, transition: { duration: 0.1 } }}
         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
         onHoverStart={() => {
-          if (isLoading) return;
+          if (status === 'streaming') return;
 
           cancelCloseTimer();
           setIsToolbarVisible(true);
         }}
         onHoverEnd={() => {
-          if (isLoading) return;
+          if (status === 'streaming') return;
 
           startCloseTimer();
         }}
@@ -431,7 +423,7 @@ const PureToolbar = ({
         }}
         ref={toolbarRef}
       >
-        {isLoading ? (
+        {status === 'streaming' ? (
           <motion.div
             key="stop-icon"
             initial={{ scale: 1 }}
@@ -440,7 +432,7 @@ const PureToolbar = ({
             className="p-3"
             onClick={() => {
               stop();
-              setMessages((messages) => sanitizeUIMessages(messages));
+              setMessages((messages) => messages);
             }}
           >
             <StopIcon />
@@ -470,7 +462,7 @@ const PureToolbar = ({
 };
 
 export const Toolbar = memo(PureToolbar, (prevProps, nextProps) => {
-  if (prevProps.isLoading !== nextProps.isLoading) return false;
+  if (prevProps.status !== nextProps.status) return false;
   if (prevProps.isToolbarVisible !== nextProps.isToolbarVisible) return false;
   if (prevProps.artifactKind !== nextProps.artifactKind) return false;
 

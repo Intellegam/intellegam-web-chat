@@ -24,7 +24,10 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   }
 
   return (
-    <div className="flex w-full flex-row flex-wrap gap-1">
+    <div
+      data-testid="suggested-actions"
+      className="flex flex-row flex-wrap gap-1 w-full"
+    >
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -45,9 +48,9 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
                 content: suggestedAction.action,
               });
             }}
-            className="h-auto w-full flex-1 items-start justify-start gap-1 rounded-xl border px-3 py-2 text-left text-sm sm:flex-col"
+            className="sm:flex-col flex-1 justify-start items-start gap-1 px-3 py-2 border rounded-xl w-full h-auto text-sm text-left"
           >
-            <span className="text-wrap font-medium text-muted-foreground text-xs md:text-sm">
+            <span className="font-medium text-muted-foreground text-xs md:text-sm text-wrap">
               {suggestedAction.title}
             </span>
             {/* <span className="text-muted-foreground">

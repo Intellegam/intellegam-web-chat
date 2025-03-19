@@ -1,10 +1,14 @@
+import { deleteTrailingMessages } from '@/app/(chat)/actions';
+import { useViewConfig } from '@/contexts/view-config-context';
+import type { Vote } from '@/lib/db/schema';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import type { Message } from 'ai';
+import equal from 'fast-deep-equal';
+import { RefreshCw } from 'lucide-react';
+import { memo, type RefObject } from 'react';
 import { toast } from 'sonner';
 import { useSWRConfig } from 'swr';
 import { useCopyToClipboard } from 'usehooks-ts';
-
-import type { Vote } from '@/lib/db/schema';
-
 import { CopyIcon, ThumbDownIcon, ThumbUpIcon } from './icons';
 import { Button } from './ui/button';
 import {
@@ -13,31 +17,33 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from './ui/tooltip';
-import { memo, type RefObject } from 'react';
-import equal from 'fast-deep-equal';
 
 export function PureMessageActions({
   chatId,
   message,
+  setMessages,
   vote,
   isLoading,
   enableFeedback,
+  reload,
   messageRef,
 }: {
   chatId: string;
   message: Message;
+  setMessages: UseChatHelpers['setMessages'];
   vote: Vote | undefined;
   isLoading: boolean;
   enableFeedback: boolean;
+  reload: UseChatHelpers['reload'];
   messageRef: RefObject<HTMLDivElement>;
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
+  const viewConfig = useViewConfig();
 
   if (isLoading) return null;
   if (message.role === 'user') return null;
-  // if (message.toolInvocations && message.toolInvocations.length > 0)
-  //   return null;
+
   async function richCopyToClipboard(
     messageHtml: string,
     messageContent: string,
@@ -59,10 +65,20 @@ export function PureMessageActions({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              className="py-1 px-2 h-fit text-muted-foreground"
+              className="px-2 py-1 h-fit text-muted-foreground"
               variant="outline"
               onClick={async () => {
-                const textContent = message.content as string;
+                const textContent = message.parts
+                  ?.filter((part) => part.type === 'text')
+                  .map((part) => part.text)
+                  .join('\n')
+                  .trim();
+
+                if (!textContent) {
+                  toast.error("There's no text to copy!");
+                  return;
+                }
+
                 if (messageRef.current) {
                   try {
                     const htmlContent = messageRef.current.innerHTML;
@@ -83,12 +99,42 @@ export function PureMessageActions({
           <TooltipContent>Copy</TooltipContent>
         </Tooltip>
 
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              className="px-2 py-1 h-fit text-muted-foreground"
+              variant="outline"
+              onClick={async () => {
+                if (!viewConfig.isIframe) {
+                  await deleteTrailingMessages({
+                    id: message.id,
+                  });
+                }
+
+                setMessages((messages) => {
+                  const index = messages.findIndex((m) => m.id === message.id);
+                  if (index !== -1) {
+                    return [...messages.slice(0, index)];
+                  }
+                  return messages;
+                });
+
+                reload();
+              }}
+            >
+              <RefreshCw />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Retry</TooltipContent>
+        </Tooltip>
+
         {enableFeedback && (
           <>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
+                  data-testid="message-upvote"
+                  className="px-2 py-1 h-fit text-muted-foreground !pointer-events-auto"
                   disabled={vote?.isUpvoted}
                   variant="outline"
                   onClick={async () => {
@@ -140,7 +186,8 @@ export function PureMessageActions({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  className="py-1 px-2 h-fit text-muted-foreground !pointer-events-auto"
+                  data-testid="message-downvote"
+                  className="px-2 py-1 h-fit text-muted-foreground !pointer-events-auto"
                   variant="outline"
                   disabled={vote && !vote.isUpvoted}
                   onClick={async () => {
