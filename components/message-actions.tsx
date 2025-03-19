@@ -16,6 +16,7 @@ import {
 } from './ui/tooltip';
 import { deleteTrailingMessages } from '@/app/(chat)/actions';
 import { useViewConfig } from '@/contexts/view-config-context';
+import type { UseChatHelpers } from '@ai-sdk/react';
 
 export function PureMessageActions({
   chatId,
@@ -28,15 +29,11 @@ export function PureMessageActions({
 }: {
   chatId: string;
   message: Message;
-  setMessages: (
-    messages: Message[] | ((messages: Message[]) => Message[]),
-  ) => void;
+  setMessages: UseChatHelpers['setMessages'];
   vote: Vote | undefined;
   isLoading: boolean;
   enableFeedback: boolean;
-  reload: (
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
+  reload: UseChatHelpers['reload'];
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
