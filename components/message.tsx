@@ -217,9 +217,11 @@ const PurePreviewMessage = ({
                 key={`action-${message.id}`}
                 chatId={chatId}
                 message={message}
+                setMessages={setMessages}
                 vote={vote}
                 isLoading={isLoading}
                 enableFeedback={adminChatConfig.enableFeedback}
+                reload={reload}
               />
             )}
           </div>
