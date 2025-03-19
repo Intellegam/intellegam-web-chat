@@ -14,6 +14,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from './ui/tooltip';
+import { deleteTrailingMessages } from '@/app/(chat)/actions';
+import { useViewConfig } from '@/contexts/view-config-context';
 
 export function PureMessageActions({
   chatId,
@@ -38,6 +40,7 @@ export function PureMessageActions({
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
+  const viewConfig = useViewConfig();
 
   if (isLoading) return null;
   if (message.role === 'user') return null;
@@ -77,11 +80,12 @@ export function PureMessageActions({
             <Button
               className="px-2 py-1 h-fit text-muted-foreground"
               variant="outline"
-              onClick={() => {
-                //TODO: this will be needed for message persistance
-                //     await deleteTrailingMessages({
-                //   id: message.id,
-                // });
+              onClick={async () => {
+                if (!viewConfig.isIframe) {
+                  await deleteTrailingMessages({
+                    id: message.id,
+                  });
+                }
 
                 setMessages((messages) => {
                   const index = messages.findIndex((m) => m.id === message.id);
