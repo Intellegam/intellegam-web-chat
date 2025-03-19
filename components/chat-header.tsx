@@ -31,7 +31,7 @@ function PureChatHeader({
   const { chatConfig } = useChatSettingsContext();
 
   return (
-    <header className="flex sticky top-0 py-1.5 items-center px-2 md:px-2 gap-2">
+    <header className="top-0 sticky flex items-center gap-2 px-2 md:px-2 py-1.5">
       {viewConfig.showSidebar && <SidebarToggle />}
 
       {(!open || windowWidth < 768) && (
@@ -39,7 +39,7 @@ function PureChatHeader({
           <TooltipTrigger asChild>
             <Button
               variant="outline"
-              className="order-2 md:order-1 px-2 md:h-fit ml-auto"
+              className="order-2 md:order-1 ml-auto px-2 md:h-fit"
               onClick={() => {
                 if (!viewConfig.isIframe) {
                   router.push('/');
@@ -62,15 +62,15 @@ function PureChatHeader({
           className="order-1 md:order-2"
         />
       )}
-      <div className="flex absolute right-1/2 translate-x-1/2 items-center justify-between gap-x-3">
+      <div className="right-1/2 absolute flex justify-between items-center gap-x-3 translate-x-1/2">
         <Image
           width={0}
           height={0}
           src={chatConfig.titleLogo || '/images/intellegam_logo_light.svg'}
           alt="title logo"
-          className="h-9 w-auto"
+          className="w-auto h-9"
         />
-        <div className="text-lg font-semibold hidden sm:block">
+        <div className="hidden sm:block font-semibold text-lg">
           {chatConfig.title}
         </div>
       </div>
