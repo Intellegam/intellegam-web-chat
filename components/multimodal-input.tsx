@@ -234,20 +234,21 @@ function PureMultimodalInput({
   );
 
   return (
-    <div className="relative w-full flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4 w-full">
       {(showStartPrompts || showFollowUpPrompts) &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
           <SuggestedActions
             append={append}
             chatId={chatId}
+            searchWeb={searchWeb}
             showStartPrompts={showStartPrompts}
             showFollowUpPrompts={showFollowUpPrompts}
           />
         )}
       <input
         type="file"
-        className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
+        className="-top-4 -left-4 fixed opacity-0 size-0.5 pointer-events-none"
         ref={fileInputRef}
         multiple
         onChange={handleFileChange}
@@ -256,7 +257,7 @@ function PureMultimodalInput({
       />
 
       {(attachments.length > 0 || uploadQueue.length > 0) && (
-        <div className="flex flex-row gap-2 overflow-x-scroll items-end">
+        <div className="flex flex-row items-end gap-2 overflow-x-scroll">
           {attachments.map((attachment) => (
             <PreviewAttachment
               key={attachment.url}
@@ -307,8 +308,8 @@ function PureMultimodalInput({
         }}
       />
 
-      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <div className="flex gap-x-2 items-center">
+      <div className="bottom-0 absolute flex flex-row justify-start p-2 w-fit">
+        <div className="flex items-center gap-x-2">
           {adminChatConfig.showFileUpload && (
             <AttachmentsButton
               fileInputRef={fileInputRef}
@@ -321,11 +322,11 @@ function PureMultimodalInput({
         </div>
       </div>
 
-      <div className="absolute bottom-0 p-2 left-1/2 -translate-x-1/2 sm:translate-y-1">
+      <div className="bottom-0 left-1/2 absolute p-2 -translate-x-1/2 sm:translate-y-1">
         <PoweredBy poweredByName={adminChatConfig.poweredBy} />
       </div>
 
-      <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
+      <div className="right-0 bottom-0 absolute flex flex-row justify-end p-2 w-fit">
         {isLoading ? (
           <StopButton stop={stop} setMessages={setMessages} />
         ) : (
@@ -360,7 +361,7 @@ function PureAttachmentsButton({
 }) {
   return (
     <Button
-      className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+      className="hover:bg-zinc-200 hover:dark:bg-zinc-900 p-[7px] dark:border-zinc-700 rounded-md rounded-bl-lg h-fit"
       onClick={(event) => {
         event.preventDefault();
         fileInputRef.current?.click();
@@ -384,7 +385,7 @@ function PureStopButton({
 }) {
   return (
     <Button
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      className="p-1.5 border dark:border-zinc-600 rounded-full h-fit"
       onClick={(event) => {
         event.preventDefault();
         stop();
@@ -409,7 +410,7 @@ function PureSendButton({
 }) {
   return (
     <Button
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      className="p-1.5 border dark:border-zinc-600 rounded-full h-fit"
       onClick={(event) => {
         event.preventDefault();
         submitForm();

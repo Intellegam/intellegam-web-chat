@@ -1,11 +1,11 @@
 'use client';
 
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
+import { useViewConfig } from '@/contexts/view-config-context';
 import type { ChatRequestOptions, CreateMessage, Message } from 'ai';
 import { motion } from 'framer-motion';
 import { memo } from 'react';
 import { Button } from './ui/button';
-import { useViewConfig } from '@/contexts/view-config-context';
 
 interface SuggestedActionsProps {
   chatId: string;
@@ -13,6 +13,7 @@ interface SuggestedActionsProps {
     message: Message | CreateMessage,
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
+  searchWeb: boolean;
   showStartPrompts: boolean;
   showFollowUpPrompts: boolean;
 }
@@ -20,6 +21,7 @@ interface SuggestedActionsProps {
 function PureSuggestedActions({
   chatId,
   append,
+  searchWeb,
   showStartPrompts,
   showFollowUpPrompts,
 }: SuggestedActionsProps) {
@@ -39,7 +41,7 @@ function PureSuggestedActions({
   }
 
   return (
-    <div className="flex w-full flex-row flex-wrap gap-1">
+    <div className="flex flex-row flex-wrap gap-1 w-full">
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -56,14 +58,19 @@ function PureSuggestedActions({
                 window.history.replaceState({}, '', `/chat/${chatId}`);
               }
 
-              append({
-                role: 'user',
-                content: suggestedAction.action,
-              });
+              console.log(searchWeb);
+
+              append(
+                {
+                  role: 'user',
+                  content: suggestedAction.action,
+                },
+                { body: { enableWebSearch: searchWeb } },
+              );
             }}
-            className="h-auto w-full flex-1 items-start justify-start gap-1 rounded-xl border px-3 py-2 text-left text-sm sm:flex-col"
+            className="sm:flex-col flex-1 justify-start items-start gap-1 px-3 py-2 border rounded-xl w-full h-auto text-sm text-left"
           >
-            <span className="text-wrap font-medium text-muted-foreground text-xs md:text-sm">
+            <span className="font-medium text-muted-foreground text-xs md:text-sm text-wrap">
               {suggestedAction.title}
             </span>
             {/* <span className="text-muted-foreground">
@@ -76,4 +83,12 @@ function PureSuggestedActions({
   );
 }
 
-export const SuggestedActions = memo(PureSuggestedActions, () => true);
+export const SuggestedActions = memo(
+  PureSuggestedActions,
+  (prevProps, nextProps) => {
+    if (prevProps.searchWeb !== nextProps.searchWeb) {
+      return false;
+    }
+    return true;
+  },
+);
