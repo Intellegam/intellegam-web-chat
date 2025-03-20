@@ -1,10 +1,11 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Button } from './ui/button';
-import type { ChatRequestOptions, CreateMessage, Message } from 'ai';
-import { memo } from 'react';
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
+import { useViewConfig } from '@/contexts/view-config-context';
+import type { ChatRequestOptions, CreateMessage, Message } from 'ai';
+import { motion } from 'framer-motion';
+import { memo } from 'react';
+import { Button } from './ui/button';
 
 interface SuggestedActionsProps {
   chatId: string;
@@ -12,13 +13,29 @@ interface SuggestedActionsProps {
     message: Message | CreateMessage,
     chatRequestOptions?: ChatRequestOptions,
   ) => Promise<string | null | undefined>;
+  searchWeb: boolean;
+  showStartPrompts: boolean;
+  showFollowUpPrompts: boolean;
 }
 
-function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
+function PureSuggestedActions({
+  chatId,
+  append,
+  searchWeb,
+  showStartPrompts,
+  showFollowUpPrompts,
+}: SuggestedActionsProps) {
+  const { chatConfig, adminChatConfig } = useChatSettingsContext();
+  const viewConfig = useViewConfig();
   let suggestedActions: { title: string; label: string; action: string }[] = [];
-  const { chatConfig } = useChatSettingsContext();
-  if (chatConfig.startPrompts) {
+
+  if (showStartPrompts) {
     suggestedActions = chatConfig.startPrompts
+      .sort((a, b) => b.length - a.length)
+      .map((p) => ({ title: p, label: p, action: p }));
+  }
+  if (showFollowUpPrompts) {
+    suggestedActions = adminChatConfig.followUpPrompts
       .sort((a, b) => b.length - a.length)
       .map((p) => ({ title: p, label: p, action: p }));
   }
@@ -40,13 +57,19 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
           <Button
             variant="ghost"
             onClick={async () => {
-              //TODO: check for iframe here
-              // window.history.replaceState({}, '', `/chat/${chatId}`);
+              if (!viewConfig.isIframe) {
+                window.history.replaceState({}, '', `/chat/${chatId}`);
+              }
 
-              append({
-                role: 'user',
-                content: suggestedAction.action,
-              });
+              console.log(searchWeb);
+
+              append(
+                {
+                  role: 'user',
+                  content: suggestedAction.action,
+                },
+                { body: { enableWebSearch: searchWeb } },
+              );
             }}
             className="sm:flex-col flex-1 justify-start items-start gap-1 px-3 py-2 border rounded-xl w-full h-auto text-sm text-left"
           >
@@ -63,4 +86,12 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   );
 }
 
-export const SuggestedActions = memo(PureSuggestedActions, () => true);
+export const SuggestedActions = memo(
+  PureSuggestedActions,
+  (prevProps, nextProps) => {
+    if (prevProps.searchWeb !== nextProps.searchWeb) {
+      return false;
+    }
+    return true;
+  },
+);
