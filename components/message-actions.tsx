@@ -1,8 +1,11 @@
+import { deleteTrailingMessages } from '@/app/(chat)/actions';
+import { useViewConfig } from '@/contexts/view-config-context';
 import type { Vote } from '@/lib/db/schema';
-import type { ChatRequestOptions, Message } from 'ai';
+import type { UseChatHelpers } from '@ai-sdk/react';
+import type { Message } from 'ai';
 import equal from 'fast-deep-equal';
 import { RefreshCw } from 'lucide-react';
-import { memo } from 'react';
+import { memo, type RefObject } from 'react';
 import { toast } from 'sonner';
 import { useSWRConfig } from 'swr';
 import { useCopyToClipboard } from 'usehooks-ts';
@@ -14,9 +17,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from './ui/tooltip';
-import { deleteTrailingMessages } from '@/app/(chat)/actions';
-import { useViewConfig } from '@/contexts/view-config-context';
-import type { UseChatHelpers } from '@ai-sdk/react';
 
 export function PureMessageActions({
   chatId,
@@ -26,6 +26,7 @@ export function PureMessageActions({
   isLoading,
   enableFeedback,
   reload,
+  messageRef,
 }: {
   chatId: string;
   message: Message;
@@ -34,6 +35,7 @@ export function PureMessageActions({
   isLoading: boolean;
   enableFeedback: boolean;
   reload: UseChatHelpers['reload'];
+  messageRef: RefObject<HTMLDivElement>;
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
@@ -41,6 +43,21 @@ export function PureMessageActions({
 
   if (isLoading) return null;
   if (message.role === 'user') return null;
+
+  async function richCopyToClipboard(
+    messageHtml: string,
+    messageContent: string,
+  ) {
+    const clipboardItem = new ClipboardItem({
+      'text/plain': new Blob([messageContent], {
+        type: 'text/plain',
+      }),
+      'text/html': new Blob([messageHtml], {
+        type: 'text/html',
+      }),
+    });
+    await navigator.clipboard.write([clipboardItem]);
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -51,19 +68,29 @@ export function PureMessageActions({
               className="px-2 py-1 h-fit text-muted-foreground"
               variant="outline"
               onClick={async () => {
-                const textFromParts = message.parts
+                const textContent = message.parts
                   ?.filter((part) => part.type === 'text')
                   .map((part) => part.text)
                   .join('\n')
                   .trim();
 
-                if (!textFromParts) {
+                if (!textContent) {
                   toast.error("There's no text to copy!");
                   return;
                 }
 
-                await copyToClipboard(textFromParts);
-                toast.success('Copied to clipboard!');
+                if (messageRef.current) {
+                  try {
+                    const htmlContent = messageRef.current.innerHTML;
+                    await richCopyToClipboard(htmlContent, textContent);
+                  } catch (error) {
+                    console.error('Failed to copy to clipboard:', error);
+                    toast.error('Failed to copy to clipboard');
+                  }
+                } else {
+                  await copyToClipboard(textContent);
+                }
+                toast.success('Copied to clipboard');
               }}
             >
               <CopyIcon />
