@@ -41,7 +41,10 @@ function PureSuggestedActions({
   }
 
   return (
-    <div className="flex flex-row flex-wrap gap-1 w-full">
+    <div
+      data-testid="suggested-actions"
+      className="flex flex-row flex-wrap gap-1 w-full"
+    >
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}

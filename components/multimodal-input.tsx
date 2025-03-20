@@ -1,11 +1,6 @@
 'use client';
 
-import type {
-  Attachment,
-  ChatRequestOptions,
-  CreateMessage,
-  Message,
-} from 'ai';
+import type { Attachment, Message } from 'ai';
 import cx from 'classnames';
 import type React from 'react';
 import {
@@ -21,11 +16,10 @@ import {
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
-import { sanitizeUIMessages } from '@/lib/utils';
-
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
 import { processFilesForUpload } from '@/lib/utils/fileUploadUtils';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import equal from 'fast-deep-equal';
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { PoweredBy } from './powered-by';
@@ -35,29 +29,6 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import WebToggleButton from './web-toggle-button';
 
-interface PureMultimodalInputProps {
-  chatId: string;
-  input: string;
-  setInput: (value: string) => void;
-  isLoading: boolean;
-  stop: () => void;
-  attachments: Array<Attachment>;
-  setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
-  messages: Array<Message>;
-  setMessages: Dispatch<SetStateAction<Array<Message>>>;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
-  handleSubmit: (
-    event?: {
-      preventDefault?: () => void;
-    },
-    chatRequestOptions?: ChatRequestOptions,
-  ) => void;
-  className?: string;
-}
-
 const MAX_ATTACHMENTS = 5;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB in bytes
 const VALID_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -66,7 +37,7 @@ function PureMultimodalInput({
   chatId,
   input,
   setInput,
-  isLoading,
+  status,
   stop,
   attachments,
   setAttachments,
@@ -75,7 +46,20 @@ function PureMultimodalInput({
   append,
   handleSubmit,
   className,
-}: PureMultimodalInputProps) {
+}: {
+  chatId: string;
+  input: UseChatHelpers['input'];
+  setInput: UseChatHelpers['setInput'];
+  status: UseChatHelpers['status'];
+  stop: () => void;
+  attachments: Array<Attachment>;
+  setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
+  messages: Array<Message>;
+  setMessages: Dispatch<SetStateAction<Array<Message>>>;
+  append: UseChatHelpers['append'];
+  handleSubmit: UseChatHelpers['handleSubmit'];
+  className?: string;
+}) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
   const viewConfig = useViewConfig();
@@ -257,7 +241,10 @@ function PureMultimodalInput({
       />
 
       {(attachments.length > 0 || uploadQueue.length > 0) && (
-        <div className="flex flex-row items-end gap-2 overflow-x-scroll">
+        <div
+          data-testid="attachments-preview"
+          className="flex flex-row items-end gap-2 overflow-x-scroll"
+        >
           {attachments.map((attachment) => (
             <PreviewAttachment
               key={attachment.url}
@@ -285,6 +272,7 @@ function PureMultimodalInput({
       )}
 
       <Textarea
+        data-testid="multimodal-input"
         ref={textareaRef}
         placeholder={chatConfig.inputPlaceholder || 'How can i help ?'}
         value={input}
@@ -296,10 +284,14 @@ function PureMultimodalInput({
         rows={2}
         autoFocus
         onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.shiftKey) {
+          if (
+            event.key === 'Enter' &&
+            !event.shiftKey &&
+            !event.nativeEvent.isComposing
+          ) {
             event.preventDefault();
 
-            if (isLoading) {
+            if (status !== 'ready') {
               toast.error('Please wait for the model to finish its response!');
             } else {
               submitForm();
@@ -311,10 +303,7 @@ function PureMultimodalInput({
       <div className="bottom-0 absolute flex flex-row justify-start p-2 w-fit">
         <div className="flex items-center gap-x-2">
           {adminChatConfig.showFileUpload && (
-            <AttachmentsButton
-              fileInputRef={fileInputRef}
-              isLoading={isLoading}
-            />
+            <AttachmentsButton fileInputRef={fileInputRef} status={status} />
           )}
           {adminChatConfig.showWebSearch && (
             <WebToggleButton setSearchWeb={setSearchWeb} />
@@ -327,7 +316,7 @@ function PureMultimodalInput({
       </div>
 
       <div className="right-0 bottom-0 absolute flex flex-row justify-end p-2 w-fit">
-        {isLoading ? (
+        {status === 'submitted' ? (
           <StopButton stop={stop} setMessages={setMessages} />
         ) : (
           <SendButton
@@ -345,7 +334,7 @@ export const MultimodalInput = memo(
   PureMultimodalInput,
   (prevProps, nextProps) => {
     if (prevProps.input !== nextProps.input) return false;
-    if (prevProps.isLoading !== nextProps.isLoading) return false;
+    if (prevProps.status !== nextProps.status) return false;
     if (!equal(prevProps.attachments, nextProps.attachments)) return false;
 
     return true;
@@ -354,19 +343,20 @@ export const MultimodalInput = memo(
 
 function PureAttachmentsButton({
   fileInputRef,
-  isLoading,
+  status,
 }: {
   fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
-  isLoading: boolean;
+  status: UseChatHelpers['status'];
 }) {
   return (
     <Button
+      data-testid="attachments-button"
       className="hover:bg-zinc-200 hover:dark:bg-zinc-900 p-[7px] dark:border-zinc-700 rounded-md rounded-bl-lg h-fit"
       onClick={(event) => {
         event.preventDefault();
         fileInputRef.current?.click();
       }}
-      disabled={isLoading}
+      disabled={status !== 'ready'}
       variant="ghost"
     >
       <PaperclipIcon size={14} />
@@ -385,11 +375,12 @@ function PureStopButton({
 }) {
   return (
     <Button
+      data-testid="stop-button"
       className="p-1.5 border dark:border-zinc-600 rounded-full h-fit"
       onClick={(event) => {
         event.preventDefault();
         stop();
-        setMessages((messages) => sanitizeUIMessages(messages));
+        setMessages((messages) => messages);
       }}
     >
       <StopIcon size={14} />
@@ -410,6 +401,7 @@ function PureSendButton({
 }) {
   return (
     <Button
+      data-testid="send-button"
       className="p-1.5 border dark:border-zinc-600 rounded-full h-fit"
       onClick={(event) => {
         event.preventDefault();

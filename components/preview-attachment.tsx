@@ -16,9 +16,13 @@ export const PreviewAttachment = ({
 
   return (
     // biome-ignore lint/nursery/noStaticElementInteractions: <explanation>
-    <div onClick={removeAttachmentCallback} className="flex flex-col gap-2">
-      <div className="w-20 h-16 aspect-video bg-muted rounded-md relative flex flex-col items-center justify-center">
-        <div className="absolute inset-0 bg-black opacity-0 hover:opacity-60 transition-opacity duration-300 flex items-center justify-center">
+    <div
+      data-testid="input-attachment-preview"
+      onClick={removeAttachmentCallback}
+      className="flex flex-col gap-2"
+    >
+      <div className="relative flex flex-col justify-center items-center bg-muted rounded-md w-20 h-16 aspect-video">
+        <div className="absolute inset-0 flex justify-center items-center bg-black opacity-0 hover:opacity-60 transition-opacity duration-300">
           <X size={24} />
         </div>
         {contentType ? (
@@ -39,12 +43,15 @@ export const PreviewAttachment = ({
         )}
 
         {isUploading && (
-          <div className="animate-spin absolute text-zinc-500">
+          <div
+            data-testid="input-attachment-loader"
+            className="absolute text-zinc-500 animate-spin"
+          >
             <LoaderIcon />
           </div>
         )}
       </div>
-      <div className="text-xs text-zinc-500 max-w-16 truncate">{name}</div>
+      <div className="max-w-16 text-zinc-500 text-xs truncate">{name}</div>
     </div>
   );
 };
