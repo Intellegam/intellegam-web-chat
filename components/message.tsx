@@ -1,14 +1,14 @@
 'use client';
 
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
+import type { Vote } from '@/lib/db/schema';
+import { cn } from '@/lib/utils';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
 import cx from 'classnames';
-import { AnimatePresence, motion } from 'framer-motion';
-import { memo, useRef, useState } from 'react';
-import type { Vote } from '@/lib/db/schema';
-
-import { useChatSettingsContext } from '@/contexts/chat-config-context';
-import { cn } from '@/lib/utils';
 import equal from 'fast-deep-equal';
+import { AnimatePresence, motion } from 'framer-motion';
+import { memo, useMemo, useRef, useState } from 'react';
 import AssistantAvatar from './assistant-avatar';
 import BackendActions from './backend-actions';
 import { DocumentToolCall, DocumentToolResult } from './document';
@@ -22,8 +22,6 @@ import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Weather } from './weather';
-import type { UseChatHelpers } from '@ai-sdk/react';
-import BackendActions from './backend-actions';
 
 const PurePreviewMessage = ({
   chatId,
@@ -45,6 +43,61 @@ const PurePreviewMessage = ({
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const { chatConfig, adminChatConfig } = useChatSettingsContext();
   const messageRef = useRef<HTMLDivElement>(null);
+
+  const unifiedComponents = useMemo(() => {
+    // Check if message has parts
+    if (!message.parts) return { hasWebsearch: false, hasReasoning: false };
+
+    // Find the first websearch part index to know where to render BackendActions
+    const firstWebsearchIndex = message.parts.findIndex(
+      (part) =>
+        part.type === 'tool-invocation' &&
+        part.toolInvocation.toolName.includes('WebSearch'),
+    );
+
+    // Find the first reasoning part index
+    const firstReasoningIndex = message.parts.findIndex(
+      (part) => part.type === 'reasoning',
+    );
+
+    // Track if there's any active websearch
+    let isWebsearchActive = false;
+    // Collect all reasoning content
+    let allReasoning = '';
+
+    // Process all parts to gather necessary information
+    message.parts.forEach((part) => {
+      // Check for active websearch
+      if (
+        part.type === 'tool-invocation' &&
+        part.toolInvocation.toolName.includes('WebSearch') &&
+        part.toolInvocation.state === 'call'
+      ) {
+        isWebsearchActive = true;
+      }
+
+      // Collect all reasoning content
+      if (part.type === 'reasoning') {
+        // If multiple reasoning parts, we'll concatenate them
+        if (allReasoning) {
+          allReasoning += '\n\n';
+        }
+        allReasoning += part.reasoning;
+      }
+    });
+
+    return {
+      hasWebsearch: firstWebsearchIndex !== -1,
+      isWebsearchActive,
+      firstWebsearchIndex,
+      websearchAnnotations: message.annotations,
+      messageId: message.id,
+
+      hasReasoning: firstReasoningIndex !== -1,
+      firstReasoningIndex,
+      allReasoning,
+    };
+  }, [message.parts, message.annotations, message.id]);
 
   return (
     <AnimatePresence>
@@ -87,12 +140,30 @@ const PurePreviewMessage = ({
               const { type } = part;
               const key = `message-${message.id}-part-${index}`;
 
-              if (type === 'reasoning') {
+              if (
+                unifiedComponents.hasWebsearch &&
+                index === unifiedComponents.firstWebsearchIndex
+              ) {
+                return (
+                  <div key={key}>
+                    <BackendActions
+                      isActive={unifiedComponents.isWebsearchActive}
+                      annotations={unifiedComponents.websearchAnnotations}
+                      messageId={unifiedComponents.messageId}
+                    />
+                  </div>
+                );
+              }
+
+              if (
+                unifiedComponents.hasReasoning &&
+                index === unifiedComponents.firstReasoningIndex
+              ) {
                 return (
                   <MessageReasoning
                     key={key}
                     isLoading={isLoading}
-                    reasoning={part.reasoning}
+                    reasoning={unifiedComponents.allReasoning}
                   />
                 );
               }
@@ -153,24 +224,21 @@ const PurePreviewMessage = ({
               if (type === 'tool-invocation') {
                 const { toolInvocation } = part;
                 const { toolName, toolCallId, state } = toolInvocation;
+                const key = toolCallId.includes('WebSearch')
+                  ? 'WebSearch'
+                  : toolCallId;
 
                 if (state === 'call') {
                   const { args } = toolInvocation;
 
                   return (
                     <div
-                      key={toolCallId}
+                      key={key}
                       className={cx({
                         skeleton: ['getWeather'].includes(toolName),
                       })}
                     >
-                      {toolName.includes('WebSearch') ? (
-                        <BackendActions
-                          isLoading={isLoading}
-                          annotations={message.annotations}
-                          messageId={message.id}
-                        />
-                      ) : toolName === 'getWeather' ? (
+                      {toolName === 'getWeather' ? (
                         <Weather />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview isReadonly={isReadonly} args={args} />

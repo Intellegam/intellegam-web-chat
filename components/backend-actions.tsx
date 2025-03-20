@@ -1,7 +1,6 @@
 import type { ActionItem } from '@/lib/types/custom-data';
 import type { JSONValue } from 'ai';
 import { motion } from 'framer-motion';
-import { useEffect } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -9,6 +8,8 @@ import {
   AccordionTrigger,
 } from './ui/accordion';
 import { cn } from '@/lib/utils';
+import { CornerDownRight, Search } from 'lucide-react';
+import ShinyText from './ui/shiny-text';
 
 function BackendAction({ action }: { action: ActionItem }) {
   return <p>{action.action}</p>;
@@ -16,9 +17,13 @@ function BackendAction({ action }: { action: ActionItem }) {
 
 export default function BackendActions({
   annotations,
-  isLoading,
   messageId,
-}: { annotations?: JSONValue[]; isLoading: boolean; messageId: string }) {
+  isActive,
+}: {
+  annotations?: JSONValue[];
+  messageId: string;
+  isActive: boolean;
+}) {
   function safelyParseBackendAction(data: JSONValue): ActionItem | null {
     if (typeof data !== 'object' || data === null || Array.isArray(data)) {
       return null;
@@ -42,51 +47,52 @@ export default function BackendActions({
         .filter((a) => a !== null)
     : null;
 
-  useEffect(() => {
-    console.log(actions);
-  });
-
   return (
     <>
       {actions && (
-        <div className="w-full">
-          <Accordion type="single" defaultValue="search" collapsible>
-            <AccordionItem value="search" className="border-none">
-              <AccordionTrigger
-                className={cn(
-                  'dark:bg-neutral-900 px-2 py-1 border border-neutral-200 dark:border-neutral-800 rounded-lg w-full hover:no-underline',
-                  '[&[data-state=open]]:rounded-b-none',
-                )}
+        <Accordion type="single" collapsible>
+          <AccordionItem value="search" className="border-none">
+            <AccordionTrigger
+              className={cn(
+                'dark:bg-neutral-900 px-2 py-1 border border-neutral-200 dark:border-neutral-800 rounded-lg w-full hover:no-underline',
+                '[&[data-state=open]]:rounded-b-none',
+              )}
+            >
+              <span>
+                <Search size={18} />
+              </span>
+              <motion.div
+                key={actions.at(-1)?.action}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="py-1 font-normal text-base truncate"
               >
-                <motion.p
-                  key={actions.at(-1)?.action}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.4 }}
-                  className={cn('py-1 font-normal text-base truncate', {
-                    'animate-pulse': isLoading,
-                  })}
-                >
-                  {actions.at(-1)?.action}
-                </motion.p>
-              </AccordionTrigger>
-              <AccordionContent className="dark:bg-neutral-900 px-2 py-1 border dark:border-neutral-800 border-t-0 rounded-b-lg">
-                <ul>
-                  {actions.map((action, actionIndex) => (
-                    <li
-                      key={`action-${messageId}-${
-                        // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                        actionIndex
-                      }`}
-                    >
-                      <BackendAction action={action} />
-                    </li>
-                  ))}
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
+                {isActive ? (
+                  <ShinyText text={actions.at(-1)?.action || ''} speed={5} />
+                ) : (
+                  actions.at(-1)?.action
+                )}
+              </motion.div>
+            </AccordionTrigger>
+            <AccordionContent className="dark:bg-neutral-900 px-2 py-1 border dark:border-neutral-800 border-t-0 rounded-b-lg">
+              <ul>
+                {actions.map((action, actionIndex) => (
+                  <li
+                    key={`action-${messageId}-${
+                      // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                      actionIndex
+                    }`}
+                    className="flex items-center gap-x-1 my-1"
+                  >
+                    <CornerDownRight size={14} />
+                    <BackendAction action={action} />
+                  </li>
+                ))}
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       )}
     </>
   );
