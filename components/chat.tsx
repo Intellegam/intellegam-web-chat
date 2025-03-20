@@ -69,6 +69,9 @@ export function Chat({
       toast.error('An error occured, please try again!');
     },
   });
+  useEffect(() => {
+    console.log(messages, messages.length);
+  });
 
   return (
     <>
@@ -92,6 +95,7 @@ export function Chat({
           isArtifactVisible={isArtifactVisible}
         />
 
+        <form className="flex gap-2 mx-auto px-4 pb-4 md:pb-6 w-full md:max-w-4xl">
         <form className="flex gap-2 mx-auto px-4 pb-4 md:pb-6 w-full md:max-w-4xl">
           {!isReadonly && (
             <MultimodalInput

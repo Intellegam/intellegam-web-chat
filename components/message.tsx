@@ -10,6 +10,7 @@ import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { cn } from '@/lib/utils';
 import equal from 'fast-deep-equal';
 import AssistantAvatar from './assistant-avatar';
+import BackendActions from './backend-actions';
 import { DocumentToolCall, DocumentToolResult } from './document';
 import { DocumentPreview } from './document-preview';
 import { LoaderIcon, PencilEditIcon } from './icons';
@@ -163,7 +164,13 @@ const PurePreviewMessage = ({
                         skeleton: ['getWeather'].includes(toolName),
                       })}
                     >
-                      {toolName === 'getWeather' ? (
+                      {toolName.includes('WebSearch') ? (
+                        <BackendActions
+                          isLoading={isLoading}
+                          annotations={message.annotations}
+                          messageId={message.id}
+                        />
+                      ) : toolName === 'getWeather' ? (
                         <Weather />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview isReadonly={isReadonly} args={args} />

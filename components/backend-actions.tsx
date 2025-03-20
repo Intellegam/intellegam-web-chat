@@ -1,26 +1,24 @@
-import { motion } from 'framer-motion';
 import type { ActionItem } from '@/lib/types/custom-data';
 import type { JSONValue } from 'ai';
+import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from './ui/accordion';
-import { useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 function BackendAction({ action }: { action: ActionItem }) {
-  return (
-    <div>
-      <p>{action.action}</p>
-    </div>
-  );
+  return <p>{action.action}</p>;
 }
 
 export default function BackendActions({
   annotations,
+  isLoading,
   messageId,
-}: { annotations?: JSONValue[]; messageId: string }) {
+}: { annotations?: JSONValue[]; isLoading: boolean; messageId: string }) {
   function safelyParseBackendAction(data: JSONValue): ActionItem | null {
     if (typeof data !== 'object' || data === null || Array.isArray(data)) {
       return null;
@@ -51,30 +49,40 @@ export default function BackendActions({
   return (
     <>
       {actions && (
-        <div className="w-full max-w-2xl mx-auto">
-          <Accordion type="single" collapsible>
+        <div className="w-full">
+          <Accordion type="single" defaultValue="search" collapsible>
             <AccordionItem value="search" className="border-none">
-              <AccordionTrigger className="hover:no-underline border-b pb-1 w-full">
+              <AccordionTrigger
+                className={cn(
+                  'dark:bg-neutral-900 px-2 py-1 border border-neutral-200 dark:border-neutral-800 rounded-lg w-full hover:no-underline',
+                  '[&[data-state=open]]:rounded-b-none',
+                )}
+              >
                 <motion.p
-                  // key={actions.at(-1)?.action}
+                  key={actions.at(-1)?.action}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-base font-normal pr-1 truncate "
+                  transition={{ duration: 0.4 }}
+                  className={cn('py-1 font-normal text-base truncate', {
+                    'animate-pulse': isLoading,
+                  })}
                 >
                   {actions.at(-1)?.action}
                 </motion.p>
               </AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-y-2 py-1">
-                {actions.map((action, actionIndex) => (
-                  <BackendAction
-                    key={`action-${messageId}-${
-                      // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                      actionIndex
-                    }`}
-                    action={action}
-                  />
-                ))}
+              <AccordionContent className="dark:bg-neutral-900 px-2 py-1 border dark:border-neutral-800 border-t-0 rounded-b-lg">
+                <ul>
+                  {actions.map((action, actionIndex) => (
+                    <li
+                      key={`action-${messageId}-${
+                        // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                        actionIndex
+                      }`}
+                    >
+                      <BackendAction action={action} />
+                    </li>
+                  ))}
+                </ul>
               </AccordionContent>
             </AccordionItem>
           </Accordion>

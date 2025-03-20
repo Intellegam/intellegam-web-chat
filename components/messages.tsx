@@ -43,6 +43,7 @@ function PureMessages({
 
       {messages.map((message, index) => (
         <PreviewMessage
+          //TODO: the ids change to the steps for some reason which causes rerendering, apparently this is fixed in a newer version
           key={message.id}
           chatId={chatId}
           message={message}
