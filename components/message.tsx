@@ -4,7 +4,7 @@ import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import type { Vote } from '@/lib/db/schema';
 import { cn } from '@/lib/utils';
 import type { UseChatHelpers } from '@ai-sdk/react';
-import type { UIMessage } from 'ai';
+import type { ToolInvocationUIPart, UIMessage } from 'ai';
 import cx from 'classnames';
 import equal from 'fast-deep-equal';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -140,30 +140,12 @@ const PurePreviewMessage = ({
               const { type } = part;
               const key = `message-${message.id}-part-${index}`;
 
-              if (
-                unifiedComponents.hasWebsearch &&
-                index === unifiedComponents.firstWebsearchIndex
-              ) {
-                return (
-                  <div key={key}>
-                    <BackendActions
-                      isActive={unifiedComponents.isWebsearchActive}
-                      annotations={unifiedComponents.websearchAnnotations}
-                      messageId={unifiedComponents.messageId}
-                    />
-                  </div>
-                );
-              }
-
-              if (
-                unifiedComponents.hasReasoning &&
-                index === unifiedComponents.firstReasoningIndex
-              ) {
+              if (type === 'reasoning') {
                 return (
                   <MessageReasoning
                     key={key}
                     isLoading={isLoading}
-                    reasoning={unifiedComponents.allReasoning}
+                    reasoning={part.reasoning}
                   />
                 );
               }
@@ -224,21 +206,36 @@ const PurePreviewMessage = ({
               if (type === 'tool-invocation') {
                 const { toolInvocation } = part;
                 const { toolName, toolCallId, state } = toolInvocation;
-                const key = toolCallId.includes('WebSearch')
-                  ? 'WebSearch'
-                  : toolCallId;
 
                 if (state === 'call') {
                   const { args } = toolInvocation;
 
                   return (
                     <div
-                      key={key}
+                      key={toolCallId}
                       className={cx({
                         skeleton: ['getWeather'].includes(toolName),
                       })}
                     >
-                      {toolName === 'getWeather' ? (
+                      {toolName.includes('WebSearch') ? (
+                        <BackendActions
+                          isActive={true}
+                          annotation={message.annotations?.at(
+                            message.parts
+                              .filter(
+                                (p): p is ToolInvocationUIPart =>
+                                  p.type === 'tool-invocation' &&
+                                  p.toolInvocation.toolName.includes(
+                                    'WebSearch',
+                                  ),
+                              )
+                              .findIndex(
+                                (p) =>
+                                  p.toolInvocation.toolCallId === toolCallId,
+                              ),
+                          )}
+                        />
+                      ) : toolName === 'getWeather' ? (
                         <Weather />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview isReadonly={isReadonly} args={args} />
@@ -264,7 +261,26 @@ const PurePreviewMessage = ({
 
                   return (
                     <div key={toolCallId}>
-                      {toolName === 'getWeather' ? (
+                      {toolName.includes('WebSearch') ? (
+                        <BackendActions
+                          isActive={false}
+                          result={result}
+                          annotation={message.annotations?.at(
+                            message.parts
+                              .filter(
+                                (p): p is ToolInvocationUIPart =>
+                                  p.type === 'tool-invocation' &&
+                                  p.toolInvocation.toolName.includes(
+                                    'WebSearch',
+                                  ),
+                              )
+                              .findIndex(
+                                (p) =>
+                                  p.toolInvocation.toolCallId === toolCallId,
+                              ),
+                          )}
+                        />
+                      ) : toolName === 'getWeather' ? (
                         <Weather weatherAtLocation={result} />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview
