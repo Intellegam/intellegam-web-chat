@@ -56,6 +56,7 @@ export function Chat({
       ...(endpointConfig.subscriptionKey
         ? { 'Subscription-Key': endpointConfig.subscriptionKey }
         : {}),
+      'X-Preferred-Stream-Protocol': 'VERCEL_AI_DATA_STREAM_V1',
     },
     initialMessages,
     experimental_throttle: 100,
