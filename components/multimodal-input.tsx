@@ -66,6 +66,10 @@ function PureMultimodalInput({
   const { chatConfig, adminChatConfig } = useChatSettingsContext();
   const [searchWeb, setSearchWeb] = useState(false);
 
+  const showStartPrompts = chatConfig.startPrompts && messages.length === 0;
+  const showFollowUpPrompts =
+    adminChatConfig.followUpPrompts && messages.length === 2;
+
   useEffect(() => {
     if (textareaRef.current) {
       adjustHeight();
@@ -215,12 +219,17 @@ function PureMultimodalInput({
 
   return (
     <div className="relative flex flex-col gap-4 w-full">
-      {messages.length === 0 &&
+      {(showStartPrompts || showFollowUpPrompts) &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
-          <SuggestedActions append={append} chatId={chatId} />
+          <SuggestedActions
+            append={append}
+            chatId={chatId}
+            searchWeb={searchWeb}
+            showStartPrompts={showStartPrompts}
+            showFollowUpPrompts={showFollowUpPrompts}
+          />
         )}
-
       <input
         type="file"
         className="-top-4 -left-4 fixed opacity-0 size-0.5 pointer-events-none"
