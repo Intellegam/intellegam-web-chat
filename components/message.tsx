@@ -44,61 +44,6 @@ const PurePreviewMessage = ({
   const { chatConfig, adminChatConfig } = useChatSettingsContext();
   const messageRef = useRef<HTMLDivElement>(null);
 
-  const unifiedComponents = useMemo(() => {
-    // Check if message has parts
-    if (!message.parts) return { hasWebsearch: false, hasReasoning: false };
-
-    // Find the first websearch part index to know where to render BackendActions
-    const firstWebsearchIndex = message.parts.findIndex(
-      (part) =>
-        part.type === 'tool-invocation' &&
-        part.toolInvocation.toolName.includes('WebSearch'),
-    );
-
-    // Find the first reasoning part index
-    const firstReasoningIndex = message.parts.findIndex(
-      (part) => part.type === 'reasoning',
-    );
-
-    // Track if there's any active websearch
-    let isWebsearchActive = false;
-    // Collect all reasoning content
-    let allReasoning = '';
-
-    // Process all parts to gather necessary information
-    message.parts.forEach((part) => {
-      // Check for active websearch
-      if (
-        part.type === 'tool-invocation' &&
-        part.toolInvocation.toolName.includes('WebSearch') &&
-        part.toolInvocation.state === 'call'
-      ) {
-        isWebsearchActive = true;
-      }
-
-      // Collect all reasoning content
-      if (part.type === 'reasoning') {
-        // If multiple reasoning parts, we'll concatenate them
-        if (allReasoning) {
-          allReasoning += '\n\n';
-        }
-        allReasoning += part.reasoning;
-      }
-    });
-
-    return {
-      hasWebsearch: firstWebsearchIndex !== -1,
-      isWebsearchActive,
-      firstWebsearchIndex,
-      websearchAnnotations: message.annotations,
-      messageId: message.id,
-
-      hasReasoning: firstReasoningIndex !== -1,
-      firstReasoningIndex,
-      allReasoning,
-    };
-  }, [message.parts, message.annotations, message.id]);
-
   return (
     <AnimatePresence>
       <motion.div
