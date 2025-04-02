@@ -2,15 +2,15 @@
 
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import type { Vote } from '@/lib/db/schema';
+import type { SearchToolInvocation } from '@/lib/types/search';
 import { cn } from '@/lib/utils';
 import type { UseChatHelpers } from '@ai-sdk/react';
-import type { ToolInvocationUIPart, UIMessage } from 'ai';
+import type { UIMessage } from 'ai';
 import cx from 'classnames';
 import equal from 'fast-deep-equal';
 import { AnimatePresence, motion } from 'framer-motion';
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 import AssistantAvatar from './assistant-avatar';
-import BackendActions from './backend-actions';
 import { DocumentToolCall, DocumentToolResult } from './document';
 import { DocumentPreview } from './document-preview';
 import { LoaderIcon, PencilEditIcon } from './icons';
@@ -19,6 +19,7 @@ import { MessageActions } from './message-actions';
 import { MessageEditor } from './message-editor';
 import { MessageReasoning } from './message-reasoning';
 import { PreviewAttachment } from './preview-attachment';
+import { SearchToolComponent } from './search/search-tool';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Weather } from './weather';
@@ -163,22 +164,11 @@ const PurePreviewMessage = ({
                       })}
                     >
                       {toolName.includes('WebSearch') ? (
-                        <BackendActions
-                          isActive={true}
-                          annotation={message.annotations?.at(
-                            message.parts
-                              .filter(
-                                (p): p is ToolInvocationUIPart =>
-                                  p.type === 'tool-invocation' &&
-                                  p.toolInvocation.toolName.includes(
-                                    'WebSearch',
-                                  ),
-                              )
-                              .findIndex(
-                                (p) =>
-                                  p.toolInvocation.toolCallId === toolCallId,
-                              ),
-                          )}
+                        <SearchToolComponent
+                          toolInvocation={
+                            toolInvocation as SearchToolInvocation
+                          }
+                          annotations={message.annotations}
                         />
                       ) : toolName === 'getWeather' ? (
                         <Weather />
@@ -207,23 +197,11 @@ const PurePreviewMessage = ({
                   return (
                     <div key={toolCallId}>
                       {toolName.includes('WebSearch') ? (
-                        <BackendActions
-                          isActive={false}
-                          result={result}
-                          annotation={message.annotations?.at(
-                            message.parts
-                              .filter(
-                                (p): p is ToolInvocationUIPart =>
-                                  p.type === 'tool-invocation' &&
-                                  p.toolInvocation.toolName.includes(
-                                    'WebSearch',
-                                  ),
-                              )
-                              .findIndex(
-                                (p) =>
-                                  p.toolInvocation.toolCallId === toolCallId,
-                              ),
-                          )}
+                        <SearchToolComponent
+                          toolInvocation={
+                            toolInvocation as SearchToolInvocation
+                          }
+                          annotations={message.annotations}
                         />
                       ) : toolName === 'getWeather' ? (
                         <Weather weatherAtLocation={result} />
