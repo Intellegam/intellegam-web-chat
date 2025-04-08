@@ -16,6 +16,7 @@ interface SearchEntryProps {
 
 export function SearchEntry({ searchData }: SearchEntryProps) {
   const hasResults = searchData.results;
+  const sources = searchData.results?.sources ?? [];
 
   const getSearchTypeIcon = (type: SearchType) => {
     switch (type) {
@@ -29,7 +30,7 @@ export function SearchEntry({ searchData }: SearchEntryProps) {
     }
   };
 
-  if (searchData.status === 'searching') {
+  if (searchData.status === 'call') {
     return (
       <div className="flex items-center gap-2 py-1 text-muted-foreground text-sm">
         <LoaderIcon className="size-3.5 animate-pulse" />
@@ -38,7 +39,7 @@ export function SearchEntry({ searchData }: SearchEntryProps) {
     );
   }
 
-  if (!hasResults || searchData.results.length === 0) {
+  if (!hasResults || searchData.results?.sources.length === 0) {
     return (
       <div className="my-1.5">
         <div className="flex items-center gap-2 py-1 cursor-default">
@@ -49,7 +50,7 @@ export function SearchEntry({ searchData }: SearchEntryProps) {
             <span className="text-muted-foreground text-sm">0 sources</span>
           </div>
         </div>
-        {searchData.status === 'received' && (
+        {searchData.status === 'result' && (
           <div className="ml-5 text-muted-foreground text-sm">
             No results found.
           </div>
@@ -67,8 +68,7 @@ export function SearchEntry({ searchData }: SearchEntryProps) {
               {getSearchTypeIcon(searchData.type)}
             </div>
             <span className="text-muted-foreground text-sm">
-              {searchData.results.length}{' '}
-              {searchData.results.length === 1 ? 'source' : 'sources'}
+              {sources.length} {sources.length === 1 ? 'source' : 'sources'}
             </span>
           </div>
         </AccordionTrigger>
@@ -81,9 +81,9 @@ export function SearchEntry({ searchData }: SearchEntryProps) {
               </div>
             </div>
             <div className="flex flex-col gap-y-1 max-h-44 overflow-scroll">
-              {searchData.results.map((result) => (
+              {sources.map((result) => (
                 <SearchResultItem
-                  key={`${result.tool_call_id}-${result.url}`}
+                  key={`${searchData.toolCallId}-${result.url}`}
                   result={result}
                 />
               ))}

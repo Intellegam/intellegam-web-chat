@@ -23,6 +23,7 @@ import { SearchToolComponent } from './search/search-tool';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Weather } from './weather';
+import { AnnotationType, getAnnotationsByType } from '@/lib/types/annotations';
 
 const PurePreviewMessage = ({
   chatId,
@@ -152,6 +153,10 @@ const PurePreviewMessage = ({
               if (type === 'tool-invocation') {
                 const { toolInvocation } = part;
                 const { toolName, toolCallId, state } = toolInvocation;
+                const widgetName = getAnnotationsByType(
+                  message.annotations,
+                  AnnotationType.ToolCall,
+                ).find((a) => a.toolCallId === toolCallId)?.widgetName;
 
                 if (state === 'call') {
                   const { args } = toolInvocation;
@@ -163,7 +168,7 @@ const PurePreviewMessage = ({
                         skeleton: ['getWeather'].includes(toolName),
                       })}
                     >
-                      {toolName.includes('WebSearch') ? (
+                      {widgetName === 'webSearch' ? (
                         <SearchToolComponent
                           toolInvocation={
                             toolInvocation as SearchToolInvocation
@@ -196,7 +201,7 @@ const PurePreviewMessage = ({
 
                   return (
                     <div key={toolCallId}>
-                      {toolName.includes('WebSearch') ? (
+                      {widgetName === 'webSearch' ? (
                         <SearchToolComponent
                           toolInvocation={
                             toolInvocation as SearchToolInvocation

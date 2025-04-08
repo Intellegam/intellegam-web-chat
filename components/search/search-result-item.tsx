@@ -1,14 +1,12 @@
 'use client';
 
-import type { Source } from '@/lib/types/search';
+import type { Source } from '@/lib/types/annotations';
 
 interface SearchResultItemProps {
   result: Source;
 }
 
 export function SearchResultItem({ result }: SearchResultItemProps) {
-  console.log(result);
-
   // Extract domain from URL if available
   const domain = result.url
     ? new URL(result.url).hostname.replace('www.', '')
