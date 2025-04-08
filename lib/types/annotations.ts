@@ -1,7 +1,7 @@
 import type { JSONValue } from 'ai';
 
 export enum AnnotationType {
-  ToolCall = 'toolCallMetadata',
+  ToolCallMeta = 'toolCallMetadata',
   Source = 'source',
 }
 
@@ -10,8 +10,8 @@ interface TypedAnnotation {
   [key: string]: any;
 }
 
-export interface ToolCallAnnotation extends TypedAnnotation {
-  annotationType: AnnotationType.ToolCall;
+export interface ToolCallMetaAnnotation extends TypedAnnotation {
+  annotationType: AnnotationType.ToolCallMeta;
   toolCallId: string;
   widgetName: string;
 }
@@ -22,6 +22,7 @@ export interface SourcesAnnotation extends TypedAnnotation {
   sources: Source[];
 }
 
+//TODO: maybe this and the annotation can be in their own files or in a separate folder
 export interface Source {
   type: string;
   text: string;
@@ -32,7 +33,7 @@ export interface Source {
 }
 
 type AnnotationTypeMap = {
-  [AnnotationType.ToolCall]: ToolCallAnnotation;
+  [AnnotationType.ToolCallMeta]: ToolCallMetaAnnotation;
   [AnnotationType.Source]: SourcesAnnotation;
 };
 
