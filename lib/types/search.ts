@@ -19,7 +19,7 @@ export interface SearchData {
 }
 
 export interface Source {
-  type: string;
+  //type: string;
   text: string;
   headings?: string[];
   url?: string;
