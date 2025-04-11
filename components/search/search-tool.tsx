@@ -56,7 +56,7 @@ export function SearchToolComponent({
       query: toolInvocation.args.query,
       type: type,
       status: toolInvocation.state,
-      results: sources,
+      results: sources?.sources,
     };
 
     setSearchData(newSearchData);

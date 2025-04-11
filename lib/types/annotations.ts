@@ -1,4 +1,5 @@
 import type { JSONValue } from 'ai';
+import type { Source } from './search';
 
 export enum AnnotationType {
   ToolCallMeta = 'toolCallMetadata',
@@ -20,16 +21,6 @@ export interface SourcesAnnotation extends TypedAnnotation {
   annotationType: AnnotationType.Source;
   toolCallId: string;
   sources: Source[];
-}
-
-//TODO: maybe this and the annotation can be in their own files or in a separate folder
-export interface Source {
-  type: string;
-  text: string;
-  headings?: string[];
-  url?: string;
-  file_reference?: string;
-  position?: number;
 }
 
 type AnnotationTypeMap = {

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Source } from '@/lib/types/annotations';
+import type { Source } from '@/lib/types/search';
 
 interface SearchResultItemProps {
   result: Source;

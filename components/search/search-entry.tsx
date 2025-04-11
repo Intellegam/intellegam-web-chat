@@ -17,7 +17,7 @@ interface SearchEntryProps {
 
 export function SearchEntry({ searchData }: SearchEntryProps) {
   const hasResults = searchData.results;
-  const sources = searchData.results?.sources ?? [];
+  const sources = searchData.results ?? [];
 
   const getSearchTypeIcon = (type: SearchType) => {
     switch (type) {
@@ -58,7 +58,7 @@ export function SearchEntry({ searchData }: SearchEntryProps) {
                 text={`Searching ${searchData.type ?? ''}...`}
               />
             </motion.div>
-          ) : !hasResults || searchData.results?.sources.length === 0 ? (
+          ) : !hasResults || sources.length === 0 ? (
             <motion.div
               key="no-results"
               {...textAnimationProps}
