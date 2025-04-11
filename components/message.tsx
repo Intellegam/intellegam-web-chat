@@ -155,7 +155,7 @@ const PurePreviewMessage = ({
                 const { toolName, toolCallId, state } = toolInvocation;
                 const widgetName = getAnnotationsByType(
                   message.annotations,
-                  AnnotationType.ToolCallMeta,
+                  AnnotationType.ToolCallMetaData,
                 ).find((a) => a.toolCallId === toolCallId)?.widgetName;
 
                 if (state === 'call') {

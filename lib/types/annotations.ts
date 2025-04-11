@@ -2,7 +2,7 @@ import type { JSONValue } from 'ai';
 import type { Source } from './search';
 
 export enum AnnotationType {
-  ToolCallMeta = 'toolCallMetadata',
+  ToolCallMetaData = 'toolCallMetadata',
   Source = 'source',
 }
 
@@ -12,7 +12,7 @@ interface TypedAnnotation {
 }
 
 export interface ToolCallMetaAnnotation extends TypedAnnotation {
-  annotationType: AnnotationType.ToolCallMeta;
+  annotationType: AnnotationType.ToolCallMetaData;
   toolCallId: string;
   widgetName: string;
 }
@@ -24,7 +24,7 @@ export interface SourcesAnnotation extends TypedAnnotation {
 }
 
 type AnnotationTypeMap = {
-  [AnnotationType.ToolCallMeta]: ToolCallMetaAnnotation;
+  [AnnotationType.ToolCallMetaData]: ToolCallMetaAnnotation;
   [AnnotationType.Source]: SourcesAnnotation;
 };
 
