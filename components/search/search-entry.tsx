@@ -98,9 +98,9 @@ export function SearchEntry({ searchData }: SearchEntryProps) {
                         </div>
                       </div>
                       <div className="flex flex-col gap-y-1 max-h-44 overflow-scroll">
-                        {sources.map((result) => (
+                        {sources.map((result, index) => (
                           <SearchResultItem
-                            key={`${searchData.toolCallId}-${result.url}`}
+                            key={`${searchData.toolCallId}-${result.url}-${index}`}
                             result={result}
                           />
                         ))}
