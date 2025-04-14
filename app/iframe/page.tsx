@@ -13,11 +13,12 @@ import Image from 'next/image';
 
 const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 
-//TODO search Params entweder EncryptionHelper oder hier bessere Types
+//TODO: better types for searchParams -Meris
 export default async function Page({
   searchParams,
-}: { searchParams: { endpoint: string } }) {
+}: { searchParams: Promise<{ endpoint: string }> }) {
   const id = generateUUID();
+  //TODO: the below could be refactored/extracted as it is used in chat/page.tsx too -Meris
   const chatParams = new URLSearchParams(await searchParams);
   const decryptedSearchParams = await EncryptionHelper.decryptURLSearchParams(
     chatParams,
@@ -30,14 +31,14 @@ export default async function Page({
   return (
     <>
       {chatConfig.backgroundImg && (
-        <div className="fixed left-0 top-0 z-[-1] size-full blur-0">
-          <div className="absolute left-0 top-0 size-full bg-background/95" />
+        <div className="top-0 left-0 z-[-1] fixed blur-0 size-full">
+          <div className="top-0 left-0 absolute bg-background/95 size-full" />
           <Image
             width={0}
             height={0}
             sizes="100vh"
             src={chatConfig.backgroundImg}
-            className="size-full min-h-screen object-cover"
+            className="min-h-screen size-full object-cover"
             alt=""
           />
         </div>
