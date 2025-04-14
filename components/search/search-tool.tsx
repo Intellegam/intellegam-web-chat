@@ -39,7 +39,7 @@ export function SearchToolComponent({
 
     const toolCallMetadata = getAnnotationsByType(
       annotations,
-      AnnotationType.ToolCallMetaData,
+      AnnotationType.ToolCallMetadata,
     ).find((a) => a.toolCallId === toolInvocation.toolCallId);
 
     const sources = getAnnotationsByType(

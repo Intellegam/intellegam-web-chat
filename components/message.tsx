@@ -159,7 +159,7 @@ const PurePreviewMessage = ({
                 const { toolName, toolCallId, state } = toolInvocation;
                 const widgetName = getAnnotationsByType(
                   message.annotations,
-                  AnnotationType.ToolCallMetaData,
+                  AnnotationType.ToolCallMetadata,
                 ).find((a) => a.toolCallId === toolCallId)?.widgetName;
 
                 //TODO: rework this as i dont see the point in return different things based on the state
