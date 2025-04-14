@@ -6,19 +6,24 @@ export enum AnnotationType {
   Source = 'source',
 }
 
+export enum WidgetName {
+  WebSearch = 'webSearch',
+  DatabaseSearch = 'databaseSearch',
+}
+
 interface TypedAnnotation {
-  annotationType: string;
+  annotationTypeId: string;
   [key: string]: any;
 }
 
 export interface ToolCallMetaAnnotation extends TypedAnnotation {
-  annotationType: AnnotationType.ToolCallMetaData;
+  annotationTypeId: AnnotationType.ToolCallMetaData;
   toolCallId: string;
-  widgetName: string;
+  widgetName: WidgetName;
 }
 
 export interface SourcesAnnotation extends TypedAnnotation {
-  annotationType: AnnotationType.Source;
+  annotationTypeId: AnnotationType.Source;
   toolCallId: string;
   sources: Source[];
 }
@@ -39,8 +44,8 @@ export function isTypedAnnotation(value: JSONValue): value is TypedAnnotation {
     value !== null &&
     typeof value === 'object' &&
     !Array.isArray(value) &&
-    'annotationType' in value &&
-    typeof (value as any).annotationType === 'string'
+    'annotationTypeId' in value &&
+    typeof (value as any).annotationTypeId === 'string'
   );
 }
 
@@ -62,6 +67,6 @@ export function getAnnotationsByType<T extends AnnotationType>(
 
   return annotations.filter((item): item is AnnotationTypeMap[T] => {
     if (!isTypedAnnotation(item)) return false;
-    return item.annotationType === type;
+    return item.annotationTypeId === type;
   });
 }
