@@ -23,7 +23,11 @@ import { SearchToolComponent } from './search/search-tool';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Weather } from './weather';
-import { AnnotationType, getAnnotationsByType } from '@/lib/types/annotations';
+import {
+  AnnotationType,
+  getAnnotationsByType,
+  WidgetName,
+} from '@/lib/types/annotations';
 
 const PurePreviewMessage = ({
   chatId,
@@ -158,6 +162,8 @@ const PurePreviewMessage = ({
                   AnnotationType.ToolCallMetaData,
                 ).find((a) => a.toolCallId === toolCallId)?.widgetName;
 
+                //TODO: rework this as i dont see the point in return different things based on the state
+                // the components themself should handle the toolcall state -Meris
                 if (state === 'call') {
                   const { args } = toolInvocation;
 
@@ -168,7 +174,8 @@ const PurePreviewMessage = ({
                         skeleton: ['getWeather'].includes(toolName),
                       })}
                     >
-                      {widgetName === 'webSearch' ? (
+                      {widgetName === WidgetName.WebSearch ||
+                      widgetName === WidgetName.DatabaseSearch ? (
                         <SearchToolComponent
                           toolInvocation={
                             toolInvocation as SearchToolInvocation
@@ -201,7 +208,8 @@ const PurePreviewMessage = ({
 
                   return (
                     <div key={toolCallId}>
-                      {widgetName === 'webSearch' ? (
+                      {widgetName === WidgetName.WebSearch ||
+                      widgetName === WidgetName.DatabaseSearch ? (
                         <SearchToolComponent
                           toolInvocation={
                             toolInvocation as SearchToolInvocation
