@@ -11,22 +11,30 @@ export const authConfig = {
   ],
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
+      //TODO: only the iframe route is allowed for now -Meris
       const isLoggedIn = !!auth?.user;
+      const isOnIframe = nextUrl.pathname.startsWith('/iframe');
       const isOnChat = nextUrl.pathname.startsWith('/');
       const isOnRegister = nextUrl.pathname.startsWith('/register');
       const isOnLogin = nextUrl.pathname.startsWith('/login');
+
+      if (isOnIframe) {
+        return true;
+      }
 
       if (isLoggedIn && (isOnLogin || isOnRegister)) {
         return Response.redirect(new URL('/', nextUrl as unknown as URL));
       }
 
       if (isOnRegister || isOnLogin) {
-        return true; // Always allow access to register and login pages
+        return Response.redirect(new URL('/iframe', nextUrl as unknown as URL));
+        // return true; // Always allow access to register and login pages
       }
 
       if (isOnChat) {
-        if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
+        return Response.redirect(new URL('/iframe', nextUrl as unknown as URL));
+        // if (isLoggedIn) return true;
+        // return false; // Redirect unauthenticated users to login page
       }
 
       if (isLoggedIn) {
