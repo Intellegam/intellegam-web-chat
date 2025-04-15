@@ -80,8 +80,8 @@ export function SearchEntry({ searchData }: SearchEntryProps) {
               className="flex-1"
             >
               <Accordion type="single" collapsible className="border-none">
-                <AccordionItem value="results" className="border-none w-fit">
-                  <AccordionTrigger className="flex justify-start items-center gap-2 px-0 py-1 hover:no-underline">
+                <AccordionItem value="results" className="border-none w-full">
+                  <AccordionTrigger className="flex justify-start items-center gap-2 p-1 hover:no-underline">
                     <div className="flex items-center">
                       <span className="text-muted-foreground text-sm">
                         {sources.length}{' '}
