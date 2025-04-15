@@ -2,8 +2,9 @@
 
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import type { Vote } from '@/lib/db/schema';
-import type { SearchToolInvocation } from '@/lib/types/search';
+import { AnnotationType, WidgetId } from '@/lib/types/annotations';
 import { cn } from '@/lib/utils';
+import { getAnnotationsByTypeAndToolId } from '@/lib/utils/annotationUtils';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
 import cx from 'classnames';
@@ -23,11 +24,6 @@ import { SearchToolComponent } from './search/search-tool';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Weather } from './weather';
-import {
-  AnnotationType,
-  getAnnotationsByType,
-  WidgetName,
-} from '@/lib/types/annotations';
 
 const PurePreviewMessage = ({
   chatId,
@@ -157,13 +153,12 @@ const PurePreviewMessage = ({
               if (type === 'tool-invocation') {
                 const { toolInvocation } = part;
                 const { toolName, toolCallId, state } = toolInvocation;
-                const widgetName = getAnnotationsByType(
+                const widgetId = getAnnotationsByTypeAndToolId(
                   message.annotations,
-                  AnnotationType.ToolCallMetadata,
-                ).find((a) => a.toolCallId === toolCallId)?.widgetName;
+                  AnnotationType.WidgetData,
+                  toolCallId,
+                )[0]?.widgetId;
 
-                //TODO: rework this as i dont see the point in return different things based on the state
-                // the components themself should handle the toolcall state -Meris
                 if (state === 'call') {
                   const { args } = toolInvocation;
 
@@ -174,12 +169,10 @@ const PurePreviewMessage = ({
                         skeleton: ['getWeather'].includes(toolName),
                       })}
                     >
-                      {widgetName === WidgetName.WebSearch ||
-                      widgetName === WidgetName.DatabaseSearch ? (
+                      {widgetId === WidgetId.WebSearch ||
+                      widgetId === WidgetId.DatabaseSearch ? (
                         <SearchToolComponent
-                          toolInvocation={
-                            toolInvocation as SearchToolInvocation
-                          }
+                          toolInvocation={toolInvocation}
                           annotations={message.annotations}
                         />
                       ) : toolName === 'getWeather' ? (
@@ -208,12 +201,10 @@ const PurePreviewMessage = ({
 
                   return (
                     <div key={toolCallId}>
-                      {widgetName === WidgetName.WebSearch ||
-                      widgetName === WidgetName.DatabaseSearch ? (
+                      {widgetId === WidgetId.WebSearch ||
+                      widgetId === WidgetId.DatabaseSearch ? (
                         <SearchToolComponent
-                          toolInvocation={
-                            toolInvocation as SearchToolInvocation
-                          }
+                          toolInvocation={toolInvocation}
                           annotations={message.annotations}
                         />
                       ) : toolName === 'getWeather' ? (

@@ -1,17 +1,17 @@
 'use client';
 
-import { AnnotationType, getAnnotationsByType } from '@/lib/types/annotations';
-import type {
-  SearchData,
-  SearchToolInvocation,
-  SearchType,
-} from '@/lib/types/search';
-import type { JSONValue } from 'ai';
+import { AnnotationType, WidgetId } from '@/lib/types/annotations';
+import type { SearchData, SearchType } from '@/lib/types/search';
+import type { JSONValue, ToolInvocation } from 'ai';
 import { useEffect, useState } from 'react';
 import { SearchEntry } from './search-entry';
+import {
+  getAnnotationsByTypeAndToolId,
+  getSearchWidgetDataByToolCallId,
+} from '@/lib/utils/annotationUtils';
 
 interface SearchToolComponentProps {
-  toolInvocation: SearchToolInvocation;
+  toolInvocation: ToolInvocation;
   annotations?: JSONValue[];
 }
 
@@ -21,11 +21,11 @@ export function SearchToolComponent({
 }: SearchToolComponentProps) {
   const [searchData, setSearchData] = useState<SearchData | null>(null);
 
-  const getSearchType = (type: string) => {
-    switch (type) {
-      case 'webSearch':
+  const getSearchType = (widgetId: WidgetId) => {
+    switch (widgetId) {
+      case WidgetId.WebSearch:
         return 'web';
-      case 'databaseSearch':
+      case WidgetId.DatabaseSearch:
         return 'database';
       default:
         return 'general';
@@ -37,26 +37,27 @@ export function SearchToolComponent({
     if (!annotations) return;
     let type: SearchType = 'general';
 
-    const toolCallMetadata = getAnnotationsByType(
+    const widgetDataAnnotation = getSearchWidgetDataByToolCallId(
       annotations,
-      AnnotationType.ToolCallMetadata,
-    ).find((a) => a.toolCallId === toolInvocation.toolCallId);
+      toolInvocation.toolCallId,
+    );
 
-    const sources = getAnnotationsByType(
+    const sourcesAnnotation = getAnnotationsByTypeAndToolId(
       annotations,
-      AnnotationType.Source,
-    ).find((a) => a.toolCallId === toolInvocation.toolCallId);
+      AnnotationType.Sources,
+      toolInvocation.toolCallId,
+    )[0];
 
-    if (toolCallMetadata) {
-      type = getSearchType(toolCallMetadata.widgetName);
+    if (widgetDataAnnotation) {
+      type = getSearchType(widgetDataAnnotation.widgetId);
     }
 
     const newSearchData: SearchData = {
       toolCallId: toolInvocation.toolCallId,
-      query: toolInvocation.args.query,
+      query: widgetDataAnnotation?.widgetData?.query ?? '',
       type: type,
       status: toolInvocation.state,
-      results: sources?.sources,
+      results: sourcesAnnotation?.sources ?? [],
     };
 
     setSearchData(newSearchData);

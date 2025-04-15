@@ -1,72 +1,123 @@
-import type { JSONValue } from 'ai';
-import type { Source } from './search';
-
+/**
+ * An enumeration of typed annotations that are being sent from the
+ * server.
+ *
+ * @enum {string}
+ */
 export enum AnnotationType {
-  ToolCallMetadata = 'toolCallMetadata',
-  Source = 'source',
+  WidgetData = 'widgetData',
+  Sources = 'sources',
 }
 
-export enum WidgetName {
+/**
+ * A TypedAnnotation is an annotation with a specific type that
+ * defines the structure of its associated data.
+ *
+ * TypedAnnotations are used to identify the type of annotation and
+ * determine the structure of the data associated with it.
+ *
+ * This interface is only used to extend other interfaces with the
+ * annotation type and data.
+ *
+ * @interface
+ * @property {AnnotationType} annotationType - The type of annotation.
+ * @property {any} [key: string] - The data associated with the annotation.
+ */
+export interface TypedAnnotation {
+  annotationType: AnnotationType;
+  toolCallId: string;
+}
+
+/**
+ * A TypedAnnotation that represents the sources for a widget.
+ *
+ * This annotation is used to display the sources of a toolCall. The sources are the
+ * results of a search query.
+ *
+ * @interface
+ * @property {AnnotationType} annotationType - The type of annotation.
+ * @property {string} toolCallId - The id of the tool call that created the
+ * widget.
+ * @property {Source[]} sources - The sources for the widget.
+ */
+export interface SourcesAnnotation extends TypedAnnotation {
+  annotationType: AnnotationType.Sources;
+  sources: Source[];
+}
+
+/**
+ * Represents a source of information, which can be a document, webpage, or
+ * other media. It includes the text content and optional metadata such as
+ * headings, URL, file reference, and position.
+ *
+ * @interface
+ * @property {string} text - The main content text of the source.
+ * @property {string[]} [headings] - An optional list of headings associated with the source.
+ * @property {string} [url] - An optional URL linking to the source.
+ * @property {string} [fileReference] - An optional file reference for the source.
+ * @property {number} [position] - An optional position index or marker for the source.
+ */
+export interface Source {
+  text: string;
+  headings?: string[];
+  url?: string;
+  fileReference?: string;
+  position?: number;
+}
+
+/**
+ * An enumeration of the types of widgets that can be used in the chat.
+ * Which correspond to a specific tool call.
+ *
+ * @enum {string}
+ */
+export enum WidgetId {
   WebSearch = 'webSearch',
   DatabaseSearch = 'databaseSearch',
 }
 
-interface TypedAnnotation {
-  annotationTypeId: string;
-  [key: string]: any;
+/**
+ * A TypedAnnotation that represents the data for a widget.
+ *
+ * This annotation is used to display a widget that is associated
+ * with a tool call.
+ *
+ * This interface is only used to extend other interfaces with the
+ * which have their own
+ *
+ * @interface
+ * @property {AnnotationType} annotationType - The type of annotation.
+ * @property {WidgetId} widgetId - The id of the widget.
+ * @property {string} toolCallId - The id of the tool call that created the
+ * widget.
+ * @property {Record<string, unknown>} widgetData - The data for the widget. The structure of this
+ * data is determined by the type of widget.
+ */
+interface WidgetDataAnnotation extends TypedAnnotation {
+  annotationType: AnnotationType.WidgetData;
+  widgetId: WidgetId;
+
+  widgetData: Record<string, unknown>;
 }
 
-export interface ToolCallMetaAnnotation extends TypedAnnotation {
-  annotationTypeId: AnnotationType.ToolCallMetadata;
-  toolCallId: string;
-  widgetName: WidgetName;
+export interface SearchWidgetData extends WidgetDataAnnotation {
+  widgetData: { query: string };
 }
 
-export interface SourcesAnnotation extends TypedAnnotation {
-  annotationTypeId: AnnotationType.Source;
-  toolCallId: string;
-  sources: Source[];
-}
-
-type AnnotationTypeMap = {
-  [AnnotationType.ToolCallMetadata]: ToolCallMetaAnnotation;
-  [AnnotationType.Source]: SourcesAnnotation;
+/**
+ * A map of annotation types to their associated TypedAnnotation interfaces.
+ *
+ * The keys of this map are the values of the AnnotationType enum, and the values are
+ * the interfaces that extend TypedAnnotation.
+ *
+ * This map is used to provide types for annotations that are retrieved from the server.
+ *
+ * For example, if the server sends an annotation with type 'widgetData', this map
+ * can be used to determine the type of the annotation, and the shape of its data.
+ *
+ * Always update when adding Annotation types!!
+ */
+export type AnnotationTypeMap = {
+  [AnnotationType.WidgetData]: WidgetDataAnnotation;
+  [AnnotationType.Sources]: SourcesAnnotation;
 };
-
-/**
- * Checks if a given value is a TypedAnnotation object.
- *
- * @param value Value to check.
- * @returns True if the value is a TypedAnnotation, false otherwise.
- */
-export function isTypedAnnotation(value: JSONValue): value is TypedAnnotation {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    !Array.isArray(value) &&
-    'annotationTypeId' in value &&
-    typeof (value as any).annotationTypeId === 'string'
-  );
-}
-
-/**
- * Gets a list of annotations of the given type from an array of
- * arbitrary JSON values.
- *
- * @param annotations Array of JSON values to search for annotations
- * @param type Type of annotations to search for
- * @returns Array of annotations of the given type
- */
-export function getAnnotationsByType<T extends AnnotationType>(
-  annotations: JSONValue[] | undefined,
-  type: T,
-): AnnotationTypeMap[T][] {
-  if (!annotations || !Array.isArray(annotations)) {
-    return [];
-  }
-
-  return annotations.filter((item): item is AnnotationTypeMap[T] => {
-    if (!isTypedAnnotation(item)) return false;
-    return item.annotationTypeId === type;
-  });
-}

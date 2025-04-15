@@ -1,12 +1,5 @@
-import type { ToolInvocation, ToolStatus } from './tool';
-
-export interface SearchToolInvocation extends ToolInvocation {
-  toolName: 'search';
-  args: {
-    query: string;
-  };
-  result?: string;
-}
+import type { Source } from './annotations';
+import type { ToolStatus } from './tool';
 
 export type SearchType = 'web' | 'database' | 'general';
 
@@ -16,13 +9,4 @@ export interface SearchData {
   type: SearchType;
   status: ToolStatus;
   results?: Source[];
-}
-
-export interface Source {
-  //type: string;
-  text: string;
-  headings?: string[];
-  url?: string;
-  file_reference?: string;
-  position?: number;
 }

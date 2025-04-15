@@ -12,7 +12,7 @@ export function SearchResultItem({ result }: SearchResultItemProps) {
   const domain = result.url
     ? new URL(result.url).hostname.replace('www.', '')
     : '';
-  const fileName = result.file_reference?.split('/').pop();
+  const fileName = result.fileReference?.split('/').pop();
   const fileType = fileName?.split('.').pop();
   const page = result.url?.match(/page=(\d+)/)?.[1];
   const header = result.headings
@@ -28,7 +28,7 @@ export function SearchResultItem({ result }: SearchResultItemProps) {
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          {result.file_reference ? (
+          {result.fileReference ? (
             <FileIcon size={12} />
           ) : (
             <GlobeIcon size={12} />
@@ -37,7 +37,7 @@ export function SearchResultItem({ result }: SearchResultItemProps) {
         </div>
         <h4 className="font-medium text-sm line-clamp-1">{header}</h4>
         <p className="mt-0.5 text-muted-foreground text-xs line-clamp-2">
-          {result.file_reference ? `Page ${page}` : result.text}
+          {result.fileReference ? `Page ${page}` : result.text}
         </p>
       </div>
     </a>
