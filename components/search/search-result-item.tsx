@@ -1,6 +1,6 @@
 'use client';
 
-import type { Source } from '@/lib/types/search';
+import type { Source } from '@/lib/types/annotations';
 import { FileIcon, GlobeIcon } from 'lucide-react';
 
 interface SearchResultItemProps {

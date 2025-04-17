@@ -1,61 +1,65 @@
 /**
- * An enumeration of typed annotations that are being sent from the
- * server.
+ * This file defines typed message annotations used in our system.
+ *
+ * Message annotations, a concept from the Vercel AI SDK, allow attaching
+ * structured metadata to messages. This file specifically defines "typed"
+ * annotations - those with predetermined structures - as opposed to
+ * arbitrary untyped annotations.
+ *
+ * Only annotation types defined in this file are considered "typed" and
+ * will have proper TypeScript types and validation.
+ */
+
+/**
+ * Types of structured message annotations supported by the application.
  *
  * @enum {string}
  */
-export enum AnnotationType {
-  WidgetData = 'widgetData',
+export enum MessageAnnotationType {
+  ToolView = 'toolView',
   Sources = 'sources',
 }
 
 /**
- * A TypedAnnotation is an annotation with a specific type that
- * defines the structure of its associated data.
+ * Base interface for all typed message annotations.
  *
- * TypedAnnotations are used to identify the type of annotation and
- * determine the structure of the data associated with it.
- *
- * This interface is only used to extend other interfaces with the
- * annotation type and data.
+ * In our system, a "typed annotation" is a message annotation with a
+ * predefined structure. This differs from arbitrary message annotations
+ * which can contain any data. Only annotation types defined in this file
+ * are considered typed.
  *
  * @interface
- * @property {AnnotationType} annotationType - The type of annotation.
- * @property {any} [key: string] - The data associated with the annotation.
+ * @property {AnnotationType} annotationType - Identifies the specific type of annotation
+ * @property {string} toolCallId - The id of the tool call that created this annotation
  */
-export interface TypedAnnotation {
-  annotationType: AnnotationType;
-  toolCallId: string;
+export interface TypedMessageAnnotation {
+  annotationType: MessageAnnotationType;
 }
 
 /**
- * A TypedAnnotation that represents the sources for a widget.
+ * Message annotation containing source references.
  *
- * This annotation is used to display the sources of a toolCall. The sources are the
- * results of a search query.
+ * Contains search results or citations that provide evidence for
+ * information presented in a message.
  *
- * @interface
- * @property {AnnotationType} annotationType - The type of annotation.
- * @property {string} toolCallId - The id of the tool call that created the
- * widget.
- * @property {Source[]} sources - The sources for the widget.
+ * @property {MessageAnnotationType.Sources} annotationType - Identifies this as a Sources annotation
+ * @property {string} toolCallId - ID of the associated tool call
+ * @property {Source[]} sources - List of information sources
  */
-export interface SourcesAnnotation extends TypedAnnotation {
-  annotationType: AnnotationType.Sources;
+export interface SourcesAnnotation extends TypedMessageAnnotation {
+  annotationType: MessageAnnotationType.Sources;
+  toolCallId: string;
   sources: Source[];
 }
 
 /**
- * Represents a source of information, which can be a document, webpage, or
- * other media. It includes the text content and optional metadata such as
- * headings, URL, file reference, and position.
+ * Information source reference with content and metadata.
  *
- * @interface
- * @property {string} text - The main content text of the source.
- * @property {string[]} [headings] - An optional list of headings associated with the source.
- * @property {string} [url] - An optional URL linking to the source.
- * @property {string} [fileReference] - An optional file reference for the source.
- * @property {number} [position] - An optional position index or marker for the source.
+ * @property {string} text - Main content text
+ * @property {string[]} [headings] - Section headings or titles
+ * @property {string} [url] - Source URL
+ * @property {string} [fileReference] - File identifier
+ * @property {number} [position] - Position index
  */
 export interface Source {
   text: string;
@@ -65,59 +69,32 @@ export interface Source {
   position?: number;
 }
 
-/**
- * An enumeration of the types of widgets that can be used in the chat.
- * Which correspond to a specific tool call.
- *
- * @enum {string}
- */
-export enum WidgetId {
+export enum ToolViewId {
   WebSearch = 'webSearch',
   DatabaseSearch = 'databaseSearch',
 }
 
-/**
- * A TypedAnnotation that represents the data for a widget.
- *
- * This annotation is used to display a widget that is associated
- * with a tool call.
- *
- * This interface is only used to extend other interfaces with the
- * which have their own
- *
- * @interface
- * @property {AnnotationType} annotationType - The type of annotation.
- * @property {WidgetId} widgetId - The id of the widget.
- * @property {string} toolCallId - The id of the tool call that created the
- * widget.
- * @property {Record<string, unknown>} widgetData - The data for the widget. The structure of this
- * data is determined by the type of widget.
- */
-interface WidgetDataAnnotation extends TypedAnnotation {
-  annotationType: AnnotationType.WidgetData;
-  widgetId: WidgetId;
-
-  widgetData: Record<string, unknown>;
+interface ToolViewAnnotation extends TypedMessageAnnotation {
+  annotationType: MessageAnnotationType.ToolView;
+  toolCallId: string;
+  toolViewId: ToolViewId;
+  toolViewData: Record<string, unknown>;
 }
 
-export interface SearchWidgetData extends WidgetDataAnnotation {
-  widgetData: { query: string };
+export interface SearchToolViewAnnotation extends ToolViewAnnotation {
+  toolViewId: ToolViewId.WebSearch | ToolViewId.DatabaseSearch;
+  toolViewData: { query: string };
 }
 
 /**
- * A map of annotation types to their associated TypedAnnotation interfaces.
+ * Maps annotation types to their corresponding interfaces.
  *
- * The keys of this map are the values of the AnnotationType enum, and the values are
- * the interfaces that extend TypedAnnotation.
+ * Provides type safety when working with annotations by associating each
+ * MessageAnnotationType with its properly typed interface.
  *
- * This map is used to provide types for annotations that are retrieved from the server.
- *
- * For example, if the server sends an annotation with type 'widgetData', this map
- * can be used to determine the type of the annotation, and the shape of its data.
- *
- * Always update when adding Annotation types!!
+ * Note: Must be updated when adding new annotation types.
  */
 export type AnnotationTypeMap = {
-  [AnnotationType.WidgetData]: WidgetDataAnnotation;
-  [AnnotationType.Sources]: SourcesAnnotation;
+  [MessageAnnotationType.ToolView]: ToolViewAnnotation;
+  [MessageAnnotationType.Sources]: SourcesAnnotation;
 };

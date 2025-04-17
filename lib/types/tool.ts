@@ -1,9 +1,9 @@
-export type ToolStatus = 'call' | 'partial-call' | 'result';
+export type ToolState = 'call' | 'partial-call' | 'result';
 
 export interface ToolInvocation {
   toolName: string;
   toolCallId: string;
   args: unknown;
-  state: ToolStatus;
+  state: ToolState;
   result?: unknown;
 }

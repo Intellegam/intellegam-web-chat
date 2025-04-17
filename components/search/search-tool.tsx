@@ -1,71 +1,135 @@
 'use client';
 
-import { AnnotationType, WidgetId } from '@/lib/types/annotations';
-import type { SearchData, SearchType } from '@/lib/types/search';
-import type { JSONValue, ToolInvocation } from 'ai';
-import { useEffect, useState } from 'react';
-import { SearchEntry } from './search-entry';
 import {
-  getAnnotationsByTypeAndToolId,
-  getSearchWidgetDataByToolCallId,
-} from '@/lib/utils/annotationUtils';
+  type SearchToolViewAnnotation,
+  type SourcesAnnotation,
+  ToolViewId,
+} from '@/lib/types/annotations';
+import type { ToolState } from '@/lib/types/tool';
+import { AnimatePresence, motion } from 'framer-motion';
+import { DatabaseIcon, GlobeIcon, SearchIcon } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '../ui/accordion';
+import ShinyText from '../ui/shiny-text';
+import { SearchResultItem } from './search-result-item';
 
 interface SearchToolComponentProps {
-  toolInvocation: ToolInvocation;
-  annotations?: JSONValue[];
+  toolCallId: string;
+  state: ToolState;
+  annotation: SearchToolViewAnnotation;
+  sourcesAnnotation?: SourcesAnnotation[];
 }
 
 export function SearchToolComponent({
-  toolInvocation,
-  annotations,
+  toolCallId,
+  state,
+  annotation,
+  sourcesAnnotation,
 }: SearchToolComponentProps) {
-  const [searchData, setSearchData] = useState<SearchData | null>(null);
+  const sources = sourcesAnnotation
+    ? sourcesAnnotation.flatMap((sa) => sa.sources)
+    : [];
+  const hasResults = sources.length > 0;
 
-  const getSearchType = (widgetId: WidgetId) => {
-    switch (widgetId) {
-      case WidgetId.WebSearch:
-        return 'web';
-      case WidgetId.DatabaseSearch:
-        return 'database';
+  const getSearchTypeIcon = (type: ToolViewId) => {
+    switch (type) {
+      case ToolViewId.WebSearch:
+        return <GlobeIcon className="size-3.5" />;
+      case ToolViewId.DatabaseSearch:
+        return <DatabaseIcon className="size-3.5" />;
       default:
-        return 'general';
+        return <SearchIcon className="size-3.5" />;
     }
   };
 
-  useEffect(() => {
-    if (!toolInvocation.args) return;
-    if (!annotations) return;
-    let type: SearchType = 'general';
+  // Text animation props for consistency
+  const textAnimationProps = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.3 },
+  };
 
-    const widgetDataAnnotation = getSearchWidgetDataByToolCallId(
-      annotations,
-      toolInvocation.toolCallId,
-    );
+  return (
+    <div className="flex items-start gap-2">
+      <div className="mt-[0.4rem] text-muted-foreground">
+        {getSearchTypeIcon(annotation.toolViewId)}
+      </div>
 
-    const sourcesAnnotation = getAnnotationsByTypeAndToolId(
-      annotations,
-      AnnotationType.Sources,
-      toolInvocation.toolCallId,
-    )[0];
-
-    if (widgetDataAnnotation) {
-      type = getSearchType(widgetDataAnnotation.widgetId);
-    }
-
-    const newSearchData: SearchData = {
-      toolCallId: toolInvocation.toolCallId,
-      query: widgetDataAnnotation?.widgetData?.query ?? '',
-      type: type,
-      status: toolInvocation.state,
-      results: sourcesAnnotation?.sources ?? [],
-    };
-
-    setSearchData(newSearchData);
-  }, [toolInvocation, annotations]);
-
-  if (!searchData) {
-    return null;
-  }
-
-  return <SearchEntry searchData={searchData} />;
+      <div className="flex-1">
+        <AnimatePresence mode="wait">
+          {state === 'call' ? (
+            <motion.div
+              key="searching"
+              {...textAnimationProps}
+              className="py-1 text-muted-foreground text-sm"
+            >
+              <ShinyText
+                speed={2}
+                text={`Searching ${annotation.toolViewId.replace('Search', '')}...`}
+              />
+            </motion.div>
+          ) : !hasResults || sources.length === 0 ? (
+            <motion.div
+              key="no-results"
+              {...textAnimationProps}
+              className="flex-1"
+            >
+              <div className="flex items-center py-1 cursor-default">
+                <span className="text-muted-foreground text-sm">0 sources</span>
+              </div>
+              {state === 'result' && (
+                <div className="ml-3 text-muted-foreground text-sm">
+                  No results found.
+                </div>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="results"
+              {...textAnimationProps}
+              className="flex-1"
+            >
+              <Accordion type="single" collapsible className="border-none">
+                <AccordionItem value="results" className="border-none w-full">
+                  <AccordionTrigger className="flex justify-start items-center gap-2 p-1 hover:no-underline">
+                    <div className="flex items-center">
+                      <span className="text-muted-foreground text-sm">
+                        {sources.length}{' '}
+                        {sources.length === 1 ? 'source' : 'sources'}
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-0 pt-1 pb-2">
+                    <div className="mt-1 mb-2 border rounded-lg overflow-hidden">
+                      <div className="bg-muted/20 p-2 border-b">
+                        <div className="flex items-center gap-1.5">
+                          <SearchIcon className="size-3.5 text-muted-foreground" />
+                          <p className="text-sm truncate">
+                            {annotation.toolViewData?.query}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-y-1 max-h-44 overflow-scroll">
+                        {sources.map((result, index) => (
+                          <SearchResultItem
+                            key={`${toolCallId}-${result.url}-${index}`}
+                            result={result}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
 }

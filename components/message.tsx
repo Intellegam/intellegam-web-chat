@@ -2,9 +2,13 @@
 
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import type { Vote } from '@/lib/db/schema';
-import { AnnotationType, WidgetId } from '@/lib/types/annotations';
+import {
+  MessageAnnotationType,
+  type SearchToolViewAnnotation,
+  ToolViewId,
+} from '@/lib/types/annotations';
 import { cn } from '@/lib/utils';
-import { getAnnotationsByTypeAndToolId } from '@/lib/utils/annotationUtils';
+import { getMessageAnnotationsByTypeAndToolId } from '@/lib/utils/annotationUtils';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
 import cx from 'classnames';
@@ -153,15 +157,42 @@ const PurePreviewMessage = ({
               if (type === 'tool-invocation') {
                 const { toolInvocation } = part;
                 const { toolName, toolCallId, state } = toolInvocation;
-                const widgetId = getAnnotationsByTypeAndToolId(
-                  message.annotations,
-                  AnnotationType.WidgetData,
-                  toolCallId,
-                )[0]?.widgetId;
+                const toolViewAnnotations =
+                  getMessageAnnotationsByTypeAndToolId(
+                    message.annotations,
+                    MessageAnnotationType.ToolView,
+                    toolCallId,
+                  );
+
+                if (toolViewAnnotations) {
+                  return (
+                    <div key={toolCallId}>
+                      {toolViewAnnotations.map((a) => {
+                        if (
+                          a.toolViewId === ToolViewId.WebSearch ||
+                          a.toolViewId === ToolViewId.DatabaseSearch
+                        ) {
+                          return (
+                            <SearchToolComponent
+                              key={a.toolCallId + a.toolViewId}
+                              toolCallId={a.toolCallId}
+                              state={state}
+                              annotation={a as SearchToolViewAnnotation}
+                              sourcesAnnotation={getMessageAnnotationsByTypeAndToolId(
+                                message.annotations,
+                                MessageAnnotationType.Sources,
+                                toolCallId,
+                              )}
+                            />
+                          );
+                        }
+                      })}
+                    </div>
+                  );
+                }
 
                 if (state === 'call') {
                   const { args } = toolInvocation;
-
                   return (
                     <div
                       key={toolCallId}
@@ -169,13 +200,7 @@ const PurePreviewMessage = ({
                         skeleton: ['getWeather'].includes(toolName),
                       })}
                     >
-                      {widgetId === WidgetId.WebSearch ||
-                      widgetId === WidgetId.DatabaseSearch ? (
-                        <SearchToolComponent
-                          toolInvocation={toolInvocation}
-                          annotations={message.annotations}
-                        />
-                      ) : toolName === 'getWeather' ? (
+                      {toolName === 'getWeather' ? (
                         <Weather />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview isReadonly={isReadonly} args={args} />
@@ -198,16 +223,9 @@ const PurePreviewMessage = ({
 
                 if (state === 'result') {
                   const { result } = toolInvocation;
-
                   return (
                     <div key={toolCallId}>
-                      {widgetId === WidgetId.WebSearch ||
-                      widgetId === WidgetId.DatabaseSearch ? (
-                        <SearchToolComponent
-                          toolInvocation={toolInvocation}
-                          annotations={message.annotations}
-                        />
-                      ) : toolName === 'getWeather' ? (
+                      {toolName === 'getWeather' ? (
                         <Weather weatherAtLocation={result} />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview
