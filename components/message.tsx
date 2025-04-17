@@ -4,7 +4,7 @@ import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import type { Vote } from '@/lib/db/schema';
 import {
   MessageAnnotationType,
-  type SearchToolViewAnnotation,
+  type SearchToolViewMessageAnnotation,
   ToolViewId,
 } from '@/lib/types/annotations';
 import { cn } from '@/lib/utils';
@@ -177,7 +177,7 @@ const PurePreviewMessage = ({
                               key={a.toolCallId + a.toolViewId}
                               toolCallId={a.toolCallId}
                               state={state}
-                              annotation={a as SearchToolViewAnnotation}
+                              annotation={a as SearchToolViewMessageAnnotation}
                               sourcesAnnotation={getMessageAnnotationsByTypeAndToolId(
                                 message.annotations,
                                 MessageAnnotationType.Sources,

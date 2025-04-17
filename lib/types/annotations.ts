@@ -46,7 +46,7 @@ export interface TypedMessageAnnotation {
  * @property {string} toolCallId - ID of the associated tool call
  * @property {Source[]} sources - List of information sources
  */
-export interface SourcesAnnotation extends TypedMessageAnnotation {
+export interface SourcesMessageAnnotation extends TypedMessageAnnotation {
   annotationType: MessageAnnotationType.Sources;
   toolCallId: string;
   sources: Source[];
@@ -74,14 +74,15 @@ export enum ToolViewId {
   DatabaseSearch = 'databaseSearch',
 }
 
-interface ToolViewAnnotation extends TypedMessageAnnotation {
+interface ToolViewMessageAnnotation extends TypedMessageAnnotation {
   annotationType: MessageAnnotationType.ToolView;
   toolCallId: string;
   toolViewId: ToolViewId;
   toolViewData: Record<string, unknown>;
 }
 
-export interface SearchToolViewAnnotation extends ToolViewAnnotation {
+export interface SearchToolViewMessageAnnotation
+  extends ToolViewMessageAnnotation {
   toolViewId: ToolViewId.WebSearch | ToolViewId.DatabaseSearch;
   toolViewData: { query: string };
 }
@@ -94,7 +95,7 @@ export interface SearchToolViewAnnotation extends ToolViewAnnotation {
  *
  * Note: Must be updated when adding new annotation types.
  */
-export type AnnotationTypeMap = {
-  [MessageAnnotationType.ToolView]: ToolViewAnnotation;
-  [MessageAnnotationType.Sources]: SourcesAnnotation;
+export type MessageAnnotationTypeMap = {
+  [MessageAnnotationType.ToolView]: ToolViewMessageAnnotation;
+  [MessageAnnotationType.Sources]: SourcesMessageAnnotation;
 };

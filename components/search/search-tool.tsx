@@ -1,8 +1,8 @@
 'use client';
 
 import {
-  type SearchToolViewAnnotation,
-  type SourcesAnnotation,
+  type SearchToolViewMessageAnnotation,
+  type SourcesMessageAnnotation,
   ToolViewId,
 } from '@/lib/types/annotations';
 import type { ToolState } from '@/lib/types/tool';
@@ -20,8 +20,8 @@ import { SearchResultItem } from './search-result-item';
 interface SearchToolComponentProps {
   toolCallId: string;
   state: ToolState;
-  annotation: SearchToolViewAnnotation;
-  sourcesAnnotation?: SourcesAnnotation[];
+  annotation: SearchToolViewMessageAnnotation;
+  sourcesAnnotation?: SourcesMessageAnnotation[];
 }
 
 export function SearchToolComponent({

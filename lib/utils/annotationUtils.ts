@@ -1,6 +1,6 @@
 import type {
-  AnnotationTypeMap,
   MessageAnnotationType,
+  MessageAnnotationTypeMap,
   TypedMessageAnnotation,
 } from '../types/annotations';
 
@@ -36,7 +36,7 @@ export function isTypedMessageAnnotation(
 export function getMessageAnnotationsByType<T extends MessageAnnotationType>(
   annotations: unknown[] | undefined,
   type: T,
-): AnnotationTypeMap[T][] {
+): MessageAnnotationTypeMap[T][] {
   if (!annotations || !Array.isArray(annotations)) {
     return [];
   }
@@ -45,7 +45,7 @@ export function getMessageAnnotationsByType<T extends MessageAnnotationType>(
     .filter(
       (item) => isTypedMessageAnnotation(item) && item.annotationType === type,
     )
-    .map((item) => item as AnnotationTypeMap[T]);
+    .map((item) => item as MessageAnnotationTypeMap[T]);
 }
 
 /**
@@ -54,7 +54,7 @@ export function getMessageAnnotationsByType<T extends MessageAnnotationType>(
  * defining which annotations have a toolCallId property.
  */
 type AnnotationTypesWithToolCallId = {
-  [K in MessageAnnotationType]: AnnotationTypeMap[K] extends {
+  [K in MessageAnnotationType]: MessageAnnotationTypeMap[K] extends {
     toolCallId: string;
   }
     ? K
@@ -67,13 +67,15 @@ export function getMessageAnnotationsByTypeAndToolId<
   annotations: unknown[] | undefined,
   type: T,
   toolCallId: string,
-): Extract<AnnotationTypeMap[T], { toolCallId: string }>[] {
+): Extract<MessageAnnotationTypeMap[T], { toolCallId: string }>[] {
   if (!annotations || !Array.isArray(annotations)) {
     return [];
   }
 
   return annotations.filter(
-    (item): item is Extract<AnnotationTypeMap[T], { toolCallId: string }> => {
+    (
+      item,
+    ): item is Extract<MessageAnnotationTypeMap[T], { toolCallId: string }> => {
       return (
         isTypedMessageAnnotation(item) &&
         'toolCallId' in item &&
