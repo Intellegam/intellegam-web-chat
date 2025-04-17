@@ -69,11 +69,21 @@ export interface Source {
   position?: number;
 }
 
+/**
+ * The Identifiers for different types of tool views.
+ * These are used to determine which component to render for a tool view.
+ */
 export enum ToolViewId {
   WebSearch = 'webSearch',
   DatabaseSearch = 'databaseSearch',
 }
 
+/**
+ * Base interface for all tool view annotations.
+ * This links a ToolCall to the Component that should be rendered.
+ * It contains some data that is needed to render the component.
+ * But it does not contain the result of the tool call.
+ */
 interface ToolViewMessageAnnotation extends TypedMessageAnnotation {
   annotationType: MessageAnnotationType.ToolView;
   toolCallId: string;
