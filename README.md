@@ -59,3 +59,5 @@ pnpm dev
 ```
 
 Your app template should now be running on [localhost:3000](http://localhost:3000/).
+
+Run the `/iFrame` route on [http://localhost:3000/iframe?endpoint=http://127.0.0.1:8000/chat](http://localhost:3000/iframe?endpoint=http://127.0.0.1:8000/chat) to test the iframe integration.
