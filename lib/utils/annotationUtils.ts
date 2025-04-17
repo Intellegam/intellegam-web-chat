@@ -49,31 +49,37 @@ export function getMessageAnnotationsByType<T extends MessageAnnotationType>(
 }
 
 /**
- * Gets a list of annotations of the given type and tool call ID from an
- * array of unknown Message Annotations.
- *
- * @param annotations Array of unknown Message Annotations to search for annotations
- * @param type Type of annotations to search for
- * @param toolCallId ID of the tool call to search for annotations
- * @returns Array of annotations of the given type and tool call ID
+ * This is an automatically generated type that contains all annotation types that have a toolCallId property.
+ * It is used to ensure type safety when searching for annotations by type and tool call ID without manually
+ * defining which annotations have a toolCallId property.
  */
+type AnnotationTypesWithToolCallId = {
+  [K in MessageAnnotationType]: AnnotationTypeMap[K] extends {
+    toolCallId: string;
+  }
+    ? K
+    : never;
+}[MessageAnnotationType];
+
 export function getMessageAnnotationsByTypeAndToolId<
-  T extends MessageAnnotationType,
+  T extends AnnotationTypesWithToolCallId,
 >(
   annotations: unknown[] | undefined,
   type: T,
   toolCallId: string,
-): AnnotationTypeMap[T][] {
+): Extract<AnnotationTypeMap[T], { toolCallId: string }>[] {
   if (!annotations || !Array.isArray(annotations)) {
     return [];
   }
 
-  return annotations.filter((item): item is AnnotationTypeMap[T] => {
-    return (
-      isTypedMessageAnnotation(item) &&
-      'toolCallId' in item &&
-      item.annotationType === type &&
-      item.toolCallId === toolCallId
-    );
-  });
+  return annotations.filter(
+    (item): item is Extract<AnnotationTypeMap[T], { toolCallId: string }> => {
+      return (
+        isTypedMessageAnnotation(item) &&
+        'toolCallId' in item &&
+        item.annotationType === type &&
+        item.toolCallId === toolCallId
+      );
+    },
+  );
 }
