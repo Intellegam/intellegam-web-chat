@@ -3,7 +3,7 @@ import type { Vote } from '@/lib/db/schema';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
 import equal from 'fast-deep-equal';
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { PreviewMessage, ThinkingMessage } from './message';
 import { Overview } from './overview';
 import { useScrollToBottom } from './use-scroll-to-bottom';
@@ -32,6 +32,44 @@ function PureMessages({
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
   const { chatConfig } = useChatSettingsContext();
+
+  useEffect(() => {
+    //TODO: this needs a refactor this is just the first pass
+    const lastUserMessage = messages.filter((m) => m.role === 'user').at(-1);
+    if (
+      !messagesContainerRef.current ||
+      !messagesEndRef.current ||
+      !lastUserMessage
+    ) {
+      return;
+    }
+    console.log(messages);
+
+    const lastUserMessageIndex = messages.findIndex(
+      (m) => m.id === lastUserMessage.id,
+    );
+    const lastAssistantMessage = messages[lastUserMessageIndex + 1];
+    if (!lastAssistantMessage) return;
+
+    const lastUserMessageElement = document.getElementById(lastUserMessage.id);
+    const lastAssistantMessageElement = document.getElementById(
+      lastAssistantMessage.id,
+    );
+
+    if (!lastAssistantMessageElement || !lastUserMessageElement) return;
+    const combinedHeight =
+      lastUserMessageElement?.clientHeight +
+      lastAssistantMessageElement?.clientHeight;
+    console.log(combinedHeight);
+
+    //TODO: i hard coded to subtract 16px from the pt-4 and 24 px twice for the gap above the user message and the gap under the user message
+    // if its possible i would get these values from somewhere else but i am not sure how yet
+    if (combinedHeight <= messagesContainerRef.current.clientHeight) {
+      messagesEndRef.current.style.height = `${messagesContainerRef.current.clientHeight - combinedHeight - 16 - 24 - 24}px`;
+    } else {
+      messagesEndRef.current.style.height = '24px';
+    }
+  });
 
   return (
     <div
