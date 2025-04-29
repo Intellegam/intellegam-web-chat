@@ -70,7 +70,7 @@ function PureMultimodalInput({
   // - For new conversations (0 messages): show initial starter prompts
   // - After first exchange (2 messages): show follow-up prompt suggestions
   // - For ongoing conversations: don't show any suggestions (null)
-  const suggestedActions =
+  const suggestedActionPrompts =
     messages.length === 0
       ? chatConfig.startPrompts
       : messages.length === 2
@@ -226,13 +226,13 @@ function PureMultimodalInput({
 
   return (
     <div className="relative flex flex-col gap-4 w-full">
-      {suggestedActions &&
+      {suggestedActionPrompts &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
           <SuggestedActions
             append={append}
             chatId={chatId}
-            actions={suggestedActions}
+            actions={suggestedActionPrompts}
             searchWeb={searchWeb}
           />
         )}

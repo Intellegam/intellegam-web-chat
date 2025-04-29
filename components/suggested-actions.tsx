@@ -22,15 +22,13 @@ function PureSuggestedActions({
   const viewConfig = useViewConfig();
   //TODO: Either change the data model of the suggested actions or the data model of the startPrompts/FollowUpPrompts -Meris
   // This conversion is unnecessary and just causes confusion
-  let suggestedActions: { title: string; label: string; action: string }[] = [];
 
   // This sorts the prompts from shortest to longest for a more cohesive look in the ui
   // and transforms them into the suggestedActions format
-  if (actions.length !== 0) {
-    suggestedActions = actions
+  const suggestedActions: { title: string; label: string; action: string }[] =
+    actions
       .sort((a, b) => a.length - b.length)
       .map((p) => ({ title: p, label: p, action: p }));
-  }
 
   return (
     <div
