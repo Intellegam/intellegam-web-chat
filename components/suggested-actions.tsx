@@ -61,8 +61,6 @@ function PureSuggestedActions({
                 window.history.replaceState({}, '', `/chat/${chatId}`);
               }
 
-              console.log(searchWeb);
-
               append(
                 {
                   role: 'user',
