@@ -24,7 +24,6 @@ export function Chat({
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
-  selectedChatModel: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
 }) {
