@@ -5,6 +5,7 @@ import type { UseChatHelpers } from '@ai-sdk/react';
 import { motion } from 'framer-motion';
 import { memo } from 'react';
 import { Button } from './ui/button';
+import equal from 'fast-deep-equal';
 
 interface SuggestedActionsProps {
   chatId: string;
@@ -80,6 +81,11 @@ export const SuggestedActions = memo(
     if (prevProps.searchWeb !== nextProps.searchWeb) {
       return false;
     }
+
+    if (!equal(prevProps.actions, nextProps.actions)) {
+      return false;
+    }
+
     return true;
   },
 );
