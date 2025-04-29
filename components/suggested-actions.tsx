@@ -1,42 +1,33 @@
 'use client';
 
-import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
-import type { ChatRequestOptions, CreateMessage, Message } from 'ai';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import { motion } from 'framer-motion';
 import { memo } from 'react';
 import { Button } from './ui/button';
 
 interface SuggestedActionsProps {
   chatId: string;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
+  append: UseChatHelpers['append'];
   searchWeb: boolean;
-  showStartPrompts: boolean;
-  showFollowUpPrompts: boolean;
+  actions: string[];
 }
 
 function PureSuggestedActions({
   chatId,
   append,
   searchWeb,
-  showStartPrompts,
-  showFollowUpPrompts,
+  actions,
 }: SuggestedActionsProps) {
-  const { chatConfig, adminChatConfig } = useChatSettingsContext();
   const viewConfig = useViewConfig();
+  //TODO: Either change the data model of the suggested actions or the data model of the startPrompts/FollowUpPrompts
   let suggestedActions: { title: string; label: string; action: string }[] = [];
 
-  if (showStartPrompts) {
-    suggestedActions = chatConfig.startPrompts
-      .sort((a, b) => b.length - a.length)
-      .map((p) => ({ title: p, label: p, action: p }));
-  }
-  if (showFollowUpPrompts) {
-    suggestedActions = adminChatConfig.followUpPrompts
-      .sort((a, b) => b.length - a.length)
+  // This sorts the prompts from shortest to longest for a more cohesive look in the ui
+  // and transforms them into the suggestedActions format
+  if (actions.length !== 0) {
+    suggestedActions = actions
+      .sort((a, b) => a.length - b.length)
       .map((p) => ({ title: p, label: p, action: p }));
   }
 
