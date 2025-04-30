@@ -104,8 +104,9 @@ function PureMultimodalInput({
   }, []);
 
   useEffect(() => {
+    if (viewConfig.isIframe) return;
     setLocalStorageInput(input);
-  }, [input, setLocalStorageInput]);
+  }, [input, setLocalStorageInput, viewConfig.isIframe]);
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(event.target.value);
