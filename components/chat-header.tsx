@@ -13,6 +13,7 @@ import { useSidebar } from './ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { VisibilitySelector, type VisibilityType } from './visibility-selector';
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
+import { ModeToggle } from './mode-toggle';
 
 function PureChatHeader({
   chatId,
@@ -33,6 +34,7 @@ function PureChatHeader({
   return (
     <header className="top-0 sticky flex items-center gap-2 px-2 md:px-2 py-1.5">
       {viewConfig.showSidebar && <SidebarToggle />}
+      <ModeToggle />
 
       {(!open || windowWidth < 768) && (
         <Tooltip>
@@ -48,7 +50,7 @@ function PureChatHeader({
               }}
             >
               <PlusIcon />
-              <span>New Chat</span>
+              <span className="hidden md:block">New Chat</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>New Chat</TooltipContent>
