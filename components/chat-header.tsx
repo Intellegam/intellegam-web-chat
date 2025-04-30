@@ -34,7 +34,15 @@ function PureChatHeader({
   return (
     <header className="top-0 sticky flex items-center gap-2 px-2 md:px-2 py-1.5">
       {viewConfig.showSidebar && <SidebarToggle />}
-      <ModeToggle />
+      <ModeToggle className="order-1" />
+
+      {!isReadonly && !viewConfig.isIframe && (
+        <VisibilitySelector
+          chatId={chatId}
+          selectedVisibilityType={selectedVisibilityType}
+          className="order-1"
+        />
+      )}
 
       {(!open || windowWidth < 768) && (
         <Tooltip>
@@ -57,13 +65,6 @@ function PureChatHeader({
         </Tooltip>
       )}
 
-      {!isReadonly && !viewConfig.isIframe && (
-        <VisibilitySelector
-          chatId={chatId}
-          selectedVisibilityType={selectedVisibilityType}
-          className="order-1 md:order-2"
-        />
-      )}
       <div className="right-1/2 absolute flex justify-between items-center gap-x-3 translate-x-1/2">
         <Image
           width={0}
