@@ -66,6 +66,17 @@ function PureMultimodalInput({
   const { chatConfig, adminChatConfig } = useChatSettingsContext();
   const [searchWeb, setSearchWeb] = useState(false);
 
+  // Determine which prompts to display based on conversation state:
+  // - For new conversations (0 messages): show initial starter prompts
+  // - After first exchange (2 messages): show follow-up prompt suggestions
+  // - For ongoing conversations: don't show any suggestions (null)
+  const suggestedActionPrompts =
+    messages.length === 0
+      ? chatConfig.startPrompts
+      : messages.length === 2
+        ? adminChatConfig.followUpPrompts
+        : null;
+
   useEffect(() => {
     if (textareaRef.current) {
       adjustHeight();
@@ -215,12 +226,16 @@ function PureMultimodalInput({
 
   return (
     <div className="relative flex flex-col gap-4 w-full">
-      {messages.length === 0 &&
+      {suggestedActionPrompts &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
-          <SuggestedActions append={append} chatId={chatId} />
+          <SuggestedActions
+            append={append}
+            chatId={chatId}
+            actions={suggestedActionPrompts}
+            searchWeb={searchWeb}
+          />
         )}
-
       <input
         type="file"
         className="-top-4 -left-4 fixed opacity-0 size-0.5 pointer-events-none"

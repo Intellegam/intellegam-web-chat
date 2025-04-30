@@ -1,27 +1,35 @@
 'use client';
 
+import { useViewConfig } from '@/contexts/view-config-context';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import { motion } from 'framer-motion';
-import { Button } from './ui/button';
-import type { ChatRequestOptions, CreateMessage, Message } from 'ai';
 import { memo } from 'react';
-import { useChatSettingsContext } from '@/contexts/chat-config-context';
+import { Button } from './ui/button';
+import equal from 'fast-deep-equal';
 
 interface SuggestedActionsProps {
   chatId: string;
-  append: (
-    message: Message | CreateMessage,
-    chatRequestOptions?: ChatRequestOptions,
-  ) => Promise<string | null | undefined>;
+  append: UseChatHelpers['append'];
+  searchWeb: boolean;
+  actions: string[];
 }
 
-function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
-  let suggestedActions: { title: string; label: string; action: string }[] = [];
-  const { chatConfig } = useChatSettingsContext();
-  if (chatConfig.startPrompts) {
-    suggestedActions = chatConfig.startPrompts
-      .sort((a, b) => b.length - a.length)
+function PureSuggestedActions({
+  chatId,
+  append,
+  searchWeb,
+  actions,
+}: SuggestedActionsProps) {
+  const viewConfig = useViewConfig();
+  //TODO: Either change the data model of the suggested actions or the data model of the startPrompts/FollowUpPrompts -Meris
+  // This conversion is unnecessary and just causes confusion
+
+  // This sorts the prompts from shortest to longest for a more cohesive look in the ui
+  // and transforms them into the suggestedActions format
+  const suggestedActions: { title: string; label: string; action: string }[] =
+    actions
+      .sort((a, b) => a.length - b.length)
       .map((p) => ({ title: p, label: p, action: p }));
-  }
 
   return (
     <div
@@ -40,13 +48,17 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
           <Button
             variant="ghost"
             onClick={async () => {
-              //TODO: check for iframe here
-              // window.history.replaceState({}, '', `/chat/${chatId}`);
+              if (!viewConfig.isIframe) {
+                window.history.replaceState({}, '', `/chat/${chatId}`);
+              }
 
-              append({
-                role: 'user',
-                content: suggestedAction.action,
-              });
+              append(
+                {
+                  role: 'user',
+                  content: suggestedAction.action,
+                },
+                { body: { enableWebSearch: searchWeb } },
+              );
             }}
             className="sm:flex-col flex-1 justify-start items-start gap-1 px-3 py-2 border rounded-xl w-full h-auto text-sm text-left"
           >
@@ -63,4 +75,17 @@ function PureSuggestedActions({ chatId, append }: SuggestedActionsProps) {
   );
 }
 
-export const SuggestedActions = memo(PureSuggestedActions, () => true);
+export const SuggestedActions = memo(
+  PureSuggestedActions,
+  (prevProps, nextProps) => {
+    if (prevProps.searchWeb !== nextProps.searchWeb) {
+      return false;
+    }
+
+    if (!equal(prevProps.actions, nextProps.actions)) {
+      return false;
+    }
+
+    return true;
+  },
+);
