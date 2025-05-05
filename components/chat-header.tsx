@@ -58,10 +58,10 @@ function PureChatHeader({
               }}
             >
               <PlusIcon />
-              <span className="hidden md:block">New Chat</span>
+              <span className="md:hidden block">New Chat</span>
             </Button>
           </TooltipTrigger>
-          <TooltipContent>New Chat</TooltipContent>
+          <TooltipContent align="end">New Chat</TooltipContent>
         </Tooltip>
       )}
 
