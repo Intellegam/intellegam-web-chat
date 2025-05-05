@@ -13,6 +13,7 @@ import { useSidebar } from './ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { VisibilitySelector, type VisibilityType } from './visibility-selector';
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
+import { ModeToggle } from './mode-toggle';
 
 function PureChatHeader({
   chatId,
@@ -33,6 +34,15 @@ function PureChatHeader({
   return (
     <header className="top-0 sticky flex items-center gap-2 px-2 md:px-2 py-1.5">
       {viewConfig.showSidebar && <SidebarToggle />}
+      <ModeToggle className="order-1" />
+
+      {!isReadonly && !viewConfig.isIframe && (
+        <VisibilitySelector
+          chatId={chatId}
+          selectedVisibilityType={selectedVisibilityType}
+          className="order-1"
+        />
+      )}
 
       {(!open || windowWidth < 768) && (
         <Tooltip>
@@ -48,20 +58,13 @@ function PureChatHeader({
               }}
             >
               <PlusIcon />
-              <span>New Chat</span>
+              <span className="md:hidden block">New Chat</span>
             </Button>
           </TooltipTrigger>
-          <TooltipContent>New Chat</TooltipContent>
+          <TooltipContent align="end">New Chat</TooltipContent>
         </Tooltip>
       )}
 
-      {!isReadonly && !viewConfig.isIframe && (
-        <VisibilitySelector
-          chatId={chatId}
-          selectedVisibilityType={selectedVisibilityType}
-          className="order-1 md:order-2"
-        />
-      )}
       <div className="right-1/2 absolute flex justify-between items-center gap-x-3 translate-x-1/2">
         <Image
           width={0}
