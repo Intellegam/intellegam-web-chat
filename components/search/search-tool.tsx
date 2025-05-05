@@ -33,7 +33,6 @@ export function SearchToolComponent({
   const sources = sourcesAnnotation
     ? sourcesAnnotation.flatMap((sa) => sa.sources)
     : [];
-  const hasResults = sources.length > 0;
 
   const getSearchTypeIcon = (type: ToolViewId) => {
     switch (type) {
@@ -73,7 +72,7 @@ export function SearchToolComponent({
                 text={`Searching ${annotation.toolViewId.replace('Search', '')}...`}
               />
             </motion.div>
-          ) : !hasResults || sources.length === 0 ? (
+          ) : state === 'result' && sources.length === 0 ? (
             <motion.div
               key="no-results"
               {...textAnimationProps}
