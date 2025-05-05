@@ -20,14 +20,14 @@ import { SearchResultItem } from './search-result-item';
 interface SearchToolComponentProps {
   toolCallId: string;
   state: ToolState;
-  annotation: SearchToolViewMessageAnnotation;
+  searchAnnotation: SearchToolViewMessageAnnotation;
   sourcesAnnotation?: SourcesMessageAnnotation[];
 }
 
 export function SearchToolComponent({
   toolCallId,
   state,
-  annotation,
+  searchAnnotation,
   sourcesAnnotation,
 }: SearchToolComponentProps) {
   const sources = sourcesAnnotation
@@ -53,10 +53,21 @@ export function SearchToolComponent({
     transition: { duration: 0.3 },
   };
 
+  function getSearchText(type: ToolViewId) {
+    switch (type) {
+      case ToolViewId.WebSearch:
+        return 'Searching Web';
+      case ToolViewId.DatabaseSearch:
+        return 'Searching Database';
+      default:
+        return 'Finding Information';
+    }
+  }
+
   return (
     <div className="flex items-start gap-2">
       <div className="mt-[0.4rem] text-muted-foreground">
-        {getSearchTypeIcon(annotation.toolViewId)}
+        {getSearchTypeIcon(searchAnnotation.toolViewId)}
       </div>
 
       <div className="flex-1">
@@ -69,7 +80,7 @@ export function SearchToolComponent({
             >
               <ShinyText
                 speed={2}
-                text={`Searching ${annotation.toolViewId.replace('Search', '')}...`}
+                text={getSearchText(searchAnnotation.toolViewId)}
               />
             </motion.div>
           ) : state === 'result' && sources.length === 0 ? (
@@ -109,7 +120,7 @@ export function SearchToolComponent({
                         <div className="flex items-center gap-1.5">
                           <SearchIcon className="size-3.5 text-muted-foreground" />
                           <p className="text-sm truncate">
-                            {annotation.toolViewData?.query}
+                            {searchAnnotation.toolViewData?.query}
                           </p>
                         </div>
                       </div>
