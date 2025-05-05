@@ -177,7 +177,9 @@ const PurePreviewMessage = ({
                               key={a.toolCallId + a.toolViewId}
                               toolCallId={a.toolCallId}
                               state={state}
-                              annotation={a as SearchToolViewMessageAnnotation}
+                              searchAnnotation={
+                                a as SearchToolViewMessageAnnotation
+                              }
                               sourcesAnnotation={getMessageAnnotationsByTypeAndToolId(
                                 message.annotations,
                                 MessageAnnotationType.Sources,
