@@ -1,14 +1,20 @@
 'use client';
 
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
+import type { Vote } from '@/lib/db/schema';
+import {
+  MessageAnnotationType,
+  type SearchToolViewMessageAnnotation,
+  ToolViewId,
+} from '@/lib/types/annotations';
+import { cn } from '@/lib/utils';
+import { getMessageAnnotationsByTypeAndToolId } from '@/lib/utils/annotationUtils';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
 import cx from 'classnames';
+import equal from 'fast-deep-equal';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useRef, useState } from 'react';
-import type { Vote } from '@/lib/db/schema';
-
-import { useChatSettingsContext } from '@/contexts/chat-config-context';
-import { cn } from '@/lib/utils';
-import equal from 'fast-deep-equal';
 import AssistantAvatar from './assistant-avatar';
 import { DocumentToolCall, DocumentToolResult } from './document';
 import { DocumentPreview } from './document-preview';
@@ -18,10 +24,10 @@ import { MessageActions } from './message-actions';
 import { MessageEditor } from './message-editor';
 import { MessageReasoning } from './message-reasoning';
 import { PreviewAttachment } from './preview-attachment';
+import { SearchToolComponent } from './search/search-tool';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Weather } from './weather';
-import type { UseChatHelpers } from '@ai-sdk/react';
 
 const PurePreviewMessage = ({
   chatId,
@@ -151,10 +157,44 @@ const PurePreviewMessage = ({
               if (type === 'tool-invocation') {
                 const { toolInvocation } = part;
                 const { toolName, toolCallId, state } = toolInvocation;
+                const toolViewAnnotations =
+                  getMessageAnnotationsByTypeAndToolId(
+                    message.annotations,
+                    MessageAnnotationType.ToolView,
+                    toolCallId,
+                  );
+
+                if (toolViewAnnotations) {
+                  return (
+                    <div key={toolCallId}>
+                      {toolViewAnnotations.map((a) => {
+                        if (
+                          a.toolViewId === ToolViewId.WebSearch ||
+                          a.toolViewId === ToolViewId.DatabaseSearch
+                        ) {
+                          return (
+                            <SearchToolComponent
+                              key={a.toolCallId + a.toolViewId}
+                              toolCallId={a.toolCallId}
+                              state={state}
+                              searchAnnotation={
+                                a as SearchToolViewMessageAnnotation
+                              }
+                              sourcesAnnotation={getMessageAnnotationsByTypeAndToolId(
+                                message.annotations,
+                                MessageAnnotationType.Sources,
+                                toolCallId,
+                              )}
+                            />
+                          );
+                        }
+                      })}
+                    </div>
+                  );
+                }
 
                 if (state === 'call') {
                   const { args } = toolInvocation;
-
                   return (
                     <div
                       key={toolCallId}
@@ -185,7 +225,6 @@ const PurePreviewMessage = ({
 
                 if (state === 'result') {
                   const { result } = toolInvocation;
-
                   return (
                     <div key={toolCallId}>
                       {toolName === 'getWeather' ? (
@@ -239,6 +278,8 @@ export const PreviewMessage = memo(
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.message.id !== nextProps.message.id) return false;
+    if (prevProps.message.annotations !== nextProps.message.annotations)
+      return false;
     if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
     if (!equal(prevProps.vote, nextProps.vote)) return false;
 

@@ -43,6 +43,7 @@ function PureMessages({
 
       {messages.map((message, index) => (
         <PreviewMessage
+          //TODO: the ids change to the steps_id which causes rerendering -Meris
           key={message.id}
           chatId={chatId}
           message={message}

@@ -12,6 +12,7 @@ import {
 import { Textarea } from './ui/textarea';
 import { deleteTrailingMessages } from '@/app/(chat)/actions';
 import type { UseChatHelpers } from '@ai-sdk/react';
+import { useViewConfig } from '@/contexts/view-config-context';
 
 export type MessageEditorProps = {
   message: Message;
@@ -30,6 +31,7 @@ export function MessageEditor({
 
   const [draftContent, setDraftContent] = useState<string>(message.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const viewConfig = useViewConfig();
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -77,9 +79,11 @@ export function MessageEditor({
           onClick={async () => {
             setIsSubmitting(true);
 
-            await deleteTrailingMessages({
-              id: message.id,
-            });
+            if (!viewConfig.isIframe) {
+              await deleteTrailingMessages({
+                id: message.id,
+              });
+            }
 
             // @ts-expect-error todo: support UIMessage in setMessages
             setMessages((messages) => {
