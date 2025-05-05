@@ -10,7 +10,13 @@ interface SearchResultItemProps {
 export function SearchResultItem({ result }: SearchResultItemProps) {
   // Extract domain from URL if available
   const domain = result.url
-    ? new URL(result.url).hostname.replace('www.', '')
+    ? (() => {
+        try {
+          return new URL(result.url).hostname.replace('www.', '');
+        } catch (e) {
+          return result.url; // Fallback to displaying the raw URL
+        }
+      })()
     : '';
   const fileName = result.fileReference?.split('/').pop();
   const fileType = fileName?.split('.').pop();
