@@ -1,7 +1,9 @@
 'use client';
 
+import { deleteTrailingMessages } from '@/app/(chat)/actions';
+import { useViewConfig } from '@/contexts/view-config-context';
+import type { UseChatHelpers } from '@ai-sdk/react';
 import type { Message } from 'ai';
-import { Button } from './ui/button';
 import {
   type Dispatch,
   type SetStateAction,
@@ -9,10 +11,8 @@ import {
   useRef,
   useState,
 } from 'react';
+import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { deleteTrailingMessages } from '@/app/(chat)/actions';
-import type { UseChatHelpers } from '@ai-sdk/react';
-import { useViewConfig } from '@/contexts/view-config-context';
 
 export type MessageEditorProps = {
   message: Message;

@@ -1,12 +1,13 @@
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
+import { useMessages } from '@/hooks/use-messages';
 import type { Vote } from '@/lib/db/schema';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
 import equal from 'fast-deep-equal';
+import { motion } from 'framer-motion';
 import { memo } from 'react';
+import { Greeting } from './greeting';
 import { PreviewMessage, ThinkingMessage } from './message';
-import { Overview } from './overview';
-import { useScrollToBottom } from './use-scroll-to-bottom';
 
 interface MessagesProps {
   chatId: string;
@@ -28,8 +29,16 @@ function PureMessages({
   reload,
   isReadonly,
 }: MessagesProps) {
-  const [messagesContainerRef, messagesEndRef] =
-    useScrollToBottom<HTMLDivElement>();
+  const {
+    containerRef: messagesContainerRef,
+    endRef: messagesEndRef,
+    onViewportEnter,
+    onViewportLeave,
+    hasSentMessage,
+  } = useMessages({
+    chatId,
+    status,
+  });
   const { chatConfig } = useChatSettingsContext();
 
   return (
@@ -37,8 +46,8 @@ function PureMessages({
       ref={messagesContainerRef}
       className="flex flex-col flex-1 gap-6 pt-4 min-w-0 overflow-y-scroll"
     >
-      {messages.length === 0 && chatConfig.startMessage && (
-        <Overview startMessage={chatConfig.startMessage} />
+      {messages.length === 0 && (
+        <Greeting startMessage={chatConfig.startMessage} />
       )}
 
       {messages.map((message, index) => (
@@ -56,6 +65,9 @@ function PureMessages({
           setMessages={setMessages}
           reload={reload}
           isReadonly={isReadonly}
+          requiresScrollPadding={
+            hasSentMessage && index === messages.length - 1
+          }
         />
       ))}
 
@@ -65,9 +77,11 @@ function PureMessages({
           <ThinkingMessage chatLogo={chatConfig.chatLogo} />
         )}
 
-      <div
+      <motion.div
         ref={messagesEndRef}
         className="min-w-[24px] min-h-[24px] shrink-0"
+        onViewportLeave={onViewportLeave}
+        onViewportEnter={onViewportEnter}
       />
     </div>
   );

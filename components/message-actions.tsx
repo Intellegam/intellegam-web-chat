@@ -3,10 +3,6 @@ import { useViewConfig } from '@/contexts/view-config-context';
 import type { Vote } from '@/lib/db/schema';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { Message } from 'ai';
-import equal from 'fast-deep-equal';
-import { RefreshCw } from 'lucide-react';
-import { memo, type RefObject } from 'react';
-import { toast } from 'sonner';
 import { useSWRConfig } from 'swr';
 import { useCopyToClipboard } from 'usehooks-ts';
 import { CopyIcon, ThumbDownIcon, ThumbUpIcon } from './icons';
@@ -17,6 +13,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from './ui/tooltip';
+import { memo } from 'react';
+import equal from 'fast-deep-equal';
+import { toast } from 'sonner';
 
 export function PureMessageActions({
   chatId,
