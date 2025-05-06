@@ -1,6 +1,7 @@
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { ChatSettingsProvider } from '@/contexts/chat-config-context';
+import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import type {
   AdminChatConfig,
   ChatConfig,
@@ -10,6 +11,8 @@ import { EncryptionHelper } from '@/lib/config/EncryptionHelper';
 import { generateUUID } from '@/lib/utils';
 import { getChatConfigs } from '@/lib/utils/configUtils';
 import Image from 'next/image';
+import { auth } from '../(auth)/auth';
+import { redirect } from 'next/navigation';
 
 const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 
@@ -18,6 +21,11 @@ export default async function Page({
   searchParams,
 }: { searchParams: Promise<{ endpoint: string }> }) {
   const id = generateUUID();
+  const session = await auth();
+
+  if (!session) {
+    redirect('/api/auth/guest');
+  }
   //TODO: the below could be refactored/extracted as it is used in chat/page.tsx too -Meris
   const chatParams = new URLSearchParams(await searchParams);
   const decryptedSearchParams = await EncryptionHelper.decryptURLSearchParams(
@@ -54,8 +62,11 @@ export default async function Page({
           key={id}
           id={id}
           initialMessages={[]}
-          selectedVisibilityType="private"
+          initialChatModel={DEFAULT_CHAT_MODEL}
+          initialVisibilityType="private"
           isReadonly={false}
+          autoResume={false}
+          session={session}
         />
       </ChatSettingsProvider>
       <DataStreamHandler id={id} />
