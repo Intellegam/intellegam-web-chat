@@ -1,27 +1,24 @@
-'use client';
+"use client";
 
-import { deleteTrailingMessages } from '@/app/(chat)/actions';
-import { useViewConfig } from '@/contexts/view-config-context';
-import type { UseChatHelpers } from '@ai-sdk/react';
-import type { Message } from 'ai';
+import { deleteTrailingMessages } from "@/app/(chat)/actions";
+import { useViewConfig } from "@/contexts/view-config-context";
+import type { UseChatHelpers } from "@ai-sdk/react";
+import type { Message } from "ai";
 import {
   type Dispatch,
   type SetStateAction,
   useEffect,
   useRef,
   useState,
-} from 'react';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
-import { deleteTrailingMessages } from '@/app/(chat)/actions';
-import type { UseChatHelpers } from '@ai-sdk/react';
-import { useViewConfig } from '@/contexts/view-config-context';
+} from "react";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
 
 export type MessageEditorProps = {
   message: Message;
-  setMode: Dispatch<SetStateAction<'view' | 'edit'>>;
-  setMessages: UseChatHelpers['setMessages'];
-  reload: UseChatHelpers['reload'];
+  setMode: Dispatch<SetStateAction<"view" | "edit">>;
+  setMessages: UseChatHelpers["setMessages"];
+  reload: UseChatHelpers["reload"];
 };
 
 export function MessageEditor({
@@ -44,7 +41,7 @@ export function MessageEditor({
 
   const adjustHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
     }
   };
@@ -69,7 +66,7 @@ export function MessageEditor({
           variant="outline"
           className="px-3 py-2 h-fit"
           onClick={() => {
-            setMode('view');
+            setMode("view");
           }}
         >
           Cancel
@@ -96,7 +93,7 @@ export function MessageEditor({
                 const updatedMessage = {
                   ...message,
                   content: draftContent,
-                  parts: [{ type: 'text', text: draftContent }],
+                  parts: [{ type: "text", text: draftContent }],
                 };
 
                 return [...messages.slice(0, index), updatedMessage];
@@ -105,11 +102,11 @@ export function MessageEditor({
               return messages;
             });
 
-            setMode('view');
+            setMode("view");
             reload();
           }}
         >
-          {isSubmitting ? 'Sending...' : 'Send'}
+          {isSubmitting ? "Sending..." : "Send"}
         </Button>
       </div>
     </div>
