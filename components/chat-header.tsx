@@ -14,15 +14,21 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { VisibilitySelector, type VisibilityType } from './visibility-selector';
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { ModeToggle } from './mode-toggle';
+import type { Session } from 'next-auth';
+import { ModelSelector } from './model-selector';
 
 function PureChatHeader({
   chatId,
+  selectedModelId,
   selectedVisibilityType,
   isReadonly,
+  session,
 }: {
   chatId: string;
+  selectedModelId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
+  session?: Session;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -63,6 +69,13 @@ function PureChatHeader({
           </TooltipTrigger>
           <TooltipContent align="end">New Chat</TooltipContent>
         </Tooltip>
+      )}
+      {!isReadonly && !viewConfig.isIframe && (
+        <ModelSelector
+          session={session}
+          selectedModelId={selectedModelId}
+          className="order-1 md:order-2"
+        />
       )}
 
       <div className="right-1/2 absolute flex justify-between items-center gap-x-3 translate-x-1/2">

@@ -1,6 +1,6 @@
 'use client';
 
-import type {
+import {
   AdminChatConfig,
   ChatConfig,
   EndpointConfig,
@@ -14,9 +14,9 @@ export interface ChatSettings {
 }
 
 export const DEFAULT_SETTINGS_CONFIG: ChatSettings = {
-  endpointConfig: {} as EndpointConfig,
-  chatConfig: {} as ChatConfig,
-  adminChatConfig: {} as AdminChatConfig,
+  endpointConfig: new EndpointConfig(),
+  chatConfig: new ChatConfig(),
+  adminChatConfig: new AdminChatConfig(),
 };
 
 const ChatSettingsContext = createContext<ChatSettings>(

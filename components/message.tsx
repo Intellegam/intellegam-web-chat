@@ -7,7 +7,7 @@ import {
   type SearchToolViewMessageAnnotation,
   ToolViewId,
 } from '@/lib/types/annotations';
-import { cn } from '@/lib/utils';
+import { cn, sanitizeText } from '@/lib/utils';
 import { getMessageAnnotationsByTypeAndToolId } from '@/lib/utils/annotationUtils';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { UIMessage } from 'ai';
@@ -37,6 +37,7 @@ const PurePreviewMessage = ({
   setMessages,
   reload,
   isReadonly,
+  requiresScrollPadding,
 }: {
   chatId: string;
   message: UIMessage;
@@ -45,6 +46,7 @@ const PurePreviewMessage = ({
   setMessages: UseChatHelpers['setMessages'];
   reload: UseChatHelpers['reload'];
   isReadonly: boolean;
+  requiresScrollPadding: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const { chatConfig, adminChatConfig } = useChatSettingsContext();
@@ -72,20 +74,25 @@ const PurePreviewMessage = ({
             <AssistantAvatar chatLogo={chatConfig.chatLogo} />
           )}
 
-          <div className="flex flex-col gap-4 w-full">
-            {message.experimental_attachments && (
-              <div
-                data-testid={`message-attachments`}
-                className="flex flex-row justify-end gap-2"
-              >
-                {message.experimental_attachments.map((attachment) => (
-                  <PreviewAttachment
-                    key={attachment.url}
-                    attachment={attachment}
-                  />
-                ))}
-              </div>
-            )}
+          <div
+            className={cn('flex flex-col gap-4 w-full', {
+              'min-h-96': message.role === 'assistant' && requiresScrollPadding,
+            })}
+          >
+            {message.experimental_attachments &&
+              message.experimental_attachments.length > 0 && (
+                <div
+                  data-testid={`message-attachments`}
+                  className="flex flex-row justify-end gap-2"
+                >
+                  {message.experimental_attachments.map((attachment) => (
+                    <PreviewAttachment
+                      key={attachment.url}
+                      attachment={attachment}
+                    />
+                  ))}
+                </div>
+              )}
 
             {message.parts?.map((part, index) => {
               const { type } = part;
@@ -131,7 +138,7 @@ const PurePreviewMessage = ({
                         })}
                         ref={messageRef}
                       >
-                        <Markdown>{part.text}</Markdown>
+                        <Markdown>{sanitizeText(part.text)}</Markdown>
                       </div>
                     </div>
                   );
@@ -278,9 +285,15 @@ export const PreviewMessage = memo(
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.message.id !== nextProps.message.id) return false;
+<<<<<<< HEAD
     if (prevProps.message.annotations !== nextProps.message.annotations)
+=======
+    if (prevProps.requiresScrollPadding !== nextProps.requiresScrollPadding)
+>>>>>>> 51efdf0bf3e1f5cc295648d2fe151b5b9211fecd
       return false;
     if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
+    if (!equal(prevProps.message.annotations, nextProps.message.annotations))
+      return false;
     if (!equal(prevProps.vote, nextProps.vote)) return false;
 
     return true;
@@ -292,7 +305,7 @@ export const ThinkingMessage = ({ chatLogo }: { chatLogo?: string }) => {
   return (
     <motion.div
       data-testid="message-assistant-loading"
-      className="group/message mx-auto px-4 w-full max-w-3xl"
+      className="group/message mx-auto px-4 w-full max-w-3xl min-h-96"
       initial={{ y: 5, opacity: 0 }}
       animate={{ y: 0, opacity: 1, transition: { delay: 1 } }}
       data-role={role}

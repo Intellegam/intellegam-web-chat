@@ -27,6 +27,7 @@ import { sheetArtifact } from '@/artifacts/sheet/client';
 import { textArtifact } from '@/artifacts/text/client';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
+import type { VisibilityType } from './visibility-selector';
 
 export const artifactDefinitions = [
   textArtifact,
@@ -66,6 +67,7 @@ function PureArtifact({
   reload,
   votes,
   isReadonly,
+  selectedVisibilityType,
 }: {
   chatId: string;
   input: string;
@@ -81,6 +83,7 @@ function PureArtifact({
   handleSubmit: UseChatHelpers['handleSubmit'];
   reload: UseChatHelpers['reload'];
   isReadonly: boolean;
+  selectedVisibilityType: VisibilityType;
 }) {
   const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
 
@@ -256,7 +259,7 @@ function PureArtifact({
       {artifact.isVisible && (
         <motion.div
           data-testid="artifact"
-          className="flex flex-row h-dvh w-dvw fixed top-0 left-0 z-50 bg-transparent"
+          className="top-0 left-0 z-50 fixed flex flex-row bg-transparent w-dvw h-dvh"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { delay: 0.4 } }}
@@ -278,7 +281,7 @@ function PureArtifact({
 
           {!isMobile && (
             <motion.div
-              className="relative w-[400px] bg-muted dark:bg-background h-dvh shrink-0"
+              className="relative bg-muted dark:bg-background w-[400px] h-dvh shrink-0"
               initial={{ opacity: 0, x: 10, scale: 1 }}
               animate={{
                 opacity: 1,
@@ -301,7 +304,7 @@ function PureArtifact({
               <AnimatePresence>
                 {!isCurrentVersion && (
                   <motion.div
-                    className="left-0 absolute h-dvh w-[400px] top-0 bg-zinc-900/50 z-50"
+                    className="top-0 left-0 z-50 absolute bg-zinc-900/50 w-[400px] h-dvh"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -309,7 +312,7 @@ function PureArtifact({
                 )}
               </AnimatePresence>
 
-              <div className="flex flex-col h-full justify-between items-center gap-4">
+              <div className="flex flex-col justify-between items-center h-full">
                 <ArtifactMessages
                   chatId={chatId}
                   status={status}
@@ -321,7 +324,7 @@ function PureArtifact({
                   artifactStatus={artifact.status}
                 />
 
-                <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
+                <form className="relative flex flex-row items-end gap-2 px-4 pb-4 w-full">
                   <MultimodalInput
                     chatId={chatId}
                     input={input}
@@ -335,6 +338,7 @@ function PureArtifact({
                     append={append}
                     className="bg-background dark:bg-muted"
                     setMessages={setMessages}
+                    selectedVisibilityType={selectedVisibilityType}
                   />
                 </form>
               </div>
@@ -342,7 +346,7 @@ function PureArtifact({
           )}
 
           <motion.div
-            className="fixed dark:bg-muted bg-background h-dvh flex flex-col overflow-y-scroll md:border-l dark:border-zinc-700 border-zinc-200"
+            className="fixed flex flex-col bg-background dark:bg-muted border-zinc-200 dark:border-zinc-700 md:border-l h-dvh overflow-y-scroll"
             initial={
               isMobile
                 ? {
@@ -408,19 +412,19 @@ function PureArtifact({
               },
             }}
           >
-            <div className="p-2 flex flex-row justify-between items-start">
-              <div className="flex flex-row gap-4 items-start">
+            <div className="flex flex-row justify-between items-start p-2">
+              <div className="flex flex-row items-start gap-4">
                 <ArtifactCloseButton />
 
                 <div className="flex flex-col">
                   <div className="font-medium">{artifact.title}</div>
 
                   {isContentDirty ? (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       Saving changes...
                     </div>
                   ) : document ? (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       {`Updated ${formatDistance(
                         new Date(document.createdAt),
                         new Date(),
@@ -430,7 +434,7 @@ function PureArtifact({
                       )}`}
                     </div>
                   ) : (
-                    <div className="w-32 h-3 mt-2 bg-muted-foreground/20 rounded-md animate-pulse" />
+                    <div className="bg-muted-foreground/20 mt-2 rounded-md w-32 h-3 animate-pulse" />
                   )}
                 </div>
               </div>
@@ -446,7 +450,7 @@ function PureArtifact({
               />
             </div>
 
-            <div className="dark:bg-muted bg-background h-full overflow-y-scroll !max-w-full items-center">
+            <div className="items-center bg-background dark:bg-muted !max-w-full h-full overflow-y-scroll">
               <artifactDefinition.content
                 title={artifact.title}
                 content={
@@ -503,6 +507,8 @@ export const Artifact = memo(PureArtifact, (prevProps, nextProps) => {
   if (!equal(prevProps.votes, nextProps.votes)) return false;
   if (prevProps.input !== nextProps.input) return false;
   if (!equal(prevProps.messages, nextProps.messages.length)) return false;
+  if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType)
+    return false;
 
   return true;
 });

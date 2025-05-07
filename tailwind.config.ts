@@ -86,6 +86,7 @@ const config: Config = {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
+<<<<<<< HEAD
         'collapsible-down': {
           from: { height: '0' },
           to: { height: 'var(--radix-collapsible-content-height)' },
@@ -94,13 +95,18 @@ const config: Config = {
           from: { height: 'var(--radix-collapsible-content-height)' },
           to: { height: '0' },
         },
+=======
+>>>>>>> 51efdf0bf3e1f5cc295648d2fe151b5b9211fecd
       },
       animation: {
         shine: 'shine 5s linear infinite',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+<<<<<<< HEAD
         'collapsible-down': 'collapsible-down 0.2s ease-out',
         'collapsible-up': 'collapsible-up 0.2s ease-out',
+=======
+>>>>>>> 51efdf0bf3e1f5cc295648d2fe151b5b9211fecd
       },
     },
   },

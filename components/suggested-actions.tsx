@@ -2,16 +2,17 @@
 
 import { useViewConfig } from '@/contexts/view-config-context';
 import type { UseChatHelpers } from '@ai-sdk/react';
+import equal from 'fast-deep-equal';
 import { motion } from 'framer-motion';
 import { memo } from 'react';
 import { Button } from './ui/button';
-import equal from 'fast-deep-equal';
-
+import type { VisibilityType } from './visibility-selector';
 interface SuggestedActionsProps {
   chatId: string;
   append: UseChatHelpers['append'];
   searchWeb: boolean;
-  actions: string[];
+  actions?: string[];
+  selectedVisibilityType: VisibilityType;
 }
 
 function PureSuggestedActions({
@@ -19,11 +20,15 @@ function PureSuggestedActions({
   append,
   searchWeb,
   actions,
+  selectedVisibilityType,
 }: SuggestedActionsProps) {
   const viewConfig = useViewConfig();
   //TODO: Either change the data model of the suggested actions or the data model of the startPrompts/FollowUpPrompts -Meris
   // This conversion is unnecessary and just causes confusion
 
+  if (!actions) {
+    return null;
+  }
   // This sorts the prompts from shortest to longest for a more cohesive look in the ui
   // and transforms them into the suggestedActions format
   const suggestedActions: { title: string; label: string; action: string }[] =
@@ -78,6 +83,9 @@ function PureSuggestedActions({
 export const SuggestedActions = memo(
   PureSuggestedActions,
   (prevProps, nextProps) => {
+    if (prevProps.chatId !== nextProps.chatId) return false;
+    if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType)
+      return false;
     if (prevProps.searchWeb !== nextProps.searchWeb) {
       return false;
     }

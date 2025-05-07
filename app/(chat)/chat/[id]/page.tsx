@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 import { auth } from '@/app/(auth)/auth';
 import { Chat } from '@/components/chat';
@@ -10,9 +10,11 @@ import type {
   EndpointConfig,
 } from '@/lib/config/ChatConfig';
 import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
-import { getChatConfigs } from '@/lib/utils/configUtils';
 import type { DBMessage } from '@/lib/db/schema';
+import { getChatConfigs } from '@/lib/utils/configUtils';
 import type { Attachment, UIMessage } from 'ai';
+import { cookies } from 'next/headers';
+import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -29,8 +31,12 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
 
   const session = await auth();
 
+  if (!session) {
+    redirect('/api/auth/guest');
+  }
+
   if (chat.visibility === 'private') {
-    if (!session || !session.user) {
+    if (!session.user) {
       return notFound();
     }
 
@@ -56,6 +62,33 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     }));
   }
 
+  const cookieStore = await cookies();
+  const chatModelFromCookie = cookieStore.get('chat-model');
+
+  if (!chatModelFromCookie) {
+    return (
+      <>
+        <ChatSettingsProvider
+          config={{
+            adminChatConfig: adminChatConfig.toObject() as AdminChatConfig,
+            endpointConfig: endpointConfig.toObject() as EndpointConfig,
+            chatConfig: chatConfig.toObject() as ChatConfig,
+          }}
+        >
+          <Chat
+            id={chat.id}
+            initialMessages={convertToUIMessages(messagesFromDb)}
+            initialChatModel={DEFAULT_CHAT_MODEL}
+            initialVisibilityType={chat.visibility}
+            isReadonly={session?.user?.id !== chat.userId}
+            session={session}
+            autoResume={true}
+          />
+          <DataStreamHandler id={id} />
+        </ChatSettingsProvider>
+      </>
+    );
+  }
   return (
     <>
       <ChatSettingsProvider
@@ -68,12 +101,14 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         <Chat
           id={chat.id}
           initialMessages={convertToUIMessages(messagesFromDb)}
-          selectedVisibilityType={chat.visibility}
+          initialChatModel={chatModelFromCookie.value}
+          initialVisibilityType={chat.visibility}
           isReadonly={session?.user?.id !== chat.userId}
+          session={session}
+          autoResume={true}
         />
+        <DataStreamHandler id={id} />
       </ChatSettingsProvider>
-
-      <DataStreamHandler id={id} />
     </>
   );
 }

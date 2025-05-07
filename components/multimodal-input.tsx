@@ -1,6 +1,6 @@
 'use client';
 
-import type { Attachment, Message } from 'ai';
+import type { Attachment, UIMessage } from 'ai';
 import cx from 'classnames';
 import type React from 'react';
 import {
@@ -18,15 +18,18 @@ import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
+import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import { processFilesForUpload } from '@/lib/utils/fileUploadUtils';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import equal from 'fast-deep-equal';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowDown } from 'lucide-react';
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
-import { PoweredBy } from './powered-by';
 import { PreviewAttachment } from './preview-attachment';
 import { SuggestedActions } from './suggested-actions';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
+import type { VisibilityType } from './visibility-selector';
 import WebToggleButton from './web-toggle-button';
 
 const MAX_ATTACHMENTS = 5;
@@ -46,6 +49,7 @@ function PureMultimodalInput({
   append,
   handleSubmit,
   className,
+  selectedVisibilityType,
 }: {
   chatId: string;
   input: UseChatHelpers['input'];
@@ -54,11 +58,12 @@ function PureMultimodalInput({
   stop: () => void;
   attachments: Array<Attachment>;
   setAttachments: Dispatch<SetStateAction<Array<Attachment>>>;
-  messages: Array<Message>;
-  setMessages: Dispatch<SetStateAction<Array<Message>>>;
+  messages: Array<UIMessage>;
+  setMessages: UseChatHelpers['setMessages'];
   append: UseChatHelpers['append'];
   handleSubmit: UseChatHelpers['handleSubmit'];
   className?: string;
+  selectedVisibilityType: VisibilityType;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -75,7 +80,7 @@ function PureMultimodalInput({
       ? chatConfig.startPrompts
       : messages.length === 2
         ? adminChatConfig.followUpPrompts
-        : null;
+        : undefined;
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -225,14 +230,48 @@ function PureMultimodalInput({
     [attachments, setAttachments],
   );
 
+  const { isAtBottom, scrollToBottom } = useScrollToBottom();
+
+  useEffect(() => {
+    if (status === 'submitted') {
+      scrollToBottom();
+    }
+  }, [status, scrollToBottom]);
+
   return (
     <div className="relative flex flex-col gap-4 w-full">
-      {suggestedActionPrompts &&
+      <AnimatePresence>
+        {!isAtBottom && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="bottom-28 left-1/2 z-50 absolute -translate-x-1/2"
+          >
+            <Button
+              data-testid="scroll-to-bottom-button"
+              className="rounded-full"
+              size="icon"
+              variant="outline"
+              onClick={(event) => {
+                event.preventDefault();
+                scrollToBottom();
+              }}
+            >
+              <ArrowDown />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
           <SuggestedActions
             append={append}
             chatId={chatId}
+            selectedVisibilityType={selectedVisibilityType}
             actions={suggestedActionPrompts}
             searchWeb={searchWeb}
           />
@@ -248,10 +287,7 @@ function PureMultimodalInput({
       />
 
       {(attachments.length > 0 || uploadQueue.length > 0) && (
-        <div
-          data-testid="attachments-preview"
-          className="flex flex-row items-end gap-2 overflow-x-scroll"
-        >
+        <div className="flex flex-row items-end gap-2 overflow-x-scroll">
           {attachments.map((attachment) => (
             <PreviewAttachment
               key={attachment.url}
@@ -318,10 +354,6 @@ function PureMultimodalInput({
         </div>
       </div>
 
-      <div className="bottom-0 left-1/2 absolute p-2 -translate-x-1/2 sm:translate-y-1">
-        <PoweredBy poweredByName={adminChatConfig.poweredBy} />
-      </div>
-
       <div className="right-0 bottom-0 absolute flex flex-row justify-end p-2 w-fit">
         {status === 'submitted' ? (
           <StopButton stop={stop} setMessages={setMessages} />
@@ -343,6 +375,8 @@ export const MultimodalInput = memo(
     if (prevProps.input !== nextProps.input) return false;
     if (prevProps.status !== nextProps.status) return false;
     if (!equal(prevProps.attachments, nextProps.attachments)) return false;
+    if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType)
+      return false;
 
     return true;
   },
@@ -357,7 +391,6 @@ function PureAttachmentsButton({
 }) {
   return (
     <Button
-      data-testid="attachments-button"
       className="hover:bg-zinc-200 hover:dark:bg-zinc-900 p-[7px] dark:border-zinc-700 rounded-md rounded-bl-lg h-fit"
       onClick={(event) => {
         event.preventDefault();
@@ -378,11 +411,10 @@ function PureStopButton({
   setMessages,
 }: {
   stop: () => void;
-  setMessages: Dispatch<SetStateAction<Array<Message>>>;
+  setMessages: UseChatHelpers['setMessages'];
 }) {
   return (
     <Button
-      data-testid="stop-button"
       className="p-1.5 border dark:border-zinc-600 rounded-full h-fit"
       onClick={(event) => {
         event.preventDefault();
@@ -408,7 +440,6 @@ function PureSendButton({
 }) {
   return (
     <Button
-      data-testid="send-button"
       className="p-1.5 border dark:border-zinc-600 rounded-full h-fit"
       onClick={(event) => {
         event.preventDefault();

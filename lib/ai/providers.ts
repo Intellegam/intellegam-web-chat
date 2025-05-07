@@ -1,11 +1,9 @@
+import { xai } from '@ai-sdk/xai';
 import {
   customProvider,
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { fireworks } from '@ai-sdk/fireworks';
-import { xai } from '@ai-sdk/xai';
 import { isTestEnvironment } from '../constants';
 import {
   artifactModel,
@@ -25,16 +23,15 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': xai('grok-2-1212'),
+        'chat-model': xai('grok-2-vision-1212'),
         'chat-model-reasoning': wrapLanguageModel({
-          model: fireworks('accounts/fireworks/models/deepseek-r1'),
+          model: xai('grok-3-mini-beta'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
         'title-model': xai('grok-2-1212'),
         'artifact-model': xai('grok-2-1212'),
       },
       imageModels: {
-        'small-model': openai.image('dall-e-2'),
-        'large-model': openai.image('dall-e-3'),
+        'small-model': xai.image('grok-2-image'),
       },
     });

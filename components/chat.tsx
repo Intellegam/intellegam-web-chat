@@ -4,38 +4,48 @@ import { ChatHeader } from '@/components/chat-header';
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
 import { useArtifactSelector } from '@/hooks/use-artifact';
+import { useChatVisibility } from '@/hooks/use-chat-visibility';
 import type { Vote } from '@/lib/db/schema';
 import { fetcher, generateUUID } from '@/lib/utils';
 import { useChat } from '@ai-sdk/react';
 import type { Attachment, UIMessage } from 'ai';
-import { useState } from 'react';
-import { toast } from 'sonner';
+import type { Session } from 'next-auth';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
+import { unstable_serialize } from 'swr/infinite';
 import { Artifact } from './artifact';
-import { Messages } from './messages';
 import { MultimodalInput } from './multimodal-input';
+import { getChatHistoryPaginationKey } from './sidebar-history';
+import { toast } from './toast';
 import type { VisibilityType } from './visibility-selector';
+import { Messages } from './messages';
 
 export function Chat({
   id,
   initialMessages,
-  selectedVisibilityType,
+  initialChatModel,
+  initialVisibilityType,
   isReadonly,
+  session,
+  autoResume,
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
-  selectedVisibilityType: VisibilityType;
+  initialChatModel: string;
+  initialVisibilityType: VisibilityType;
   isReadonly: boolean;
+  session?: Session;
+  autoResume: boolean;
 }) {
   const { mutate } = useSWRConfig();
+
+  const { visibilityType } = useChatVisibility({
+    chatId: id,
+    initialVisibilityType,
+  });
   const viewConfig = useViewConfig();
   const { chatConfig, endpointConfig } = useChatSettingsContext();
-
-  const voteUrl = viewConfig.isIframe ? null : `/api/vote?chatId=${id}`;
-  const { data: votes } = useSWR<Array<Vote>>(voteUrl, fetcher);
-
-  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
-  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
   const {
     messages,
@@ -47,6 +57,7 @@ export function Chat({
     status,
     stop,
     reload,
+    experimental_resume,
   } = useChat({
     id,
     body: { id },
@@ -61,14 +72,60 @@ export function Chat({
     experimental_throttle: 100,
     sendExtraMessageFields: true,
     generateId: generateUUID,
+    // experimental_prepareRequestBody: (body) => ({
+    //   id,
+    //   message: body.messages.at(-1),
+    //   selectedChatModel: initialChatModel,
+    //   selectedVisibilityType: visibilityType,
+    // }),
     onFinish: () => {
-      //TODO: currently no history/ chat persistence in the backend
-      // mutate('/api/history');
+      mutate(unstable_serialize(getChatHistoryPaginationKey));
     },
-    onError: () => {
-      toast.error('An error occured, please try again!');
+    onError: (error) => {
+      toast({
+        type: 'error',
+        description: error.message,
+      });
+      console.error(error.message);
     },
   });
+
+  useEffect(() => {
+    if (autoResume) {
+      experimental_resume();
+    }
+
+    // note: this hook has no dependencies since it only needs to run once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const searchParams = useSearchParams();
+  const query = searchParams.get('query');
+
+  const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
+
+  useEffect(() => {
+    if (query && !hasAppendedQuery) {
+      append({
+        role: 'user',
+        content: query,
+      });
+
+      setHasAppendedQuery(true);
+      window.history.replaceState({}, '', `/chat/${id}`);
+    }
+  }, [query, append, hasAppendedQuery, id]);
+
+  const { data: votes } = useSWR<Array<Vote>>(
+    messages.length >= 2 && !viewConfig.isIframe
+      ? `/api/vote?chatId=${id}`
+      : null,
+
+    fetcher,
+  );
+
+  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
+  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
   return (
     <>
@@ -77,8 +134,10 @@ export function Chat({
       >
         <ChatHeader
           chatId={id}
-          selectedVisibilityType={selectedVisibilityType}
+          selectedModelId={initialChatModel}
+          selectedVisibilityType={initialVisibilityType}
           isReadonly={isReadonly}
+          session={session}
         />
 
         <Messages
@@ -106,6 +165,7 @@ export function Chat({
               messages={messages}
               setMessages={setMessages}
               append={append}
+              selectedVisibilityType={visibilityType}
             />
           )}
         </form>
@@ -126,6 +186,7 @@ export function Chat({
         reload={reload}
         votes={votes}
         isReadonly={isReadonly}
+        selectedVisibilityType={visibilityType}
       />
     </>
   );

@@ -58,6 +58,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -99,9 +100,9 @@
     @apply border-border outline-ring/50;
   }
 
-    body {
-        @apply text-foreground;
-    }
+  body {
+    @apply text-foreground;
+  }
 }
 
 .skeleton {
@@ -129,10 +130,10 @@
 
 .cm-editor,
 .cm-gutters {
-  @apply bg-background dark:bg-zinc-800 outline-none selection:bg-zinc-900 !important;
+  @apply bg-background selection:bg-zinc-900 dark:bg-zinc-800 outline-none !important;
 }
 
-.ͼo.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
+.ͼo.cm-focused>.cm-scroller>.cm-selectionLayer .cm-selectionBackground,
 .ͼo.cm-selectionBackground,
 .ͼo.cm-content::selection {
   @apply bg-zinc-200 dark:bg-zinc-900 !important;
