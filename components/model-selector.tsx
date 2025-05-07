@@ -22,14 +22,14 @@ export function ModelSelector({
   selectedModelId,
   className,
 }: {
-  session: Session;
+  session?: Session;
   selectedModelId: string;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
   const [optimisticModelId, setOptimisticModelId] =
     useOptimistic(selectedModelId);
 
-  const userType = session.user.type;
+  const userType = session?.user.type ?? 'guest';
   const { availableChatModelIds } = entitlementsByUserType[userType];
 
   const availableChatModels = chatModels.filter((chatModel) =>
@@ -83,16 +83,16 @@ export function ModelSelector({
             >
               <button
                 type="button"
-                className="gap-4 group/item flex flex-row justify-between items-center w-full"
+                className="group/item flex flex-row justify-between items-center gap-4 w-full"
               >
-                <div className="flex flex-col gap-1 items-start">
+                <div className="flex flex-col items-start gap-1">
                   <div>{chatModel.name}</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-muted-foreground text-xs">
                     {chatModel.description}
                   </div>
                 </div>
 
-                <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
+                <div className="opacity-0 group-data-[active=true]/item:opacity-100 text-foreground dark:text-foreground">
                   <CheckCircleFillIcon />
                 </div>
               </button>

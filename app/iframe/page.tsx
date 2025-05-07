@@ -11,8 +11,6 @@ import { EncryptionHelper } from '@/lib/config/EncryptionHelper';
 import { generateUUID } from '@/lib/utils';
 import { getChatConfigs } from '@/lib/utils/configUtils';
 import Image from 'next/image';
-import { auth } from '../(auth)/auth';
-import { redirect } from 'next/navigation';
 
 const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 
@@ -21,11 +19,11 @@ export default async function Page({
   searchParams,
 }: { searchParams: Promise<{ endpoint: string }> }) {
   const id = generateUUID();
-  const session = await auth();
+  // const session = await auth();
 
-  if (!session) {
-    redirect('/api/auth/guest');
-  }
+  // if (!session) {
+  //   redirect('/api/auth/guest');
+  // }
   //TODO: the below could be refactored/extracted as it is used in chat/page.tsx too -Meris
   const chatParams = new URLSearchParams(await searchParams);
   const decryptedSearchParams = await EncryptionHelper.decryptURLSearchParams(
@@ -66,7 +64,6 @@ export default async function Page({
           initialVisibilityType="private"
           isReadonly={false}
           autoResume={false}
-          session={session}
         />
       </ChatSettingsProvider>
       <DataStreamHandler id={id} />

@@ -35,7 +35,7 @@ export function Chat({
   initialChatModel: string;
   initialVisibilityType: VisibilityType;
   isReadonly: boolean;
-  session: Session;
+  session?: Session;
   autoResume: boolean;
 }) {
   const { mutate } = useSWRConfig();
@@ -46,8 +46,6 @@ export function Chat({
   });
   const viewConfig = useViewConfig();
   const { chatConfig, endpointConfig } = useChatSettingsContext();
-
-  const voteUrl = viewConfig.isIframe ? null : `/api/vote?chatId=${id}`;
 
   const {
     messages,
@@ -74,12 +72,12 @@ export function Chat({
     experimental_throttle: 100,
     sendExtraMessageFields: true,
     generateId: generateUUID,
-    experimental_prepareRequestBody: (body) => ({
-      id,
-      message: body.messages.at(-1),
-      selectedChatModel: initialChatModel,
-      selectedVisibilityType: visibilityType,
-    }),
+    // experimental_prepareRequestBody: (body) => ({
+    //   id,
+    //   message: body.messages.at(-1),
+    //   selectedChatModel: initialChatModel,
+    //   selectedVisibilityType: visibilityType,
+    // }),
     onFinish: () => {
       mutate(unstable_serialize(getChatHistoryPaginationKey));
     },
