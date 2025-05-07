@@ -1,8 +1,12 @@
 'use client';
 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useState } from 'react';
 import { ChevronDownIcon, LoaderIcon } from './icons';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Markdown } from './markdown';
 
 interface MessageReasoningProps {
@@ -14,65 +18,47 @@ export function MessageReasoning({
   isLoading,
   reasoning,
 }: MessageReasoningProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
-
-  const variants = {
-    collapsed: {
-      height: 0,
-      opacity: 0,
-      marginTop: 0,
-      marginBottom: 0,
-    },
-    expanded: {
-      height: 'auto',
-      opacity: 1,
-      marginTop: '1rem',
-      marginBottom: '0.5rem',
-    },
-  };
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className="flex flex-col">
-      {isLoading ? (
-        <div className="flex flex-row gap-2 items-center">
-          <div className="font-medium">Reasoning</div>
-          <div className="animate-spin">
-            <LoaderIcon />
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      data-testid="message-reasoning-container"
+      className={` text-zinc-600 dark:text-zinc-200 bg-secondary  ${!isOpen ? 'hover:bg-zinc-700 transition-colors' : ''} px-3 py-2 border dark:border-zinc-700 rounded-xl w-full`}
+    >
+      <div className="flex flex-row items-center gap-2">
+        <CollapsibleTrigger
+          data-testid="message-reasoning-toggle"
+          className="flex justify-between items-center gap-x-2 w-full cursor-pointer"
+        >
+          <div className="flex items-center">
+            {isOpen ? (
+              <p>Reasoning</p>
+            ) : (
+              <p className="line-clamp-1">{reasoning.split(':')[0]}</p>
+            )}
+
+            {isLoading && (
+              <div className="ml-2 w-fit animate-spin">
+                <LoaderIcon />
+              </div>
+            )}
           </div>
-        </div>
-      ) : (
-        <div className="flex flex-row gap-2 items-center">
-          <div className="font-medium">Reasoned for a few seconds</div>
-          <button
-            data-testid="message-reasoning-toggle"
-            type="button"
-            className="cursor-pointer"
-            onClick={() => {
-              setIsExpanded(!isExpanded);
-            }}
+          <span
+            className={`${isOpen ? 'rotate-180' : ''} transition-transform`}
           >
             <ChevronDownIcon />
-          </button>
-        </div>
-      )}
+          </span>
+        </CollapsibleTrigger>
+      </div>
 
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            data-testid="message-reasoning"
-            key="content"
-            initial="collapsed"
-            animate="expanded"
-            exit="collapsed"
-            variants={variants}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
-            style={{ overflow: 'hidden' }}
-            className="pl-4 text-zinc-600 dark:text-zinc-400 border-l flex flex-col gap-4"
-          >
-            <Markdown>{reasoning}</Markdown>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      <CollapsibleContent
+        data-testid="message-reasoning"
+        // className="mt-2 max-h-64 overflow-y-auto text-sm"
+      >
+        <Markdown>{reasoning}</Markdown>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
