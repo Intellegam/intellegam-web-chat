@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { memo } from 'react';
 import { Greeting } from './greeting';
 import { PreviewMessage, ThinkingMessage } from './message';
+import MessageMap from './message-map';
 
 interface MessagesProps {
   chatId: string;
@@ -44,11 +45,20 @@ function PureMessages({
   return (
     <div
       ref={messagesContainerRef}
-      className="flex flex-col flex-1 gap-6 pt-4 min-w-0 overflow-y-scroll"
+      className="relative flex flex-col flex-1 gap-6 pt-4 min-w-0 overflow-y-scroll"
     >
       {messages.length === 0 && (
         <Greeting startMessage={chatConfig.startMessage} />
       )}
+
+      <div className="hidden md:block top-1/2 left-1/2 z-10 fixed ml-4 px-4 max-w-4xl size-full -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="top-1/2 left-0 absolute -translate-y-1/2 pointer-events-auto">
+          <MessageMap
+            messages={messages}
+            scrollContainerRef={messagesContainerRef}
+          />
+        </div>
+      </div>
 
       {messages.map((message, index) => (
         <PreviewMessage

@@ -10,16 +10,7 @@ export function ModeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
 
   function toggleTheme(theme: string) {
-    switch (theme) {
-      case 'light':
-        setTheme('dark');
-        break;
-      case 'dark':
-        setTheme('light');
-        break;
-      default:
-        break;
-    }
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   }
 
   return (
