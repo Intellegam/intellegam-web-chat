@@ -24,6 +24,7 @@ export default function MessageMap({
   const visibleMessagesRef = useRef<Set<string>>(new Set());
   const userMessages = messages.filter((message) => message.role === 'user');
 
+  // This intersection handler sets the last visible element to be the one which is highlighted in the Message Map
   const handleIntersection = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       entries.forEach((entry) => {
@@ -50,12 +51,15 @@ export default function MessageMap({
   useEffect(() => {
     if (!scrollContainerRef.current) return;
 
-    // Create the observer with the correct scrollable container as root
+    // The observer checks for all elements which are inside the scrollContainer that are 33% above the end of the screen.
+    // Through this the Elemens that are at the bottom will not trigger the map to show them as the active(current visible) message.
     const observer = new IntersectionObserver(handleIntersection, {
       root: scrollContainerRef.current,
       rootMargin: `${scrollContainerRef.current.clientHeight}px 0px -33% 0px`,
       threshold: 0.0,
     });
+
+    //Only observe the user messages to which the user can navigate to
     userMessages.forEach((message) => {
       const element = document.getElementById(message.id);
       if (element) {
@@ -67,7 +71,6 @@ export default function MessageMap({
   }, [userMessages, handleIntersection, scrollContainerRef]);
 
   function onClickScroll(messageId: string) {
-    setVisibleMessageId(messageId);
     document.getElementById(messageId)?.scrollIntoView({ behavior: 'smooth' });
   }
 
