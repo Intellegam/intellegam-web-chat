@@ -122,6 +122,9 @@ importers:
       geist:
         specifier: ^1.3.1
         version: 1.4.2(next@15.3.0-canary.31(@opentelemetry/api@1.9.0)(@playwright/test@1.52.0)(react-dom@19.0.0-rc-45804af1-20241021(react@19.0.0-rc-45804af1-20241021))(react@19.0.0-rc-45804af1-20241021))
+      langfuse:
+        specifier: ^3.37.2
+        version: 3.37.2
       lucide-react:
         specifier: ^0.446.0
         version: 0.446.0(react@19.0.0-rc-45804af1-20241021)
@@ -2915,6 +2918,14 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
+  langfuse-core@3.37.2:
+    resolution: {integrity: sha512-3iFz1UZzKDi9GEjIRRSSqcKbusmB17uR9qYxMR1BHQYuBkQv2wIV+HI793hWh3tmc6q2pmqPMjtJdoFVBhucDA==}
+    engines: {node: '>=18'}
+
+  langfuse@3.37.2:
+    resolution: {integrity: sha512-C4P56hJDNk8vWNJR102JhgyCYXbt3HG19PY0brurlrU4dh5pq91JPt44jyiT5RzUs+NFew//gCkgFEcQd3RogA==}
+    engines: {node: '>=18'}
+
   language-subtag-registry@0.3.23:
     resolution: {integrity: sha512-0K65Lea881pHotoGEa5gDlMxt3pctLi2RplBb7Ezh4rRdLEOtgi7n4EwK9lamnUCkKBqaeKRVebTq6BAxSkpXQ==}
 
@@ -3144,6 +3155,10 @@ packages:
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
+
+  mustache@4.2.0:
+    resolution: {integrity: sha512-71ippSywq5Yb7/tVYyGbkBggbU8H3u5Rz56fH60jGFgr8uHwxs+aSKeqmluIVzM0m0kB7xQjKS6qPfd0b2ZoqQ==}
+    hasBin: true
 
   mz@2.7.0:
     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
@@ -6630,6 +6645,14 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
+  langfuse-core@3.37.2:
+    dependencies:
+      mustache: 4.2.0
+
+  langfuse@3.37.2:
+    dependencies:
+      langfuse-core: 3.37.2
+
   language-subtag-registry@0.3.23: {}
 
   language-tags@1.0.9:
@@ -7062,6 +7085,8 @@ snapshots:
   motion-utils@11.18.1: {}
 
   ms@2.1.3: {}
+
+  mustache@4.2.0: {}
 
   mz@2.7.0:
     dependencies:
