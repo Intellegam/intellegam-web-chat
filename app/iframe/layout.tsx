@@ -5,6 +5,8 @@ import { ViewConfigProvider } from '@/contexts/view-config-context';
 import { IFRAME_CONFIG } from '@/contexts/viewConfigPresets';
 import Script from 'next/script';
 
+export const experimental_ppr = true;
+
 export default function IframeLayout({
   children,
 }: {
