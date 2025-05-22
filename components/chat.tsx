@@ -130,7 +130,7 @@ export function Chat({
   return (
     <>
       <div
-        className={`flex flex-col min-w-0 h-dvh ${chatConfig.backgroundImg ? '' : 'bg-background'} py-1 px-2`}
+        className={`flex relative flex-col min-w-0 h-dvh ${chatConfig.backgroundImg ? 'bg-transparent' : 'bg-background'} py-1 px-2`}
       >
         <ChatHeader
           chatId={id}

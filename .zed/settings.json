@@ -1,0 +1,28 @@
+// Folder-specific settings
+//
+// For a full list of overridable settings, and general information on folder-specific settings,
+// see the documentation: https://zed.dev/docs/configuring-zed#settings-files
+{
+  "languages": {
+    "TSX": {
+      "language_servers": ["vtsls", "biome", "!eslint"],
+      "formatter": { "language_server": { "name": "biome" } },
+      "inlay_hints": {
+        "enabled": true,
+        "show_type_hints": true,
+        // "show_parameter_hints": true
+        "show_other_hints": true
+      }
+    },
+    "TypeScript": {
+      "language_servers": ["vtsls", "biome", "!eslint"],
+      "formatter": { "language_server": { "name": "biome" } },
+      "inlay_hints": {
+        "enabled": true,
+        "show_type_hints": true,
+        // "show_parameter_hints": true
+        "show_other_hints": true
+      }
+    }
+  }
+}
