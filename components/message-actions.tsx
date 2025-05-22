@@ -106,8 +106,9 @@ export function PureMessageActions({
               variant="outline"
               onClick={async () => {
                 if (!viewConfig.isIframe) {
+                  //TODO: do we need to save the step inside the id? -meris
                   await deleteTrailingMessages({
-                    id: message.id,
+                    id: message.id.replace('step_', ''),
                   });
                 }
 

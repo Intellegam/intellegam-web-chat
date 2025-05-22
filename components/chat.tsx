@@ -1,5 +1,6 @@
 'use client';
 
+import { saveMessage } from '@/app/(chat)/actions';
 import { ChatHeader } from '@/components/chat-header';
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
@@ -11,15 +12,15 @@ import { useChat } from '@ai-sdk/react';
 import type { Attachment, UIMessage } from 'ai';
 import type { Session } from 'next-auth';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { startTransition, useEffect, useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { unstable_serialize } from 'swr/infinite';
 import { Artifact } from './artifact';
+import { Messages } from './messages';
 import { MultimodalInput } from './multimodal-input';
 import { getChatHistoryPaginationKey } from './sidebar-history';
 import { toast } from './toast';
 import type { VisibilityType } from './visibility-selector';
-import { Messages } from './messages';
 
 export function Chat({
   id,
@@ -46,6 +47,28 @@ export function Chat({
   });
   const viewConfig = useViewConfig();
   const { chatConfig, endpointConfig } = useChatSettingsContext();
+
+  function persistMessage(
+    chatId: string,
+    message: UIMessage,
+    visibilityType: VisibilityType,
+    options?: {
+      onSuccess?: () => void;
+    },
+  ) {
+    startTransition(() => {
+      saveMessage({
+        chatId,
+        message,
+        visibility: visibilityType,
+      }).then(() => {
+        // Refresh the chat history list
+        if (options?.onSuccess) {
+          options.onSuccess();
+        }
+      });
+    });
+  }
 
   const {
     messages,
@@ -78,8 +101,12 @@ export function Chat({
     //   selectedChatModel: initialChatModel,
     //   selectedVisibilityType: visibilityType,
     // }),
-    onFinish: () => {
-      mutate(unstable_serialize(getChatHistoryPaginationKey));
+    onFinish: (message) => {
+      persistMessage(id, message as UIMessage, visibilityType, {
+        onSuccess: () => {
+          mutate(unstable_serialize(getChatHistoryPaginationKey));
+        },
+      });
     },
     onError: (error) => {
       toast({
@@ -91,10 +118,26 @@ export function Chat({
   });
 
   useEffect(() => {
-    if (autoResume) {
-      experimental_resume();
-    }
+    if (messages.length === 0) return;
 
+    // Get the last message
+    const lastMessage = messages[messages.length - 1];
+
+    // Skip if it's not a user message or if status isn't 'submitted'
+    // The status check ensures we only save when the message is actually being sent
+    if (lastMessage.role === 'user' && status === 'submitted') {
+      persistMessage(id, lastMessage, visibilityType, {
+        onSuccess: () => {
+          mutate(unstable_serialize(getChatHistoryPaginationKey));
+        },
+      });
+    }
+  }, [messages, status, id, visibilityType]);
+
+  useEffect(() => {
+    // if (autoResume) {
+    //   experimental_resume();
+    // }
     // note: this hook has no dependencies since it only needs to run once
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
