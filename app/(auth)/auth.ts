@@ -89,4 +89,28 @@ export const {
       return session;
     },
   },
+  cookies: {
+    csrfToken: {
+      options: {
+        partitioned: true,
+        sameSite: 'none',
+        secure: true,
+      },
+    },
+    callbackUrl: {
+      options: {
+        partitioned: true,
+        sameSite: 'none',
+        secure: true,
+      },
+    },
+    sessionToken: {
+      options: {
+        partitioned: true,
+        sameSite: 'none',
+        path: '/api',
+        secure: true,
+      },
+    },
+  },
 });

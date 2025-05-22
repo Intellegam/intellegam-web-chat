@@ -1,5 +1,6 @@
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
+import IframeAutoAuth from '@/components/iframe-auth';
 import { ChatSettingsProvider } from '@/contexts/chat-config-context';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import type {
@@ -19,11 +20,6 @@ export default async function Page({
   searchParams,
 }: { searchParams: Promise<{ endpoint: string }> }) {
   const id = generateUUID();
-  // const session = await auth();
-
-  // if (!session) {
-  //   redirect('/api/auth/guest');
-  // }
   //TODO: the below could be refactored/extracted as it is used in chat/page.tsx too -Meris
   const chatParams = new URLSearchParams(await searchParams);
   const decryptedSearchParams = await EncryptionHelper.decryptURLSearchParams(
@@ -35,7 +31,7 @@ export default async function Page({
   );
 
   return (
-    <>
+    <IframeAutoAuth>
       {chatConfig.backgroundImg && (
         <div className="top-0 left-0 z-[-1] fixed blur-0 size-full">
           <div className="top-0 left-0 absolute bg-background/95 size-full" />
@@ -67,6 +63,6 @@ export default async function Page({
         />
       </ChatSettingsProvider>
       <DataStreamHandler id={id} />
-    </>
+    </IframeAutoAuth>
   );
 }
