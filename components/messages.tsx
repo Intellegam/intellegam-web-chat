@@ -51,12 +51,14 @@ function PureMessages({
         <Greeting startMessage={chatConfig.startMessage} />
       )}
 
-      <div className="hidden md:block top-1/2 left-1/2 z-10 fixed ml-4 px-4 max-w-4xl size-full -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-        <div className="top-1/2 left-0 absolute -translate-y-1/2 pointer-events-auto">
-          <MessageMap
-            messages={messages}
-            scrollContainerRef={messagesContainerRef}
-          />
+      <div className="size-full @container absolute">
+        <div className="hidden @md:block sticky top-1/2 mx-auto w-full pl-0 @3xl:pl-4 max-w-4xl -translate-y-1/2 pointer-events-none">
+          <div className="pointer-events-auto flex">
+            <MessageMap
+              messages={messages}
+              scrollContainerRef={messagesContainerRef}
+            />
+          </div>
         </div>
       </div>
 
