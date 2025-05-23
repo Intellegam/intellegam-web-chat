@@ -5,17 +5,16 @@ import { useWindowSize } from 'usehooks-ts';
 
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
-import Image from 'next/image';
+import type { Session } from 'next-auth';
 import { memo } from 'react';
 import { PlusIcon } from './icons';
+import { ModeToggle } from './mode-toggle';
+import { ModelSelector } from './model-selector';
 import { useSidebar } from './ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { VisibilitySelector, type VisibilityType } from './visibility-selector';
-import { useChatSettingsContext } from '@/contexts/chat-config-context';
-import { ModeToggle } from './mode-toggle';
-import type { Session } from 'next-auth';
-import { ModelSelector } from './model-selector';
 
 function PureChatHeader({
   chatId,
@@ -78,15 +77,17 @@ function PureChatHeader({
         />
       )}
 
-      <div className="right-1/2 absolute flex justify-between items-center gap-x-3 translate-x-1/2">
-        <Image
-          width={0}
-          height={0}
+      <div
+        className={`absolute ${open ? 'right-0' : 'right-1/2 translate-x-1/2'} flex justify-between items-center gap-x-3`}
+      >
+        <img
           src={chatConfig.titleLogo || '/images/intellegam_logo_light.svg'}
           alt="title logo"
           className="w-auto h-9"
         />
-        <div className="hidden sm:block font-semibold text-lg">
+        <div
+          className={`hidden ${open ? '' : 'sm:block'} font-semibold text-lg`}
+        >
           {chatConfig.title}
         </div>
       </div>
