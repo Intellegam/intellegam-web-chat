@@ -1,6 +1,8 @@
 import { deleteTrailingMessages } from '@/app/(chat)/actions';
 import { useViewConfig } from '@/contexts/view-config-context';
 import type { Vote } from '@/lib/db/schema';
+import { MessageAnnotationType } from '@/lib/types/annotations';
+import { getMessageAnnotationsByType } from '@/lib/utils/annotationUtils';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { Message } from 'ai';
 import equal from 'fast-deep-equal';
@@ -57,6 +59,17 @@ export function PureMessageActions({
       }),
     });
     await navigator.clipboard.write([clipboardItem]);
+  }
+
+  const metadataAnnotations = getMessageAnnotationsByType(
+    message.annotations,
+    MessageAnnotationType.Metadata,
+  );
+
+  let traceId = '';
+  if (metadataAnnotations.length >= 1) {
+    console.info(metadataAnnotations);
+    traceId = metadataAnnotations[0].metadata.trace_id;
   }
 
   return (
@@ -143,6 +156,7 @@ export function PureMessageActions({
                       body: JSON.stringify({
                         chatId,
                         messageId: message.id,
+                        traceId: traceId,
                         type: 'up',
                       }),
                     });
@@ -151,7 +165,7 @@ export function PureMessageActions({
                       loading: 'Upvoting Response...',
                       success: () => {
                         mutate<Array<Vote>>(
-                          `/api/vote?chatId=${chatId}`,
+                          '/api/vote?chatId=${chatId}',
                           (currentVotes) => {
                             if (!currentVotes) return [];
 
@@ -164,6 +178,7 @@ export function PureMessageActions({
                               {
                                 chatId,
                                 messageId: message.id,
+                                traceId: traceId,
                                 isUpvoted: true,
                               },
                             ];
@@ -196,6 +211,7 @@ export function PureMessageActions({
                       body: JSON.stringify({
                         chatId,
                         messageId: message.id,
+                        traceId: traceId,
                         type: 'down',
                       }),
                     });
@@ -204,7 +220,7 @@ export function PureMessageActions({
                       loading: 'Downvoting Response...',
                       success: () => {
                         mutate<Array<Vote>>(
-                          `/api/vote?chatId=${chatId}`,
+                          '/api/vote?chatId=${chatId}',
                           (currentVotes) => {
                             if (!currentVotes) return [];
 
@@ -217,6 +233,7 @@ export function PureMessageActions({
                               {
                                 chatId,
                                 messageId: message.id,
+                                traceId: traceId,
                                 isUpvoted: false,
                               },
                             ];
@@ -247,6 +264,7 @@ export const MessageActions = memo(
   (prevProps, nextProps) => {
     if (!equal(prevProps.vote, nextProps.vote)) return false;
     if (prevProps.isLoading !== nextProps.isLoading) return false;
+    if (!equal(prevProps.message, nextProps.message)) return false;
 
     return true;
   },
