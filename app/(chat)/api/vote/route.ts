@@ -1,5 +1,6 @@
 import { auth } from '@/app/(auth)/auth';
 import { getChatById, getVotesByChatId, voteMessage } from '@/lib/db/queries';
+import { LangfuseWeb } from 'langfuse';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -34,9 +35,20 @@ export async function PATCH(request: Request) {
   const {
     chatId,
     messageId,
+    traceId,
     type,
-  }: { chatId: string; messageId: string; type: 'up' | 'down' } =
-    await request.json();
+  }: {
+    chatId: string;
+    messageId: string;
+    traceId: string;
+    type: 'up' | 'down';
+  } = await request.json();
+
+  //TODO: get publick key from infisical
+  const langfuse = new LangfuseWeb({
+    publicKey: '',
+    baseUrl: 'https://cloud.langfuse.com',
+  });
 
   if (!chatId || !messageId || !type) {
     return new Response('messageId and type are required', { status: 400 });
@@ -57,6 +69,11 @@ export async function PATCH(request: Request) {
   if (chat.userId !== session.user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
+  await langfuse.score({
+    traceId,
+    name: 'user-feedback',
+    value: type === 'up' ? 1 : 0,
+  });
 
   await voteMessage({
     chatId,
