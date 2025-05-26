@@ -85,4 +85,6 @@ class EncryptionUtil {
   }
 }
 
+export const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
+
 export default EncryptionUtil;

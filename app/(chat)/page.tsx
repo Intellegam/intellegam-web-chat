@@ -13,8 +13,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { auth } from '../(auth)/auth';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
-
-const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
+import { ENCRYPTED_PARAMS } from '@/lib/utils/encryptionUtils';
 
 export default async function Page({
   searchParams,

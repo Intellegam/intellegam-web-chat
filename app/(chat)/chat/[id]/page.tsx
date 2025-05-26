@@ -4,27 +4,35 @@ import { auth } from '@/app/(auth)/auth';
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { ChatSettingsProvider } from '@/contexts/chat-config-context';
+import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import type {
   AdminChatConfig,
   ChatConfig,
   EndpointConfig,
 } from '@/lib/config/ChatConfig';
+import { EncryptionHelper } from '@/lib/config/EncryptionHelper';
 import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
 import type { DBMessage } from '@/lib/db/schema';
 import { getChatConfigs } from '@/lib/utils/configUtils';
+import { ENCRYPTED_PARAMS } from '@/lib/utils/encryptionUtils';
 import type { Attachment, UIMessage } from 'ai';
 import { cookies } from 'next/headers';
-import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 
-export default async function Page(props: { params: Promise<{ id: string }> }) {
+export default async function Page(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ endpoint: string }>;
+}) {
   const params = await props.params;
   const { id } = params;
   const chat = await getChatById({ id });
-  const urlParams = new URLSearchParams(await props.params);
-  //const decryptedUrl = await EncryptionHelper.decryptURLSearchParams(searchParams, ENCRYPTED_PARAMS);
-  const { endpointConfig, chatConfig, adminChatConfig } =
-    await getChatConfigs(urlParams);
-
+  const urlSearchParams = new URLSearchParams(await props.searchParams);
+  const decryptedSearchParams = await EncryptionHelper.decryptURLSearchParams(
+    urlSearchParams,
+    ENCRYPTED_PARAMS,
+  );
+  const { endpointConfig, chatConfig, adminChatConfig } = await getChatConfigs(
+    decryptedSearchParams,
+  );
   if (!chat) {
     notFound();
   }
