@@ -2,7 +2,6 @@ import { getToken } from 'next-auth/jwt';
 import { NextResponse, type NextRequest } from 'next/server';
 import { guestRegex, isDevelopmentEnvironment } from './lib/constants';
 
-//TODO: bypass iframe
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -49,6 +48,7 @@ export const config = {
   matcher: [
     '/',
     '/chat/:id',
+    '/iframe',
     '/api/:path*',
     '/login',
     '/register',
