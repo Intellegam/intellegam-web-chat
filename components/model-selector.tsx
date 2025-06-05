@@ -13,23 +13,25 @@ import {
 import { chatModels } from '@/lib/ai/models';
 import { cn } from '@/lib/utils';
 
-import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
-import type { Session } from 'next-auth';
+import type { NoUserInfo, UserInfo } from '@workos-inc/authkit-nextjs';
+import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
 
 export function ModelSelector({
   session,
   selectedModelId,
   className,
 }: {
-  session?: Session;
+  session?: UserInfo | NoUserInfo;
   selectedModelId: string;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
   const [optimisticModelId, setOptimisticModelId] =
     useOptimistic(selectedModelId);
 
-  const userType = session?.user.type ?? 'guest';
+  // TODO: this should check for the backends in the database not by user type only -meris
+  // const userType = session?.user.type ?? 'guest';
+  const userType = 'regular';
   const { availableChatModelIds } = entitlementsByUserType[userType];
 
   const availableChatModels = chatModels.filter((chatModel) =>

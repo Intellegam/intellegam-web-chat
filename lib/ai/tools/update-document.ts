@@ -1,11 +1,11 @@
-import { type DataStreamWriter, tool } from 'ai';
-import type { Session } from 'next-auth';
-import { z } from 'zod';
-import { getDocumentById, } from '@/lib/db/queries';
 import { documentHandlersByArtifactKind } from '@/lib/artifacts/server';
+import { getDocumentById } from '@/lib/db/queries';
+import type { UserInfo } from '@workos-inc/authkit-nextjs';
+import { type DataStreamWriter, tool } from 'ai';
+import { z } from 'zod';
 
 interface UpdateDocumentProps {
-  session: Session;
+  session: UserInfo;
   dataStream: DataStreamWriter;
 }
 

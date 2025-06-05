@@ -1,9 +1,9 @@
 import { notFound, redirect } from 'next/navigation';
 
-import { auth } from '@/app/(auth)/auth';
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { ChatSettingsProvider } from '@/contexts/chat-config-context';
+import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import type {
   AdminChatConfig,
   ChatConfig,
@@ -12,9 +12,9 @@ import type {
 import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
 import type { DBMessage } from '@/lib/db/schema';
 import { getChatConfigs } from '@/lib/utils/configUtils';
+import { withAuth } from '@workos-inc/authkit-nextjs';
 import type { Attachment, UIMessage } from 'ai';
 import { cookies } from 'next/headers';
-import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -29,7 +29,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     notFound();
   }
 
-  const session = await auth();
+  const session = await withAuth({ ensureSignedIn: true });
 
   if (!session) {
     redirect('/api/auth/guest');

@@ -1,10 +1,11 @@
-import { Toaster } from 'sonner';
+import { ThemeProvider } from '@/components/theme-provider';
+import { AuthKitProvider } from '@workos-inc/authkit-nextjs/components';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from 'sonner';
 
+import React from 'react'; // Added React import for children type
 import './globals.css';
-import { SessionProvider } from 'next-auth/react';
 
 export const metadata: Metadata = {
   title: 'Chatbot',
@@ -76,7 +77,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <Toaster position="top-center" />
-          <SessionProvider>{children}</SessionProvider>
+          <AuthKitProvider>{children}</AuthKitProvider>
         </ThemeProvider>
       </body>
     </html>
