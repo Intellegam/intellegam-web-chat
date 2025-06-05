@@ -5,17 +5,17 @@ import { useWindowSize } from 'usehooks-ts';
 
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
+import type { NoUserInfo, UserInfo } from '@workos-inc/authkit-nextjs';
 import Image from 'next/image';
 import { memo } from 'react';
 import { PlusIcon } from './icons';
+import { ModeToggle } from './mode-toggle';
+import { ModelSelector } from './model-selector';
 import { useSidebar } from './ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { VisibilitySelector, type VisibilityType } from './visibility-selector';
-import { useChatSettingsContext } from '@/contexts/chat-config-context';
-import { ModeToggle } from './mode-toggle';
-import type { Session } from 'next-auth';
-import { ModelSelector } from './model-selector';
 
 function PureChatHeader({
   chatId,
@@ -28,7 +28,7 @@ function PureChatHeader({
   selectedModelId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
-  session?: Session;
+  session?: UserInfo | NoUserInfo;
 }) {
   const router = useRouter();
   const { open } = useSidebar();

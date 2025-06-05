@@ -1,15 +1,15 @@
 'use client';
 
+import { toast } from '@/components/toast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useState } from 'react';
-import { toast } from '@/components/toast';
 
 import { AuthForm } from '@/components/auth-form';
 import { SubmitButton } from '@/components/submit-button';
 
+import { useAuth } from '@workos-inc/authkit-nextjs/components';
 import { login, type LoginActionState } from '../actions';
-import { useSession } from 'next-auth/react';
 
 export default function Page() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function Page() {
     },
   );
 
-  const { update: updateSession } = useSession();
+  const { refreshAuth: updateSession } = useAuth();
 
   useEffect(() => {
     if (state.status === 'failed') {

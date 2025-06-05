@@ -1,6 +1,7 @@
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { ChatSettingsProvider } from '@/contexts/chat-config-context';
+import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import type {
   AdminChatConfig,
   ChatConfig,
@@ -9,21 +10,15 @@ import type {
 import { EncryptionHelper } from '@/lib/config/EncryptionHelper';
 import { generateUUID } from '@/lib/utils';
 import { getChatConfigs } from '@/lib/utils/configUtils';
+import { withAuth } from '@workos-inc/authkit-nextjs';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { auth } from '../(auth)/auth';
-import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 
 const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 
 export default async function Page({
   searchParams,
 }: { searchParams: Promise<{ endpoint: string }> }) {
-  const session = await auth();
-
-  if (!session) {
-    redirect('/api/auth/guest');
-  }
+  const session = await withAuth({ ensureSignedIn: true });
 
   const id = generateUUID();
   const chatParams = new URLSearchParams(await searchParams);

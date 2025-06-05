@@ -8,18 +8,18 @@ import { useChatVisibility } from '@/hooks/use-chat-visibility';
 import type { Vote } from '@/lib/db/schema';
 import { fetcher, generateUUID } from '@/lib/utils';
 import { useChat } from '@ai-sdk/react';
+import type { NoUserInfo, UserInfo } from '@workos-inc/authkit-nextjs';
 import type { Attachment, UIMessage } from 'ai';
-import type { Session } from 'next-auth';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { unstable_serialize } from 'swr/infinite';
 import { Artifact } from './artifact';
+import { Messages } from './messages';
 import { MultimodalInput } from './multimodal-input';
 import { getChatHistoryPaginationKey } from './sidebar-history';
 import { toast } from './toast';
 import type { VisibilityType } from './visibility-selector';
-import { Messages } from './messages';
 
 export function Chat({
   id,
@@ -35,7 +35,7 @@ export function Chat({
   initialChatModel: string;
   initialVisibilityType: VisibilityType;
   isReadonly: boolean;
-  session?: Session;
+  session?: UserInfo | NoUserInfo;
   autoResume: boolean;
 }) {
   const { mutate } = useSWRConfig();
