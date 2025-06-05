@@ -3,8 +3,11 @@
 import { z } from 'zod';
 
 import { createUser, getUser } from '@/lib/db/queries';
+import { signOut } from '@workos-inc/authkit-nextjs';
 
-import { signIn } from './auth';
+export async function signOutAction(_: FormData) {
+  await signOut();
+}
 
 const authFormSchema = z.object({
   email: z.string().email(),
@@ -15,6 +18,7 @@ export interface LoginActionState {
   status: 'idle' | 'in_progress' | 'success' | 'failed' | 'invalid_data';
 }
 
+//TODO: if we need a custom login box this should be changed to the workos flow
 export const login = async (
   _: LoginActionState,
   formData: FormData,
@@ -25,11 +29,11 @@ export const login = async (
       password: formData.get('password'),
     });
 
-    await signIn('credentials', {
-      email: validatedData.email,
-      password: validatedData.password,
-      redirect: false,
-    });
+    // await signIn('credentials', {
+    //   email: validatedData.email,
+    //   password: validatedData.password,
+    //   redirect: false,
+    // });
 
     return { status: 'success' };
   } catch (error) {
@@ -51,6 +55,7 @@ export interface RegisterActionState {
     | 'invalid_data';
 }
 
+//TODO: if we need a custom login box this should be changed to the workos flow
 export const register = async (
   _: RegisterActionState,
   formData: FormData,
@@ -67,11 +72,11 @@ export const register = async (
       return { status: 'user_exists' } as RegisterActionState;
     }
     await createUser(validatedData.email, validatedData.password);
-    await signIn('credentials', {
-      email: validatedData.email,
-      password: validatedData.password,
-      redirect: false,
-    });
+    // await signIn('credentials', {
+    //   email: validatedData.email,
+    //   password: validatedData.password,
+    //   redirect: false,
+    // });
 
     return { status: 'success' };
   } catch (error) {
