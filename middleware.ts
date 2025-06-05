@@ -1,11 +1,21 @@
-import { getToken } from 'next-auth/jwt';
+import { authkit } from '@workos-inc/authkit-nextjs';
 import { NextResponse, type NextRequest } from 'next/server';
-import { guestRegex, isDevelopmentEnvironment } from './lib/constants';
+import { isDevelopment } from './lib/utils/environmentUtils';
+import { unauthorized } from 'next/navigation';
 
-//TODO: bypass iframe
+const REDIRECT_PATHNAME = '/api/auth/callback';
+const REDIRECT_ORIGIN =
+  process.env.VERCEL_ENV === 'production'
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_ENV === 'preview'
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+const REDIRECT_URI = new URL(REDIRECT_PATHNAME, REDIRECT_ORIGIN);
+
+// export default authkitMiddleware({ redirectUri: REDIRECT_URI.href });
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
   /*
    * Playwright starts the dev server and requires a 200 status to
    * begin the tests, so this ensures that the tests can start
@@ -22,43 +32,39 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-    secureCookie: !isDevelopmentEnvironment,
+  // Get session state, headers, and authorization URL from AuthKit.
+  // The `authkit` function handles cookie management, session validation, and refresh.
+  const { session, headers, authorizationUrl } = await authkit(request, {
+    debug: isDevelopment,
+    redirectUri: REDIRECT_URI.href,
   });
 
-  if (!token) {
-    const redirectUrl = encodeURIComponent(request.url);
+  // const isGuest = guestRegex.test(session?.user?.email ?? '');
 
-    return NextResponse.redirect(
-      new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url),
-    );
+  if (!session?.user) {
+    if (authorizationUrl) {
+      return NextResponse.redirect(authorizationUrl);
+    } else {
+      return unauthorized();
+    }
+  } else {
+    // User IS logged in via AuthKit (session.user exists).
+    // If a logged-in user tries to access AuthKit's login initiation page, redirect them away.
+    if (pathname === '/auth/login') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   }
+  const response = NextResponse.next({ headers });
 
-  const isGuest = guestRegex.test(token?.email ?? '');
-
-  if (token && !isGuest && ['/login', '/register'].includes(pathname)) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
   matcher: [
     '/',
-    '/chat/:id',
+    '/chat/:id*',
     '/api/:path*',
-    '/login',
-    '/register',
-
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
-     */
+    '/iframe',
     '/((?!_next/static|images|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
   ],
 };

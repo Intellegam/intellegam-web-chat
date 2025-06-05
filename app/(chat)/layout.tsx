@@ -5,8 +5,8 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 import { ViewConfigProvider } from '@/contexts/view-config-context';
 import { STANDARD_CONFIG } from '@/contexts/viewConfigPresets';
+import { withAuth } from '@workos-inc/authkit-nextjs';
 import Script from 'next/script';
-import { auth } from '../(auth)/auth';
 
 export const experimental_ppr = true;
 
@@ -15,7 +15,7 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
+  const [session, cookieStore] = await Promise.all([withAuth(), cookies()]);
   const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
 
   return (

@@ -1,4 +1,4 @@
-import { auth, type UserType } from '@/app/(auth)/auth';
+import type { UserType } from '@/app/(auth)/auth';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { systemPrompt, type RequestHints } from '@/lib/ai/prompts';
 import { myProvider } from '@/lib/ai/providers';
@@ -20,6 +20,7 @@ import {
 import type { Chat } from '@/lib/db/schema';
 import { generateUUID, getTrailingMessageId } from '@/lib/utils';
 import { geolocation } from '@vercel/functions';
+import { withAuth } from '@workos-inc/authkit-nextjs';
 import {
   appendClientMessage,
   appendResponseMessages,
@@ -73,13 +74,15 @@ export async function POST(request: Request) {
     const { id, message, selectedChatModel, selectedVisibilityType } =
       requestBody;
 
-    const session = await auth();
+    const session = await withAuth();
 
     if (!session?.user) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const userType: UserType = session.user.type;
+    // const userType: UserType = session.user.type;
+    // TODO: add user type to workos auth
+    const userType: UserType = 'regular';
 
     const messageCount = await getMessageCountByUserId({
       id: session.user.id,
@@ -257,7 +260,7 @@ export async function GET(request: Request) {
     return new Response('id is required', { status: 400 });
   }
 
-  const session = await auth();
+  const session = await withAuth();
 
   if (!session?.user) {
     return new Response('Unauthorized', { status: 401 });
@@ -311,7 +314,7 @@ export async function DELETE(request: Request) {
     return new Response('Not Found', { status: 404 });
   }
 
-  const session = await auth();
+  const session = await withAuth();
 
   if (!session?.user?.id) {
     return new Response('Unauthorized', { status: 401 });
