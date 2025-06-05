@@ -9,6 +9,7 @@ import type {
   ChatConfig,
   EndpointConfig,
 } from '@/lib/config/ChatConfig';
+import { guestRegex } from '@/lib/constants';
 import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
 import type { DBMessage } from '@/lib/db/schema';
 import { getChatConfigs } from '@/lib/utils/configUtils';
@@ -31,8 +32,8 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
 
   const session = await withAuth({ ensureSignedIn: true });
 
-  if (!session) {
-    redirect('/api/auth/guest');
+  if (guestRegex.test(session.user.email)) {
+    redirect('/api/auth/logout');
   }
 
   if (chat.visibility === 'private') {

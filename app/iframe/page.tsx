@@ -8,9 +8,12 @@ import type {
   EndpointConfig,
 } from '@/lib/config/ChatConfig';
 import { EncryptionHelper } from '@/lib/config/EncryptionHelper';
+import { guestRegex } from '@/lib/constants';
 import { generateUUID } from '@/lib/utils';
 import { getChatConfigs } from '@/lib/utils/configUtils';
+import { withAuth } from '@workos-inc/authkit-nextjs';
 import Image from 'next/image';
+import { redirect } from 'next/navigation';
 
 const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 
@@ -19,11 +22,12 @@ export default async function Page({
   searchParams,
 }: { searchParams: Promise<{ endpoint: string }> }) {
   const id = generateUUID();
-  // const session = await auth();
+  const session = await withAuth();
+  console.info(session);
 
-  // if (!session) {
-  //   redirect('/api/auth/guest');
-  // }
+  if (session.user === null || !guestRegex.test(session.user.email)) {
+    redirect('/api/auth/guest');
+  }
   //TODO: the below could be refactored/extracted as it is used in chat/page.tsx too -Meris
   const chatParams = new URLSearchParams(await searchParams);
   const decryptedSearchParams = await EncryptionHelper.decryptURLSearchParams(

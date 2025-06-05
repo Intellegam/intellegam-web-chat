@@ -24,10 +24,6 @@ export async function middleware(request: NextRequest) {
     return new Response('pong', { status: 200 });
   }
 
-  if (pathname.startsWith('/iframe')) {
-    return NextResponse.next();
-  }
-
   if (pathname.startsWith('/api/auth')) {
     return NextResponse.next();
   }
@@ -42,7 +38,9 @@ export async function middleware(request: NextRequest) {
   // const isGuest = guestRegex.test(session?.user?.email ?? '');
 
   if (!session?.user) {
-    if (authorizationUrl) {
+    if (pathname.startsWith('/iframe')) {
+      return NextResponse.next({ headers });
+    } else if (authorizationUrl) {
       return NextResponse.redirect(authorizationUrl);
     } else {
       return unauthorized();
@@ -54,9 +52,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/', request.url));
     }
   }
-  const response = NextResponse.next({ headers });
-
-  return response;
+  return NextResponse.next({ headers });
 }
 
 export const config = {

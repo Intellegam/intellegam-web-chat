@@ -1,3 +1,5 @@
+'use server';
+
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { ChatSettingsProvider } from '@/contexts/chat-config-context';
@@ -8,10 +10,12 @@ import type {
   EndpointConfig,
 } from '@/lib/config/ChatConfig';
 import { EncryptionHelper } from '@/lib/config/EncryptionHelper';
+import { guestRegex } from '@/lib/constants';
 import { generateUUID } from '@/lib/utils';
 import { getChatConfigs } from '@/lib/utils/configUtils';
 import { withAuth } from '@workos-inc/authkit-nextjs';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 
@@ -19,6 +23,10 @@ export default async function Page({
   searchParams,
 }: { searchParams: Promise<{ endpoint: string }> }) {
   const session = await withAuth({ ensureSignedIn: true });
+
+  if (guestRegex.test(session.user.email)) {
+    redirect('/api/auth/logout');
+  }
 
   const id = generateUUID();
   const chatParams = new URLSearchParams(await searchParams);
