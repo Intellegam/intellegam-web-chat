@@ -18,7 +18,11 @@ export interface LoginActionState {
   status: 'idle' | 'in_progress' | 'success' | 'failed' | 'invalid_data';
 }
 
-//TODO: if we need a custom login box this should be changed to the workos flow
+// NOTE: This action currently returns success without authentication
+// This is intentional as we're using WorkOS hosted auth via /api/auth/login
+// The login/register pages are not actively used but kept for future custom flows
+// Redirects to WorkOS hosted login
+// Keep this for now in case we want to add custom pre-login logic later
 export const login = async (
   _: LoginActionState,
   formData: FormData,
@@ -55,6 +59,9 @@ export interface RegisterActionState {
     | 'invalid_data';
 }
 
+// NOTE: This action currently creates users without proper authentication
+// This is intentional as we're using WorkOS hosted auth
+// The register flow is handled by WorkOS at /api/auth/login
 //TODO: if we need a custom login box this should be changed to the workos flow
 export const register = async (
   _: RegisterActionState,
