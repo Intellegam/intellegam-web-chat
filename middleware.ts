@@ -21,7 +21,6 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/login' || pathname === '/register') {
     return NextResponse.redirect(new URL('/api/auth/login', request.url));
   }
-  const response = NextResponse.next({ headers });
 
   // Public routes that don't require authentication
   const publicRoutes = ['/start', '/api/auth', '/iframe'];
