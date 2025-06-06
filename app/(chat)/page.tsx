@@ -18,7 +18,12 @@ const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 export default async function Page({
   searchParams,
 }: { searchParams: Promise<{ endpoint: string }> }) {
-  const session = await withAuth({ ensureSignedIn: true });
+  const session = await withAuth({ ensureSignedIn: false });
+
+  // This check is handled by middleware, but adding for type safety
+  if (!session?.user) {
+    return null; // Middleware will redirect to /start
+  }
 
   const id = generateUUID();
   const chatParams = new URLSearchParams(await searchParams);
