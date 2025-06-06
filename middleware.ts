@@ -1,7 +1,6 @@
 import { authkit } from '@workos-inc/authkit-nextjs';
 import { NextResponse, type NextRequest } from 'next/server';
 import { isDevelopment } from './lib/utils/environmentUtils';
-import { unauthorized } from 'next/navigation';
 
 const REDIRECT_PATHNAME = '/api/auth/callback';
 const REDIRECT_ORIGIN =
@@ -16,10 +15,15 @@ const REDIRECT_URI = new URL(REDIRECT_PATHNAME, REDIRECT_ORIGIN);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Health check for Playwright tests
   if (pathname.startsWith('/ping')) {
     return new Response('pong', { status: 200 });
+  }
+
+  // Redirect login and register pages to WorkOS hosted auth
+  if (pathname === '/login' || pathname === '/register') {
+    return NextResponse.redirect(new URL('/api/auth/login', request.url));
   }
 
   // Public routes that don't require authentication
@@ -27,15 +31,13 @@ export async function middleware(request: NextRequest) {
     '/start',
     '/api/auth',
     '/iframe',
-    '/login',
-    '/register',
   ];
-  
+
   // Check if the current path is public
-  const isPublicRoute = publicRoutes.some(route => 
-    pathname === route || pathname.startsWith(`${route}/`)
+  const isPublicRoute = publicRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
-  
+
   if (isPublicRoute) {
     return NextResponse.next();
   }
@@ -55,7 +57,7 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/start') {
     return NextResponse.redirect(new URL('/', request.url));
   }
-  
+
   // Continue with the request, passing along AuthKit headers
   return NextResponse.next({ headers });
 }
