@@ -16,55 +16,59 @@ const REDIRECT_URI = new URL(REDIRECT_PATHNAME, REDIRECT_ORIGIN);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  /*
-   * Playwright starts the dev server and requires a 200 status to
-   * begin the tests, so this ensures that the tests can start
-   */
+  
+  // Health check for Playwright tests
   if (pathname.startsWith('/ping')) {
     return new Response('pong', { status: 200 });
   }
 
-  if (pathname.startsWith('/iframe')) {
+  // Public routes that don't require authentication
+  const publicRoutes = [
+    '/start',
+    '/api/auth',
+    '/iframe',
+    '/login',
+    '/register',
+  ];
+  
+  // Check if the current path is public
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname === route || pathname.startsWith(`${route}/`)
+  );
+  
+  if (isPublicRoute) {
     return NextResponse.next();
   }
 
-  if (pathname.startsWith('/api/auth')) {
-    return NextResponse.next();
-  }
-
-  // Get session state, headers, and authorization URL from AuthKit.
-  // The `authkit` function handles cookie management, session validation, and refresh.
-  const { session, headers, authorizationUrl } = await authkit(request, {
+  // Get session from AuthKit - lightweight check only
+  const { session, headers } = await authkit(request, {
     debug: isDevelopment,
     redirectUri: REDIRECT_URI.href,
   });
 
-  // const isGuest = guestRegex.test(session?.user?.email ?? '');
-
+  // Redirect unauthenticated users to landing page
   if (!session?.user) {
-    if (authorizationUrl) {
-      return NextResponse.redirect(authorizationUrl);
-    } else {
-      return unauthorized();
-    }
-  } else {
-    // User IS logged in via AuthKit (session.user exists).
-    // If a logged-in user tries to access AuthKit's login initiation page, redirect them away.
-    if (pathname === '/auth/login') {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
+    return NextResponse.redirect(new URL('/start', request.url));
   }
-  const response = NextResponse.next({ headers });
 
-  return response;
+  // Redirect authenticated users away from public pages
+  if (pathname === '/start') {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+  
+  // Continue with the request, passing along AuthKit headers
+  return NextResponse.next({ headers });
 }
 
 export const config = {
   matcher: [
     '/',
+    '/start',
     '/chat/:id*',
     '/api/:path*',
     '/iframe',
+    '/login',
+    '/register',
     '/((?!_next/static|images|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
   ],
 };
