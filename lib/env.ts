@@ -15,12 +15,12 @@ type EnvironmentVariables = z.infer<typeof environmentVariables>;
 const parsed = environmentVariables.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error(
-    'Invalid environment variables:',
-    JSON.stringify(parsed.error.format(), null, 4),
-  );
-  process.exit(1);
+  const errorMessage = `Invalid environment variables: ${JSON.stringify(parsed.error.format(), null, 2)}`;
+  console.error(errorMessage);
+  throw new Error(errorMessage);
 }
+
+const env = parsed.data;
 
 declare global {
   namespace NodeJS {
@@ -28,4 +28,4 @@ declare global {
   }
 }
 
-export default parsed.data;
+export default env;
