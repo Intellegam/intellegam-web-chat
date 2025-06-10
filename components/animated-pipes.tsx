@@ -22,7 +22,7 @@ interface Pipe {
 
 const AnimatedPipes = ({
   isDark = true,
-  density = 20,
+  density = 25,
   speed = 0.5,
   opacity = 0.6,
 }: AnimatedPipesProps) => {
@@ -75,7 +75,7 @@ const AnimatedPipes = ({
     const { width, height } = dimensionsRef.current;
     return {
       x: utils.rand(width),
-      y: height * 0.5,
+      y: utils.rand(height * 0.8),
       direction: utils.round(utils.rand(1))
         ? Math.PI / 2
         : 2 * Math.PI - Math.PI / 2,
@@ -181,8 +181,13 @@ const AnimatedPipes = ({
       // Clear with trail effect but faster fade
       ctx.globalAlpha = 0.1;
       ctx.fillStyle = isDark ? '#000000' : '#ffffff';
-      ctx.fillRect(0, 0, dimensionsRef.current.width, dimensionsRef.current.height);
-      
+      ctx.fillRect(
+        0,
+        0,
+        dimensionsRef.current.width,
+        dimensionsRef.current.height,
+      );
+
       ctx.globalAlpha = 1;
 
       // Update all pipes
