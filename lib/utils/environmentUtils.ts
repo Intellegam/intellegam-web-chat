@@ -1,21 +1,14 @@
-import { type Environment, AppEnvironment } from '../types/environment';
-
-function validateEnvironment(env: string | undefined): env is Environment {
-  if (!env) return false;
-  return Object.values(AppEnvironment).includes(env as AppEnvironment);
-}
+import { AppEnvironment } from '../types/environment';
+import env from '../env';
 
 export const ENVIRONMENT = (() => {
-  const env = process.env.NEXT_PUBLIC_APP_ENV;
-  if (validateEnvironment(env)) {
-    return env as AppEnvironment;
+  if (env.NEXT_PUBLIC_APP_ENV) {
+    return env.NEXT_PUBLIC_APP_ENV;
   }
-
   // In development, default to DEVELOPMENT
   if (process.env.NODE_ENV === 'development') {
     return AppEnvironment.DEVELOPMENT;
   }
-
   // Otherwise default to PRODUCTION
   return AppEnvironment.PRODUCTION;
 })();
