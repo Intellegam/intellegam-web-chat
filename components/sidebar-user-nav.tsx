@@ -83,7 +83,7 @@ export function SidebarUserNav({ user }: { user: User }) {
               {isGuest ? (
                 <button
                   type="button"
-                  className="w-full cursor-pointer"
+                  className="w-full cursor-pointer text-left"
                   onClick={() => router.push('/login')}
                 >
                   Login to your account
@@ -92,7 +92,7 @@ export function SidebarUserNav({ user }: { user: User }) {
                 <form action={signOutAction}>
                   <button
                     type="submit"
-                    className="w-full cursor-pointer"
+                    className="w-full cursor-pointer text-left"
                     disabled={loading}
                   >
                     Sign out

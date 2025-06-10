@@ -21,32 +21,28 @@ export async function middleware(request: NextRequest) {
     return new Response('pong', { status: 200 });
   }
 
+  // Get session from AuthKit - lightweight check only
+  const { session, headers } = await authkit(request, {
+    debug: isDevelopment,
+    redirectUri: REDIRECT_URI.href,
+  });
+
   // Redirect login and register pages to WorkOS hosted auth
   if (pathname === '/login' || pathname === '/register') {
     return NextResponse.redirect(new URL('/api/auth/login', request.url));
   }
 
   // Public routes that don't require authentication
-  const publicRoutes = [
-    '/start',
-    '/api/auth',
-    '/iframe',
-  ];
+  const publicRoutes = ['/start', '/api/auth', '/iframe'];
 
   // Check if the current path is public
   const isPublicRoute = publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
+    (route) => pathname === route || pathname.startsWith(`${route}`),
   );
 
   if (isPublicRoute) {
-    return NextResponse.next();
+    return NextResponse.next({ headers });
   }
-
-  // Get session from AuthKit - lightweight check only
-  const { session, headers } = await authkit(request, {
-    debug: isDevelopment,
-    redirectUri: REDIRECT_URI.href,
-  });
 
   // Redirect unauthenticated users to landing page
   if (!session?.user) {
