@@ -1,16 +1,34 @@
 'use client';
 
-import { Moon, Sun } from 'lucide-react';
+import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export function ModeToggle({ className }: { className?: string }) {
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme, systemTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  function toggleTheme(theme: string) {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  function toggleTheme() {
+    // Cycle through: dark -> light -> system
+    if (theme === 'dark') {
+      setTheme('light');
+    } else if (theme === 'light') {
+      setTheme('system');
+    } else {
+      // theme === 'system'
+      setTheme(systemTheme === 'dark' ? 'light' : 'dark');
+    }
   }
 
   return (
@@ -18,15 +36,29 @@ export function ModeToggle({ className }: { className?: string }) {
       variant="outline"
       size="icon"
       className={cn('p-2 size-[2.125rem]', className)}
-      onClick={() => toggleTheme(theme ?? 'system')}
+      onClick={() => toggleTheme()}
+      title={`Current theme: ${theme}${theme === 'system' ? ` (${systemTheme})` : ''}`}
     >
       <Sun
         size={16}
-        className="rotate-0 dark:-rotate-90 scale-100 dark:scale-0 transition-all"
+        className={cn(
+          'transition-all',
+          theme === 'light' ? 'rotate-0 scale-100' : '-rotate-90 scale-0'
+        )}
       />
       <Moon
         size={16}
-        className="absolute rotate-90 dark:rotate-0 scale-0 dark:scale-100 transition-all"
+        className={cn(
+          'absolute transition-all',
+          theme === 'dark' ? 'rotate-0 scale-100' : 'rotate-90 scale-0'
+        )}
+      />
+      <Monitor
+        size={16}
+        className={cn(
+          'absolute transition-all',
+          theme === 'system' ? 'rotate-0 scale-100' : 'rotate-90 scale-0'
+        )}
       />
     </Button>
   );
