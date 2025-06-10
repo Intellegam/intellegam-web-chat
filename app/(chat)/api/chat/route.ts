@@ -80,8 +80,9 @@ export async function POST(request: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // const userType: UserType = session.user.type;
-    // TODO: add user type to workos auth
+    // For WorkOS users, default to 'regular' type
+    // Guest functionality is handled in a separate branch
+    // TODO: should this stay as this route should never be used for guest -meris
     const userType: UserType = 'regular';
 
     const messageCount = await getMessageCountByUserId({

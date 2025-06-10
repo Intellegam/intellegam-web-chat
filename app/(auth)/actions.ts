@@ -18,33 +18,28 @@ export interface LoginActionState {
   status: 'idle' | 'in_progress' | 'success' | 'failed' | 'invalid_data';
 }
 
-// NOTE: This action currently returns success without authentication
-// This is intentional as we're using WorkOS hosted auth via /api/auth/login
-// The login/register pages are not actively used but kept for future custom flows
-// Redirects to WorkOS hosted login
-// Keep this for now in case we want to add custom pre-login logic later
+// Legacy action: Login is now handled by WorkOS hosted auth
+// This action is maintained for component compatibility but doesn't perform authentication
+// Actual login happens via middleware redirect to /api/auth/login -> WorkOS AuthKit
 export const login = async (
   _: LoginActionState,
   formData: FormData,
 ): Promise<LoginActionState> => {
   try {
-    const validatedData = authFormSchema.parse({
+    // Validate form data for UI feedback purposes only
+    authFormSchema.parse({
       email: formData.get('email'),
       password: formData.get('password'),
     });
 
-    // await signIn('credentials', {
-    //   email: validatedData.email,
-    //   password: validatedData.password,
-    //   redirect: false,
-    // });
-
+    // No actual authentication occurs here - handled by WorkOS
     return { status: 'success' };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { status: 'invalid_data' };
     }
 
+    console.error('Login action error:', error);
     return { status: 'failed' };
   }
 };
@@ -59,31 +54,30 @@ export interface RegisterActionState {
     | 'invalid_data';
 }
 
-// NOTE: This action currently creates users without proper authentication
-// This is intentional as we're using WorkOS hosted auth
-// The register flow is handled by WorkOS at /api/auth/login
-//TODO: if we need a custom login box this should be changed to the workos flow
+// Legacy action: Registration is now handled by WorkOS hosted auth
+// This action is maintained for component compatibility but creates security risk
+// Actual registration should happen via WorkOS AuthKit only
+// TODO: Remove user creation logic when fully migrated to WorkOS
 export const register = async (
   _: RegisterActionState,
   formData: FormData,
 ): Promise<RegisterActionState> => {
   try {
+    // Validate form data for UI feedback purposes
     const validatedData = authFormSchema.parse({
       email: formData.get('email'),
       password: formData.get('password'),
     });
 
+    // Check if user already exists for UI feedback
     const [user] = await getUser(validatedData.email);
-
     if (user) {
       return { status: 'user_exists' } as RegisterActionState;
     }
+
+    // SECURITY WARNING: This creates a user without proper WorkOS authentication
+    // This should be removed once WorkOS webhook handles user creation
     await createUser(validatedData.email, validatedData.password);
-    // await signIn('credentials', {
-    //   email: validatedData.email,
-    //   password: validatedData.password,
-    //   redirect: false,
-    // });
 
     return { status: 'success' };
   } catch (error) {
@@ -91,6 +85,7 @@ export const register = async (
       return { status: 'invalid_data' };
     }
 
+    console.error('Register action error:', error);
     return { status: 'failed' };
   }
 };
