@@ -1,8 +1,11 @@
 import { deleteTrailingMessages } from '@/app/(chat)/actions';
+import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
+import { LANGFUSE_WEB_DEFAULT_PROJECT_ID } from '@/lib/constants';
 import type { Vote } from '@/lib/db/schema';
 import { MessageAnnotationType } from '@/lib/types/annotations';
 import { getMessageAnnotationsByType } from '@/lib/utils/annotationUtils';
+import { parseEndpointIds } from '@/lib/utils/endpointUtils';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { Message } from 'ai';
 import equal from 'fast-deep-equal';
@@ -41,6 +44,7 @@ export function PureMessageActions({
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
+  const { endpointConfig } = useChatSettingsContext();
   const viewConfig = useViewConfig();
 
   if (isLoading) return null;
@@ -70,6 +74,14 @@ export function PureMessageActions({
   if (metadataAnnotations.length >= 1) {
     console.info(metadataAnnotations);
     traceId = metadataAnnotations[0].metadata.trace_id;
+  }
+
+  const endpointIds = parseEndpointIds(endpointConfig.endpoint || '');
+  let langfuseProjectId: string;
+  if (endpointIds) {
+    langfuseProjectId = `${endpointIds.customerId}-${endpointIds.projectId}-${endpointIds.appId}`;
+  } else {
+    langfuseProjectId = LANGFUSE_WEB_DEFAULT_PROJECT_ID;
   }
 
   return (
@@ -156,6 +168,7 @@ export function PureMessageActions({
                       body: JSON.stringify({
                         chatId,
                         messageId: message.id,
+                        projectId: langfuseProjectId,
                         traceId: traceId,
                         type: 'up',
                       }),
@@ -165,7 +178,7 @@ export function PureMessageActions({
                       loading: 'Upvoting Response...',
                       success: () => {
                         mutate<Array<Vote>>(
-                          '/api/vote?chatId=${chatId}',
+                          `/api/vote?chatId=${chatId}`,
                           (currentVotes) => {
                             if (!currentVotes) return [];
 
@@ -178,7 +191,6 @@ export function PureMessageActions({
                               {
                                 chatId,
                                 messageId: message.id,
-                                traceId: traceId,
                                 isUpvoted: true,
                               },
                             ];
@@ -211,6 +223,7 @@ export function PureMessageActions({
                       body: JSON.stringify({
                         chatId,
                         messageId: message.id,
+                        projectId: langfuseProjectId,
                         traceId: traceId,
                         type: 'down',
                       }),
@@ -220,7 +233,7 @@ export function PureMessageActions({
                       loading: 'Downvoting Response...',
                       success: () => {
                         mutate<Array<Vote>>(
-                          '/api/vote?chatId=${chatId}',
+                          `/api/vote?chatId=${chatId}`,
                           (currentVotes) => {
                             if (!currentVotes) return [];
 
@@ -233,7 +246,6 @@ export function PureMessageActions({
                               {
                                 chatId,
                                 messageId: message.id,
-                                traceId: traceId,
                                 isUpvoted: false,
                               },
                             ];

@@ -1,9 +1,9 @@
+import clientEnv from '../env.client';
 import { AppEnvironment } from '../types/environment';
-import env from '../env';
 
 export const ENVIRONMENT = (() => {
-  if (env.NEXT_PUBLIC_APP_ENV) {
-    return env.NEXT_PUBLIC_APP_ENV;
+  if (clientEnv.NEXT_PUBLIC_APP_ENV) {
+    return clientEnv.NEXT_PUBLIC_APP_ENV;
   }
   // In development, default to DEVELOPMENT
   if (process.env.NODE_ENV === 'development') {

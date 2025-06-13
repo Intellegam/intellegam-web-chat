@@ -1,11 +1,14 @@
 import { LangfuseWeb } from 'langfuse';
+import { LANGFUSE_WEB_DEFAULT_PROJECT_ID } from '../constants';
+import serverEnv from '../env.server';
 import infisicalClient from './infisical';
-import env from '../env';
 
-export async function initLangfuseWeb(projectId = 'test-project') {
+export async function initLangfuseWeb(
+  projectId = LANGFUSE_WEB_DEFAULT_PROJECT_ID,
+) {
   const langfusePublicKey = await infisicalClient.secrets().getSecret({
     environment: 'dev',
-    projectId: env.INFISICAL_INTELLEGAM_PROJECT_ID,
+    projectId: serverEnv.INFISICAL_INTELLEGAM_PROJECT_ID,
     secretPath: `/Langfuse/${projectId}/`,
     secretName: 'PUBLIC_KEY',
   });

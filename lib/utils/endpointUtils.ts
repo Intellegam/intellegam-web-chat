@@ -1,8 +1,8 @@
-import { EndpointConfig } from "../config/ChatConfig";
-import { isDevelopment, isPreview } from "./environmentUtils";
+import { EndpointConfig } from '../config/ChatConfig';
+import { isDevelopment, isPreview } from './environmentUtils';
 
-const LOCAL_BACKEND_URL = "http://127.0.0.1:8000";
-const SAMPLE_APP_URL = "https://api.intellegam.com/customer/project/app/chat";
+const LOCAL_BACKEND_URL = 'http://127.0.0.1:8000';
+const SAMPLE_APP_URL = 'https://api.intellegam.com/customer/project/app/chat';
 
 /**
  * Checks if the backend is reachable by making a fetch request to the given URL.
@@ -31,7 +31,7 @@ export async function isBackendReachable(url: string): Promise<boolean> {
  * @returns {Promise<EndpointConfig>} - A promise that resolves to the selected EndpointConfig.
  */
 export async function determineBackendEndpoint(
-  queryParams: URLSearchParams
+  queryParams: URLSearchParams,
 ): Promise<EndpointConfig> {
   // Use the local endpoint
   if (isDevelopment && (await isBackendReachable(LOCAL_BACKEND_URL))) {
@@ -44,4 +44,54 @@ export async function determineBackendEndpoint(
 
   // Use the endpoint from the URL
   return EndpointConfig.fromSearchParams(queryParams);
+}
+
+function parseGcpCloudRunUrl(
+  hostname: string,
+): { customerId: string; projectId: string; appId: string } | null {
+  const regex =
+    /^([a-z0-9-]+)--([a-z0-9-]+)--([a-z0-9-]+)-[a-z0-9]+-ey\.a\.run\.app$/i;
+  const match = hostname.match(regex);
+  if (match) {
+    return {
+      customerId: match[1],
+      projectId: match[2],
+      appId: match[3],
+    };
+  }
+  return null;
+}
+
+function parseAzureApiManagementUrl(
+  pathSegments: string[],
+): { customerId: string; projectId: string; appId: string } | null {
+  if (pathSegments.length >= 3) {
+    return {
+      customerId: pathSegments[0],
+      projectId: pathSegments[1],
+      appId: pathSegments[2],
+    };
+  }
+  return null;
+}
+
+export function parseEndpointIds(
+  url: string,
+): { customerId: string; projectId: string; appId: string } | null {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname;
+    const pathSegments = urlObj.pathname
+      .split('/')
+      .filter((segment) => segment);
+
+    if (hostname.includes('a.run.app')) {
+      return parseGcpCloudRunUrl(hostname);
+    } else if (hostname.includes('api.intellegam.com')) {
+      return parseAzureApiManagementUrl(pathSegments);
+    }
+  } catch (error) {
+    console.error('Failed to parse URL:', error);
+  }
+  return null;
 }
