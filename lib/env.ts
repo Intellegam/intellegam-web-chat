@@ -8,6 +8,9 @@ const environmentVariables = z.object({
   POSTGRES_URL: z.string(),
   OPENAI_API_KEY: z.string().optional(),
   NEXT_PUBLIC_APP_ENV: z.nativeEnum(AppEnvironment).optional(),
+  INFISICAL_MACHINE_IDENTITY_CLIENT_ID: z.string(),
+  INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET: z.string(),
+  INFISICAL_INTELLEGAM_PROJECT_ID: z.string(),
 });
 
 type EnvironmentVariables = z.infer<typeof environmentVariables>;
