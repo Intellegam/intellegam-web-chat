@@ -36,10 +36,12 @@ export async function PATCH(request: Request) {
     chatId,
     messageId,
     traceId,
+    projectId,
     type,
   }: {
     chatId: string;
     messageId: string;
+    projectId: string;
     traceId: string;
     type: 'up' | 'down';
   } = await request.json();
@@ -64,7 +66,7 @@ export async function PATCH(request: Request) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const langfuse = await initLangfuseWeb();
+  const langfuse = await initLangfuseWeb(projectId);
   await langfuse.score({
     traceId,
     name: 'user-feedback',
