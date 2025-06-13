@@ -51,7 +51,7 @@ function PureMessages({
         <Greeting startMessage={chatConfig.startMessage} />
       )}
 
-      <div className="size-full @container absolute">
+      <div className="size-full @container absolute pointer-events-none">
         <div className="hidden @md:block sticky top-1/2 mx-auto w-full pl-0 @3xl:pl-4 max-w-4xl -translate-y-1/2 pointer-events-none">
           <div className="pointer-events-auto flex">
             <MessageMap
