@@ -18,6 +18,7 @@
 export enum MessageAnnotationType {
   ToolView = 'toolView',
   Sources = 'sources',
+  Metadata = 'metadata',
 }
 
 /**
@@ -97,6 +98,11 @@ export interface SearchToolViewMessageAnnotation
   toolViewData: { query: string };
 }
 
+interface MetadataMessageAnnotation extends TypedMessageAnnotation {
+  annotationType: MessageAnnotationType.Metadata;
+  metadata: { trace_id: string };
+}
+
 /**
  * Maps annotation types to their corresponding interfaces.
  *
@@ -108,4 +114,5 @@ export interface SearchToolViewMessageAnnotation
 export type MessageAnnotationTypeMap = {
   [MessageAnnotationType.ToolView]: ToolViewMessageAnnotation;
   [MessageAnnotationType.Sources]: SourcesMessageAnnotation;
+  [MessageAnnotationType.Metadata]: MetadataMessageAnnotation;
 };
