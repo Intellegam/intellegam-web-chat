@@ -62,7 +62,7 @@ export default function WelcomePage() {
         </div>
 
         {/* CTA Section */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-6">
           <Button
             asChild
             size="lg"
@@ -84,7 +84,7 @@ export default function WelcomePage() {
           </Button>
         </div>
 
-        <p className="text-xs text-muted-foreground/70 pt-8 animate-in fade-in duration-1000 delay-700">
+        <p className="text-xs text-muted-foreground/70 pt-8">
           By continuing, you agree to our{' '}
           <Link
             href="/terms"
@@ -104,9 +104,12 @@ export default function WelcomePage() {
 
       {/* Animated pipes background */}
       <AnimatedPipes isDark={resolvedTheme === 'dark'} />
-      
+
       {/* Subtle overlay for readability */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background/70 via-background/60 to-background/70" style={{ zIndex: 2 }} />
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-background/70 via-background/60 to-background/70"
+        style={{ zIndex: 2 }}
+      />
     </div>
   );
 }
