@@ -1,11 +1,11 @@
 'use client';
+import AnimatedNetwork from '@/components/animated-network';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import AnimatedPipes from '@/components/animated-pipes';
 
 export default function WelcomePage() {
   const { resolvedTheme } = useTheme();
@@ -48,7 +48,7 @@ export default function WelcomePage() {
           <div className="space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight animate-in fade-in slide-in-from-bottom-4 duration-1000">
               <span className="block text-foreground mb-2">Welcome to</span>
-              <span className="block bg-gradient-to-r from-foreground via-primary to-foreground/80 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-foreground via-primary to-foreground/80 bg-clip-text text-transparent pb-2">
                 Intellegam Chat
               </span>
             </h1>
@@ -103,7 +103,31 @@ export default function WelcomePage() {
       </div>
 
       {/* Animated pipes background */}
-      <AnimatedPipes isDark={resolvedTheme === 'dark'} />
+      <AnimatedNetwork
+        isDark={resolvedTheme === 'dark'}
+        terms={[
+          'onboarding',
+          'policy',
+          'procedure',
+          'handbook',
+          'directory',
+          'org chart',
+          'contact',
+          'form',
+          'deadline',
+          'workflow',
+          'meeting notes',
+          'project docs',
+          'brand assets',
+          'guidelines',
+          'training',
+          'expense report',
+          'benefits',
+          'IT request',
+          'equipment',
+          'calendar',
+        ]}
+      />
 
       {/* Subtle overlay for readability */}
       <div
