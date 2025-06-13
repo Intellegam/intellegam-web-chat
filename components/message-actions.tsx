@@ -1,7 +1,10 @@
 import { deleteTrailingMessages } from '@/app/(chat)/actions';
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
-import { LANGFUSE_WEB_DEFAULT_PROJECT_ID } from '@/lib/constants';
+import {
+  LANGFUSE_WEB_DEFAULT_PROJECT_ID,
+  SAMPLE_APP_PROJECT_ID,
+} from '@/lib/constants';
 import type { Vote } from '@/lib/db/schema';
 import { MessageAnnotationType } from '@/lib/types/annotations';
 import { getMessageAnnotationsByType } from '@/lib/utils/annotationUtils';
@@ -79,7 +82,11 @@ export function PureMessageActions({
   const endpointIds = parseEndpointIds(endpointConfig.endpoint || '');
   let langfuseProjectId: string;
   if (endpointIds) {
-    langfuseProjectId = `${endpointIds.customerId}-${endpointIds.projectId}-${endpointIds.appId}`;
+    const compositeId = `${endpointIds.customerId}-${endpointIds.projectId}-${endpointIds.appId}`;
+    langfuseProjectId =
+      compositeId === SAMPLE_APP_PROJECT_ID
+        ? LANGFUSE_WEB_DEFAULT_PROJECT_ID
+        : compositeId;
   } else {
     langfuseProjectId = LANGFUSE_WEB_DEFAULT_PROJECT_ID;
   }

@@ -75,6 +75,7 @@ function parseAzureApiManagementUrl(
   return null;
 }
 
+//TODO: just get the id from the backend via the config instead of parsing -meris
 export function parseEndpointIds(
   url: string,
 ): { customerId: string; projectId: string; appId: string } | null {

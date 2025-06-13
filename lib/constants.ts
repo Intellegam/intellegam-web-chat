@@ -13,3 +13,4 @@ export const guestRegex = /^guest-\d+$/;
 export const DUMMY_PASSWORD = generateDummyPassword();
 
 export const LANGFUSE_WEB_DEFAULT_PROJECT_ID = 'test-project';
+export const SAMPLE_APP_PROJECT_ID = 'customer-project-app';
