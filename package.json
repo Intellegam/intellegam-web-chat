@@ -47,6 +47,7 @@
     "@vercel/functions": "^2.0.0",
     "@vercel/postgres": "^0.10.0",
     "@workos-inc/authkit-nextjs": "^2.3.3",
+    "@workos-inc/node": "^7.54.0",
     "ai": "4.3.13",
     "bcrypt-ts": "^5.0.2",
     "class-variance-authority": "^0.7.0",
