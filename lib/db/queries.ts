@@ -70,26 +70,33 @@ export const ensureUserExists = async (userData: {
   updatedAt?: Date;
 }) => {
   try {
-    // Check if user already exists
+    const now = new Date();
+    
+    // Use INSERT ... ON CONFLICT DO NOTHING to handle race conditions
+    const [createdUser] = await db
+      .insert(user)
+      .values({
+        email: userData.email,
+        workosId: userData.workosId,
+        password: null,
+        createdAt: userData.createdAt || now,
+        updatedAt: userData.updatedAt || now,
+      })
+      .onConflictDoNothing({ target: user.workosId })
+      .returning();
+
+    // If user was created, return it
+    if (createdUser) {
+      return createdUser;
+    }
+
+    // Otherwise, user already exists, fetch it
     const [existingUser] = await db
       .select()
       .from(user)
       .where(eq(user.workosId, userData.workosId));
 
-    // If user already exists, no need to create again
-    if (existingUser) {
-      return existingUser;
-    }
-    // Create the user in your database
-    await createUser(userData.email, null, userData.workosId);
-
-    // Fetch the created user
-    const [createdUser] = await db
-      .select()
-      .from(user)
-      .where(eq(user.workosId, userData.workosId));
-
-    return createdUser;
+    return existingUser;
   } catch (error) {
     console.error('Error syncing user to database:', error);
     throw error;
@@ -107,13 +114,18 @@ export async function createUser(
   const now = new Date();
 
   try {
-    return await db.insert(user).values({
-      email,
-      workosId: workosId,
-      password: hashedPassword,
-      createdAt: createdAt || now,
-      updatedAt: updatedAt || now,
-    });
+    const [createdUser] = await db
+      .insert(user)
+      .values({
+        email,
+        workosId: workosId,
+        password: hashedPassword,
+        createdAt: createdAt || now,
+        updatedAt: updatedAt || now,
+      })
+      .returning();
+    
+    return createdUser;
   } catch (error) {
     console.error('Failed to create user in database');
     throw error;
@@ -124,7 +136,7 @@ export async function deleteUser(id: string) {
   try {
     return await db.delete(user).where(eq(user.id, id));
   } catch (error) {
-    console.error('Failed to create user in database');
+    console.error('Failed to delete user from database');
     throw error;
   }
 }
@@ -133,7 +145,7 @@ export async function deleteUserByWorkOSId(id: string) {
   try {
     return await db.delete(user).where(eq(user.workosId, id));
   } catch (error) {
-    console.error(`Failed to delete WorkOS user ${id} in database`);
+    console.error(`Failed to delete WorkOS user ${id} from database`);
     throw error;
   }
 }
