@@ -29,11 +29,11 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     notFound();
   }
 
-  const session = await withAuth({ ensureSignedIn: false });
+  const session = await withAuth();
 
   // This check is handled by middleware, but adding for type safety
   if (!session?.user) {
-    return null; // Middleware will redirect to /start
+    return redirect('/start');
   }
 
   if (chat.visibility === 'private') {

@@ -12,17 +12,18 @@ import { generateUUID } from '@/lib/utils';
 import { getChatConfigs } from '@/lib/utils/configUtils';
 import { withAuth } from '@workos-inc/authkit-nextjs';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 
 export default async function Page({
   searchParams,
 }: { searchParams: Promise<{ endpoint: string }> }) {
-  const session = await withAuth({ ensureSignedIn: false });
+  const session = await withAuth();
 
   // This check is handled by middleware, but adding for type safety
   if (!session?.user) {
-    return null; // Middleware will redirect to /start
+    return redirect('/start');
   }
 
   const id = generateUUID();
