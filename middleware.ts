@@ -11,8 +11,7 @@ const REDIRECT_ORIGIN =
       : 'http://localhost:3000';
 const REDIRECT_URI = new URL(REDIRECT_PATHNAME, REDIRECT_ORIGIN);
 
-// export default authkitMiddleware({ redirectUri: REDIRECT_URI.href });
-
+const publicRoutes = ['/start', '/api/auth', '/iframe'];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -31,9 +30,6 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/login' || pathname === '/register') {
     return NextResponse.redirect(new URL('/api/auth/login', request.url));
   }
-
-  // Public routes that don't require authentication
-  const publicRoutes = ['/start', '/api/auth', '/iframe'];
 
   // Check if the current path is public
   const isPublicRoute = publicRoutes.some(
