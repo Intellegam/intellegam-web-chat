@@ -50,13 +50,90 @@ export async function getUser(email: string): Promise<Array<User>> {
   }
 }
 
-export async function createUser(email: string, password: string) {
-  const hashedPassword = generateHashedPassword(password);
+export async function getUserByWorkOSId(id: string): Promise<User | null> {
+  try {
+    const [foundUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.workosId, id));
+    return foundUser || null;
+  } catch (error) {
+    console.error('Failed to get user by worksoId from database');
+    throw error;
+  }
+}
+
+export const ensureUserExists = async (userData: {
+  email: string;
+  workosId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}) => {
+  try {
+    // Check if user already exists
+    const [existingUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.workosId, userData.workosId));
+
+    // If user already exists, no need to create again
+    if (existingUser) {
+      return existingUser;
+    }
+    // Create the user in your database
+    await createUser(userData.email, null, userData.workosId);
+
+    // Fetch the created user
+    const [createdUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.workosId, userData.workosId));
+
+    return createdUser;
+  } catch (error) {
+    console.error('Error syncing user to database:', error);
+    throw error;
+  }
+};
+
+export async function createUser(
+  email: string,
+  password: string | null,
+  workosId?: string,
+  createdAt?: Date,
+  updatedAt?: Date,
+) {
+  const hashedPassword = password ? generateHashedPassword(password) : null;
+  const now = new Date();
 
   try {
-    return await db.insert(user).values({ email, password: hashedPassword });
+    return await db.insert(user).values({
+      email,
+      workosId: workosId,
+      password: hashedPassword,
+      createdAt: createdAt || now,
+      updatedAt: updatedAt || now,
+    });
   } catch (error) {
     console.error('Failed to create user in database');
+    throw error;
+  }
+}
+
+export async function deleteUser(id: string) {
+  try {
+    return await db.delete(user).where(eq(user.id, id));
+  } catch (error) {
+    console.error('Failed to create user in database');
+    throw error;
+  }
+}
+
+export async function deleteUserByWorkOSId(id: string) {
+  try {
+    return await db.delete(user).where(eq(user.workosId, id));
+  } catch (error) {
+    console.error(`Failed to delete WorkOS user ${id} in database`);
     throw error;
   }
 }
