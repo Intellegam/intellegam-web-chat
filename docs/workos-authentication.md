@@ -50,17 +50,6 @@ const session = await withAuth();
 - **Before**: Custom `User` type with `id`, `email`, `type` fields
 - **After**: WorkOS `UserInfo['user']` type with standardized fields
 
-#### Sign Out
-```typescript
-// Before (NextAuth)
-import { signOut } from '@/app/(auth)/auth';
-await signOut();
-
-// After (WorkOS)
-import { signOut } from '@workos-inc/authkit-nextjs';
-await signOut();
-```
-
 ## Authentication Routes
 
 ### Public Routes
@@ -76,37 +65,12 @@ All other routes require authentication and redirect to `/start` if not authenti
 - `/api/auth/callback` - WorkOS authentication callback handler
 - `/api/auth/guest` - Disabled (returns empty response)
 
-## User Interface Changes
-
-### User Navigation (`components/sidebar-user-nav.tsx`)
-- Uses `useAuth()` hook from WorkOS for loading states
-- Calls `signOutAction` for logout functionality
-- Shows loading spinner during auth state changes
-
-### Landing Page (`app/start/page.tsx`)
-- New landing page for unauthenticated users
-- Provides links to sign in and create account
-- Both link to WorkOS hosted authentication
-
 ## Testing Considerations
 
 ### Updated Tests
 - Unauthenticated users now redirect to `/start` instead of login page
 - Login/register pages redirect to WorkOS hosted auth (external URLs)
 - Session-based tests need to account for WorkOS authentication flow
-
-### Skipped Tests
-Tests that relied on local authentication forms are skipped since authentication now happens on WorkOS hosted pages:
-- Local registration form testing
-- Local login form testing
-- Custom password validation
-
-### Integration Testing
-Consider adding tests for:
-- Proper redirects to WorkOS
-- Callback handling
-- Session persistence
-- Sign out functionality
 
 ## Security Benefits
 
@@ -145,46 +109,12 @@ import { withAuth } from '@workos-inc/authkit-nextjs';
 
 export async function POST(request: Request) {
   const session = await withAuth();
-  
+
   if (!session?.user) {
     return new Response('Unauthorized', { status: 401 });
   }
-  
+
   // Your API logic here
-}
-```
-
-#### Page Components (Server Components)
-Use `withAuth({ ensureSignedIn: false })` for pages that may have both authenticated and unauthenticated states:
-```typescript
-import { withAuth } from '@workos-inc/authkit-nextjs';
-
-export default async function Page() {
-  const session = await withAuth({ ensureSignedIn: false });
-  
-  if (!session?.user) {
-    // Handle unauthenticated state
-    return <UnauthenticatedView />;
-  }
-  
-  // Authenticated view
-  return <AuthenticatedView user={session.user} />;
-}
-```
-
-#### Client Components
-Use the `useAuth()` hook for client-side authentication state:
-```typescript
-'use client';
-import { useAuth } from '@workos-inc/authkit-nextjs/components';
-
-export function MyComponent() {
-  const { user, loading } = useAuth();
-  
-  if (loading) return <LoadingSpinner />;
-  if (!user) return <LoginPrompt />;
-  
-  return <UserContent user={user} />;
 }
 ```
 
@@ -215,22 +145,3 @@ try {
 'use client';
 import { withAuth } from '@workos-inc/authkit-nextjs'; // Wrong!
 ```
-
-❌ **Don't mix authentication patterns**
-```typescript
-// Don't use both NextAuth and WorkOS imports
-import { auth } from '@/app/(auth)/auth'; // Old NextAuth
-import { withAuth } from '@workos-inc/authkit-nextjs'; // New WorkOS
-```
-
-## Troubleshooting
-
-### Common Issues
-1. **Redirect Loops**: Check WORKOS_CLIENT_ID and callback URL configuration
-2. **Session Not Persisting**: Verify WORKOS_COOKIE_PASSWORD is 32 characters
-3. **API Authentication Failing**: Ensure all API routes use `withAuth()` instead of `auth()`
-4. **Component Import Errors**: Verify server vs client component usage
-5. **NEXT_REDIRECT Errors**: Don't wrap `withAuth({ ensureSignedIn: true })` in try-catch
-
-### Debug Mode
-Enable debug mode in development by setting `debug: true` in middleware authkit configuration.
