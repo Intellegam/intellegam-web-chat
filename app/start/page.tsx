@@ -67,7 +67,7 @@ export default function WelcomePage() {
         <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground py-4">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-primary/60 rounded-full" />
-            <span>PDFs & Documents</span>
+            <span>24 Hours 7 Days a Week</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-primary/60 rounded-full" />
