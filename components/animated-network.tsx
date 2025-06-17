@@ -35,8 +35,8 @@ interface Connection {
 
 const AnimatedNetwork = ({
   isDark = true,
-  density = 50,
-  speed = 0.5,
+  density = 100,
+  speed = 0.6,
   opacity = 0.8,
   terms = [
     'vector',
@@ -97,7 +97,7 @@ const AnimatedNetwork = ({
       driftSpeed: 0.08,
       attractionStrength: 0.0005,
       layerSeparation: 100,
-      initialFragments: 30,
+      initialFragments: 80,
       spawnRate: 0.02,
       words: terms,
     }),
@@ -204,7 +204,7 @@ const AnimatedNetwork = ({
           // Strong repulsion at close distances
           if (dist > 0 && dist < 60) {
             // Minimum distance of 60 pixels
-            const repelForce = ((60 - dist) / 60) * 2; // Stronger repulsion
+            const repelForce = ((60 - dist) / 60) * 4; // Stronger repulsion
             fragment.targetX += (dx / dist) * repelForce;
             fragment.targetY += (dy / dist) * repelForce;
           }
@@ -330,7 +330,7 @@ const AnimatedNetwork = ({
       // Draw fragments
       fragmentsRef.current.forEach((fragment) => {
         const ageRatio = fragment.age / fragment.maxAge;
-        const fadeIn = Math.min(1, fragment.age / 500);
+        const fadeIn = Math.min(1, fragment.age / 100);
         const fadeOut = Math.max(0, 1 - Math.pow(ageRatio, 2));
         const alpha = fadeIn * fadeOut * opacity;
 
