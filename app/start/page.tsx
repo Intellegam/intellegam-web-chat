@@ -44,7 +44,6 @@ export default function WelcomePage() {
         <div className="space-y-8">
           <div className="space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <span className="block text-foreground mb-2">Welcome to</span>
               <span className="block bg-gradient-to-r from-foreground via-primary to-foreground/80 bg-clip-text text-transparent pb-2">
                 Intellegam Chat
               </span>
@@ -53,14 +52,35 @@ export default function WelcomePage() {
             <div className="h-0.5 w-20 bg-gradient-to-r from-primary/60 to-primary/30 mx-auto rounded-full" />
           </div>
 
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Your AI assistant for instant access to your organization's
-            knowledge
-          </p>
+          <div className="space-y-4 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-foreground/90 leading-relaxed font-medium">
+              Chat with your knowledge base
+            </p>
+            <p className="text-base text-muted-foreground leading-relaxed">
+              Upload files, ask questions in plain language, get answers with
+              exact citations.
+            </p>
+          </div>
+        </div>
+
+        {/* Quick features */}
+        <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground py-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-primary/60 rounded-full" />
+            <span>PDFs & Documents</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-primary/60 rounded-full" />
+            <span>Instant Answers</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-primary/60 rounded-full" />
+            <span>Exact Citations</span>
+          </div>
         </div>
 
         {/* CTA Section */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-6">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           <Button
             asChild
             size="lg"
