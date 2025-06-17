@@ -14,7 +14,7 @@ import { chatModels } from '@/lib/ai/models';
 import { cn } from '@/lib/utils';
 
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
-import type { NoUserInfo, UserInfo } from '@workos-inc/authkit-nextjs';
+import type { UserInfo } from '@workos-inc/authkit-nextjs';
 import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
 
 export function ModelSelector({
@@ -22,7 +22,7 @@ export function ModelSelector({
   selectedModelId,
   className,
 }: {
-  session?: UserInfo | NoUserInfo;
+  session?: UserInfo;
   selectedModelId: string;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);

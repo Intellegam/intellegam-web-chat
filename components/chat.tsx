@@ -8,7 +8,7 @@ import { useChatVisibility } from '@/hooks/use-chat-visibility';
 import type { Vote } from '@/lib/db/schema';
 import { fetcher, generateUUID } from '@/lib/utils';
 import { useChat } from '@ai-sdk/react';
-import type { NoUserInfo, UserInfo } from '@workos-inc/authkit-nextjs';
+import type { UserInfo } from '@workos-inc/authkit-nextjs';
 import type { Attachment, UIMessage } from 'ai';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -35,7 +35,7 @@ export function Chat({
   initialChatModel: string;
   initialVisibilityType: VisibilityType;
   isReadonly: boolean;
-  session?: UserInfo | NoUserInfo;
+  session?: UserInfo;
   autoResume: boolean;
 }) {
   const { mutate } = useSWRConfig();

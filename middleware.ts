@@ -2,14 +2,17 @@ import { authkit } from '@workos-inc/authkit-nextjs';
 import { NextResponse, type NextRequest } from 'next/server';
 import { isDevelopment } from './lib/utils/environmentUtils';
 
-const REDIRECT_PATHNAME = '/api/auth/callback';
-const REDIRECT_ORIGIN =
+const WORKOS_REDIRECT_PATHNAME = '/api/auth/callback';
+const WORKOS_REDIRECT_ORIGIN =
   process.env.VERCEL_ENV === 'production'
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : process.env.VERCEL_ENV === 'preview'
       ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:3000';
-const REDIRECT_URI = new URL(REDIRECT_PATHNAME, REDIRECT_ORIGIN);
+const WORKOS_REDIRECT_URI = new URL(
+  WORKOS_REDIRECT_PATHNAME,
+  WORKOS_REDIRECT_ORIGIN,
+);
 
 // export default authkitMiddleware({ redirectUri: REDIRECT_URI.href });
 
@@ -24,7 +27,7 @@ export async function middleware(request: NextRequest) {
   // Get session from AuthKit - lightweight check only
   const { session, headers } = await authkit(request, {
     debug: isDevelopment,
-    redirectUri: REDIRECT_URI.href,
+    redirectUri: WORKOS_REDIRECT_URI.href,
   });
 
   // Redirect login and register pages to WorkOS hosted auth

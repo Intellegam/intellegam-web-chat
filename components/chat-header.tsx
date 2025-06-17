@@ -7,7 +7,7 @@ import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
 import { useChatSettingsContext } from '@/contexts/chat-config-context';
 import { useViewConfig } from '@/contexts/view-config-context';
-import type { NoUserInfo, UserInfo } from '@workos-inc/authkit-nextjs';
+import type { UserInfo } from '@workos-inc/authkit-nextjs';
 import { memo } from 'react';
 import { PlusIcon } from './icons';
 import { ModeToggle } from './mode-toggle';
@@ -27,7 +27,7 @@ function PureChatHeader({
   selectedModelId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
-  session?: UserInfo | NoUserInfo;
+  session?: UserInfo;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
