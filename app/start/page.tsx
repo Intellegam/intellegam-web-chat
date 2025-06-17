@@ -28,8 +28,8 @@ export default function WelcomePage() {
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gradient-to-br from-background via-background to-muted/30 relative overflow-hidden">
       <div className="max-w-4xl mx-auto text-center space-y-10 relative z-10 backdrop-blur-[2px] bg-background/2 border border-border/5 rounded-2xl p-8">
         {/* Logo with subtle glass effect */}
-        <div className="flex flex-col items-center justify-center mb-6 animate-in fade-in duration-1000">
-          <div className="w-20 h-20 rounded-2xl bg-muted/20 border border-border/40 flex items-center justify-center shadow-lg mb-3">
+        <div className="flex flex-col items-center justify-center mb-4 animate-in fade-in duration-1000">
+          <div className="w-20 h-20 rounded-2xl bg-muted/20 border border-border/40 flex items-center justify-center shadow-lg">
             <Image
               src={logo}
               alt="Intellegam Logo"
@@ -38,9 +38,6 @@ export default function WelcomePage() {
               className="size-12"
             />
           </div>
-          <span className="font-medium text-lg text-foreground">
-            Intellegam
-          </span>
         </div>
 
         {/* Header Section */}
@@ -57,7 +54,8 @@ export default function WelcomePage() {
           </div>
 
           <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Experience intelligent conversations with AI that truly understands
+            Your AI assistant for instant access to your organization's
+            knowledge
           </p>
         </div>
 
