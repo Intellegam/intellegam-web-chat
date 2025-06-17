@@ -1,4 +1,5 @@
 import type { UserInfo } from '@workos-inc/authkit-nextjs';
+// This file is here instead of lib/types because of backwards compatiblity with the chatsdk
 
 /**
  * User types supported by the application
