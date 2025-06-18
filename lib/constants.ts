@@ -14,3 +14,21 @@ export const DUMMY_PASSWORD = generateDummyPassword();
 
 export const LANGFUSE_WEB_DEFAULT_PROJECT_ID = 'test-project';
 export const SAMPLE_APP_PROJECT_ID = 'customer-project-app';
+
+export const WORKOS_REDIRECT_PATHNAME = '/api/auth/callback';
+export const WORKOS_LOGOUT_REDIRECT_PATHNAME = '/start';
+export const WORKOS_REDIRECT_ORIGIN =
+  process.env.VERCEL_ENV === 'production'
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_ENV === 'preview'
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+export const WORKOS_REDIRECT_URI = new URL(
+  WORKOS_REDIRECT_PATHNAME,
+  WORKOS_REDIRECT_ORIGIN,
+);
+
+export const WORKOS_LOGOUT_REDIRECT_URI = new URL(
+  WORKOS_LOGOUT_REDIRECT_PATHNAME,
+  WORKOS_REDIRECT_ORIGIN,
+);
