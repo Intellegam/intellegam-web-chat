@@ -26,98 +26,99 @@ export default function WelcomePage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gradient-to-br from-background via-background to-muted/30 relative overflow-hidden">
-      <div className="max-w-4xl mx-auto text-center space-y-10 relative z-10 backdrop-blur-[2px] bg-background/2 border border-border/5 rounded-2xl p-8">
-        {/* Logo with subtle glass effect */}
-        <div className="flex flex-col items-center justify-center mb-4 animate-in fade-in duration-1000">
-          <div className="w-20 h-20 rounded-2xl bg-muted/20 border border-border/40 flex items-center justify-center shadow-lg">
+      {/* Page indicator */}
+      <div className="absolute top-6 left-6 z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
             <Image
               src={logo}
-              alt="Intellegam Logo"
-              width={48}
-              height={48}
-              className="size-12"
+              alt="Intellegam"
+              width={20}
+              height={20}
+              className="size-5"
             />
           </div>
-        </div>
-
-        {/* Header Section */}
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight animate-in fade-in slide-in-from-bottom-4 duration-1000">
-              <span className="block bg-gradient-to-r from-foreground via-primary to-foreground/80 bg-clip-text text-transparent pb-2">
-                Intellegam Chat
-              </span>
-            </h1>
-
-            <div className="h-0.5 w-20 bg-gradient-to-r from-primary/60 to-primary/30 mx-auto rounded-full" />
-          </div>
-
-          <div className="space-y-4 max-w-2xl mx-auto">
-            <p className="text-xl md:text-2xl text-foreground/90 leading-relaxed font-medium">
-              Chat with your knowledge base
-            </p>
-            <p className="text-base text-muted-foreground leading-relaxed">
-              Upload files, ask questions in plain language, get answers with
-              exact citations.
-            </p>
+          <div className="text-sm font-medium text-foreground">
+            Intellegam Chat
           </div>
         </div>
+      </div>
 
-        {/* Quick features */}
-        <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground py-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-primary/60 rounded-full" />
-            <span>24 Hours 7 Days a Week</span>
+      <div className="max-w-6xl mx-auto relative z-10">
+        {/* Main Content - Split Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[70vh]">
+          {/* Left Side - Hero Text */}
+          <div className="space-y-8 text-center lg:text-left backdrop-blur-[1px]">
+            <div className="space-y-6">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[0.9] animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                <span className="block text-foreground mb-2">Made for</span>
+                <span className="block bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent pb-1">
+                  Knowledge
+                </span>
+              </h1>
+
+              <p className="text-lg md:text-xl text-muted-foreground/80 leading-relaxed max-w-xl font-medium">
+                Chat with your knowledge base using plain language.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+              <Button
+                asChild
+                size="lg"
+                className="px-12 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 group"
+              >
+                <a href="/login">
+                  Sign In
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </a>
+              </Button>
+
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="px-8 border-border/60 hover:bg-muted/30 transition-all duration-200"
+              >
+                <a href="/register">Create Account</a>
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-primary/60 rounded-full" />
-            <span>Instant Answers</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-primary/60 rounded-full" />
-            <span>Exact Citations</span>
+
+          {/* Right Side - Simple CTA or Visual Element */}
+          <div className="flex justify-center lg:justify-end">
+            <div className="text-center space-y-4"></div>
           </div>
         </div>
 
-        {/* CTA Section */}
-        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-          <Button
-            asChild
-            size="lg"
-            className="px-8 shadow-lg hover:shadow-xl transition-all duration-200 group"
-          >
-            <a href="/login">
-              Sign In
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </a>
-          </Button>
+        {/* Footer Links */}
+        <div className="pt-16 border-t border-border/20 text-center">
+          <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-muted-foreground/70">
+            <Link
+              href="/terms"
+              className="hover:text-foreground transition-colors duration-200 font-medium"
+            >
+              TERMS
+            </Link>
+            <Link
+              href="/privacy"
+              className="hover:text-foreground transition-colors duration-200 font-medium"
+            >
+              PRIVACY POLICY
+            </Link>
+            <Link
+              href="/contact"
+              className="hover:text-foreground transition-colors duration-200 font-medium"
+            >
+              CONTACT US
+            </Link>
+          </div>
 
-          <Button
-            asChild
-            variant="outline"
-            size="lg"
-            className="px-8 border-border/60 hover:bg-muted/30 transition-all duration-200"
-          >
-            <a href="/register">Create Account</a>
-          </Button>
+          <p className="text-xs text-muted-foreground/50 text-center mt-4">
+            MADE WITH LOVE BY INTELLEGAM
+          </p>
         </div>
-
-        <p className="text-xs text-muted-foreground/70 pt-8">
-          By continuing, you agree to our{' '}
-          <Link
-            href="/terms"
-            className="underline underline-offset-4 hover:text-foreground transition-colors"
-          >
-            Terms
-          </Link>{' '}
-          and{' '}
-          <Link
-            href="/privacy"
-            className="underline underline-offset-4 hover:text-foreground transition-colors"
-          >
-            Privacy Policy
-          </Link>
-        </p>
       </div>
 
       {/* Animated pipes background */}
