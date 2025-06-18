@@ -79,6 +79,15 @@ All other routes require authentication and redirect to `/start` if not authenti
 3. **Security Best Practices**: WorkOS handles security updates and compliance
 4. **Session Management**: Secure cookie handling and session lifecycle
 
+## Future Plans
+
+Currently using WorkOS hosted authentication pages for quick implementation. Planning to implement custom login/register pages later while keeping WorkOS as the authentication backend.
+
+When implementing custom pages:
+1. Update WorkOS configuration to allow custom UI
+2. Re-enable and update the currently skipped authentication tests
+3. Update the auth setup to work with custom forms instead of hosted flow
+
 ## Migration Notes
 
 ### Removed Dependencies

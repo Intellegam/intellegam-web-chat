@@ -25,6 +25,12 @@ export const login = async (
   _: LoginActionState,
   formData: FormData,
 ): Promise<LoginActionState> => {
+  // Throw error - this action should not be called during WorkOS hosted auth
+  // Remove this error when transitioning to custom auth UI
+  throw new Error(
+    'Login action disabled during WorkOS hosted auth migration. Middleware should redirect /login to WorkOS.'
+  );
+
   try {
     // Validate form data for UI feedback purposes only
     authFormSchema.parse({
@@ -62,6 +68,12 @@ export const register = async (
   _: RegisterActionState,
   formData: FormData,
 ): Promise<RegisterActionState> => {
+  // Throw error - this action should not be called during WorkOS hosted auth
+  // Remove this error when transitioning to custom auth UI
+  throw new Error(
+    'Register action disabled during WorkOS hosted auth migration. Middleware should redirect /register to WorkOS.'
+  );
+
   try {
     // Validate form data for UI feedback purposes
     const validatedData = authFormSchema.parse({
@@ -77,7 +89,7 @@ export const register = async (
 
     // SECURITY WARNING: This creates a user without proper WorkOS authentication
     // This should be removed once WorkOS webhook handles user creation
-    await createUser(validatedData.email, validatedData.password);
+    //await createUser(validatedData.email, validatedData.password);
 
     return { status: 'success' };
   } catch (error) {
