@@ -14,8 +14,6 @@ const WORKOS_REDIRECT_URI = new URL(
   WORKOS_REDIRECT_ORIGIN,
 );
 
-// export default authkitMiddleware({ redirectUri: REDIRECT_URI.href });
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
