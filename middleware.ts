@@ -1,18 +1,7 @@
 import { authkit } from '@workos-inc/authkit-nextjs';
 import { NextResponse, type NextRequest } from 'next/server';
+import { WORKOS_REDIRECT_URI } from './lib/constants';
 import { isDevelopment } from './lib/utils/environmentUtils';
-
-const WORKOS_REDIRECT_PATHNAME = '/api/auth/callback';
-const WORKOS_REDIRECT_ORIGIN =
-  process.env.VERCEL_ENV === 'production'
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : process.env.VERCEL_ENV === 'preview'
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
-const WORKOS_REDIRECT_URI = new URL(
-  WORKOS_REDIRECT_PATHNAME,
-  WORKOS_REDIRECT_ORIGIN,
-);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
