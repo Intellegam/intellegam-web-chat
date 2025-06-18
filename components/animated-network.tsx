@@ -111,7 +111,7 @@ const AnimatedNetwork = ({
       const layer = Math.floor(Math.random() * 3);
 
       // Start from center with some random spread
-      const centerX = width / 2;
+      const centerX = width / 4 + width / 2;
       const centerY = height / 2;
       const spreadRadius = 200;
       const angle = Math.random() * Math.PI * 2;
