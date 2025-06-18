@@ -2,11 +2,12 @@
 
 import { z } from 'zod';
 
-import { createUser, getUser } from '@/lib/db/queries';
+import { getUser } from '@/lib/db/queries';
 import { signOut } from '@workos-inc/authkit-nextjs';
+import { WORKOS_LOGOUT_REDIRECT_URI } from '@/lib/constants';
 
 export async function signOutAction(_: FormData) {
-  await signOut();
+  await signOut({ returnTo: WORKOS_LOGOUT_REDIRECT_URI.href });
 }
 
 const authFormSchema = z.object({
@@ -28,9 +29,10 @@ export const login = async (
   // Throw error - this action should not be called during WorkOS hosted auth
   // Remove this error when transitioning to custom auth UI
   throw new Error(
-    'Login action disabled during WorkOS hosted auth migration. Middleware should redirect /login to WorkOS.'
+    'Login action disabled during WorkOS hosted auth migration. Middleware should redirect /login to WorkOS.',
   );
 
+  // biome-ignore lint/correctness/noUnreachable: <explanation>
   try {
     // Validate form data for UI feedback purposes only
     authFormSchema.parse({
@@ -71,9 +73,10 @@ export const register = async (
   // Throw error - this action should not be called during WorkOS hosted auth
   // Remove this error when transitioning to custom auth UI
   throw new Error(
-    'Register action disabled during WorkOS hosted auth migration. Middleware should redirect /register to WorkOS.'
+    'Register action disabled during WorkOS hosted auth migration. Middleware should redirect /register to WorkOS.',
   );
 
+  // biome-ignore lint/correctness/noUnreachable: <explanation>
   try {
     // Validate form data for UI feedback purposes
     const validatedData = authFormSchema.parse({
