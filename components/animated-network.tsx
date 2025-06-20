@@ -36,7 +36,7 @@ interface Connection {
 const AnimatedNetwork = ({
   isDark = true,
   density = 100,
-  speed = 0.6,
+  speed = 0.5,
   opacity = 0.8,
   terms = [
     'vector',
@@ -97,7 +97,7 @@ const AnimatedNetwork = ({
       driftSpeed: 0.08,
       attractionStrength: 0.0005,
       layerSeparation: 100,
-      initialFragments: 80,
+      initialFragments: 60,
       spawnRate: 0.02,
       words: terms,
     }),
@@ -113,7 +113,7 @@ const AnimatedNetwork = ({
       // Start from center with some random spread
       const centerX = width / 4 + width / 2;
       const centerY = height / 2;
-      const spreadRadius = 200;
+      const spreadRadius = 350;
       const angle = Math.random() * Math.PI * 2;
       const radius = Math.random() * spreadRadius;
 
@@ -204,7 +204,7 @@ const AnimatedNetwork = ({
           // Strong repulsion at close distances
           if (dist > 0 && dist < 60) {
             // Minimum distance of 60 pixels
-            const repelForce = ((60 - dist) / 60) * 4; // Stronger repulsion
+            const repelForce = ((60 - dist) / 60) * 2; // Stronger repulsion
             fragment.targetX += (dx / dist) * repelForce;
             fragment.targetY += (dy / dist) * repelForce;
           }

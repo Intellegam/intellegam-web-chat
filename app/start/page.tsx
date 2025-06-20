@@ -48,7 +48,7 @@ export default function WelcomePage() {
         {/* Main Content - Split Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center min-h-[70vh]">
           {/* Left Side - Hero Text */}
-          <div className="space-y-8 text-center lg:text-left backdrop-blur-[1px]">
+          <div className="space-y-8 text-center lg:text-left backdrop-blur-[1px] mt-16 md:mt-0">
             <div className="space-y-6">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[0.9] animate-in fade-in slide-in-from-bottom-4 duration-1000">
                 <span className="block text-foreground mb-2">Made for</span>
@@ -94,7 +94,7 @@ export default function WelcomePage() {
 
         {/* Footer Links */}
         <div className="pt-16 border-t border-border/20 text-center">
-          <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-muted-foreground/70">
+          <div className="flex flex-wrap justify-center items-center gap-x-6 text-xs md:text-sm text-muted-foreground/70">
             <Link
               href="/terms"
               className="hover:text-foreground transition-colors duration-200 font-medium"
