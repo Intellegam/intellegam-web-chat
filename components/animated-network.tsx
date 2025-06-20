@@ -31,12 +31,13 @@ interface Connection {
   strength: number;
   active: boolean;
   pulsePosition: number;
+  baseStrength: number; // Store the original connection strength
 }
 
 const AnimatedNetwork = ({
   isDark = true,
   density = 100,
-  speed = 0.5,
+  speed = 0.1,
   opacity = 0.8,
   terms = [
     'vector',
@@ -68,6 +69,7 @@ const AnimatedNetwork = ({
   const dimensionsRef = useRef({ width: 0, height: 0 });
   const timeRef = useRef(0);
   const nextIdRef = useRef(0);
+  const lastConnectionUpdate = useRef(0);
 
   // Configuration
   const config = useMemo(
@@ -100,6 +102,7 @@ const AnimatedNetwork = ({
       initialFragments: 60,
       spawnRate: 0.02,
       words: terms,
+      connectionUpdateInterval: 100, // Only update connections every 100ms
     }),
     [isDark, terms],
   );
@@ -146,16 +149,72 @@ const AnimatedNetwork = ({
     );
   }, [config.initialFragments, createFragment]);
 
-  // Update connections based on proximity and semantic similarity
+  // Update connections based on proximity and semantic similarity (less frequently)
   const updateConnections = useCallback(() => {
-    connectionsRef.current = [];
+    const currentTime = Date.now();
 
+    // Only update connections every 100ms to reduce flickering
+    if (
+      currentTime - lastConnectionUpdate.current <
+      config.connectionUpdateInterval
+    ) {
+      // Just update existing connection strengths based on current distances
+      connectionsRef.current.forEach((connection) => {
+        const dx = connection.from.x - connection.to.x;
+        const dy = connection.from.y - connection.to.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < config.connectionDistance) {
+          connection.strength =
+            (1 - distance / config.connectionDistance) *
+            connection.baseStrength;
+        } else {
+          connection.strength = 0; // Fade out distant connections
+        }
+      });
+      return;
+    }
+
+    lastConnectionUpdate.current = currentTime;
+
+    // Remove connections to fragments that no longer exist
+    connectionsRef.current = connectionsRef.current.filter(
+      (connection) =>
+        fragmentsRef.current.includes(connection.from) &&
+        fragmentsRef.current.includes(connection.to),
+    );
+
+    // Clear all fragment connections
+    fragmentsRef.current.forEach((fragment) => {
+      fragment.connections = [];
+    });
+
+    // Build connection map to avoid duplicates
+    const connectionMap = new Map<string, Connection>();
+
+    connectionsRef.current.forEach((connection) => {
+      const key1 = `${connection.from.id}-${connection.to.id}`;
+      const key2 = `${connection.to.id}-${connection.from.id}`;
+      connectionMap.set(key1, connection);
+      connectionMap.set(key2, connection);
+    });
+
+    // Add new connections
     for (let i = 0; i < fragmentsRef.current.length; i++) {
       const fragment1 = fragmentsRef.current[i];
-      fragment1.connections = [];
 
       for (let j = i + 1; j < fragmentsRef.current.length; j++) {
         const fragment2 = fragmentsRef.current[j];
+        const key = `${fragment1.id}-${fragment2.id}`;
+
+        // Skip if connection already exists
+        if (connectionMap.has(key)) {
+          // Add to fragment connections list
+          fragment1.connections.push(fragment2.id);
+          fragment2.connections.push(fragment1.id);
+          continue;
+        }
+
         const dx = fragment1.x - fragment2.x;
         const dy = fragment1.y - fragment2.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -165,15 +224,19 @@ const AnimatedNetwork = ({
           const similarity = Math.random() > 0.7;
 
           if (similarity || Math.abs(fragment1.layer - fragment2.layer) <= 1) {
-            const strength = 1 - distance / config.connectionDistance;
-
-            connectionsRef.current.push({
+            const baseStrength = 1 - distance / config.connectionDistance;
+            const connection: Connection = {
               from: fragment1,
               to: fragment2,
-              strength,
+              strength: baseStrength,
+              baseStrength: baseStrength,
               active: false,
               pulsePosition: 0,
-            });
+            };
+
+            connectionsRef.current.push(connection);
+            connectionMap.set(key, connection);
+            connectionMap.set(`${fragment2.id}-${fragment1.id}`, connection);
 
             fragment1.connections.push(fragment2.id);
             fragment2.connections.push(fragment1.id);
@@ -294,10 +357,13 @@ const AnimatedNetwork = ({
       ctx.fillStyle = config.backgroundColor;
       ctx.fillRect(0, 0, width, height);
 
-      // Draw connections
+      // Draw connections with minimum opacity threshold
       ctx.lineCap = 'round';
       connectionsRef.current.forEach((connection) => {
         const alpha = connection.strength * opacity * 0.6;
+
+        // Only draw connections that are visible enough to matter
+        if (alpha < 0.05) return;
 
         if (connection.active) {
           // Draw active pulse
@@ -308,7 +374,7 @@ const AnimatedNetwork = ({
             connection.from.y +
             (connection.to.y - connection.from.y) * connection.pulsePosition;
 
-          const gradient = ctx.createRadialGradient(x, y, 0, x, y, 20);
+          const gradient = ctx.createRadialGradient(x, y, 0, x, y, 5);
           gradient.addColorStop(0, `${config.pulseColor}0.8)`);
           gradient.addColorStop(1, `${config.pulseColor}0)`);
 
