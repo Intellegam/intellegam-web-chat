@@ -319,7 +319,7 @@ const AnimatedNetwork = ({
         }
 
         // Draw connection line
-        ctx.strokeStyle = `${config.connectionColor + alpha})`;
+        ctx.strokeStyle = `${config.connectionColor}${alpha})`;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(connection.from.x, connection.from.y);
