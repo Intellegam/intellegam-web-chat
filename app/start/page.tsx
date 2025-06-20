@@ -148,7 +148,7 @@ export default function WelcomePage() {
 
       {/* Subtle overlay for readability */}
       <div
-        className="absolute inset-0 bg-gradient-to-br from-background/70 via-background/60 to-background/70"
+        className="absolute inset-0 bg-background/50"
         style={{ zIndex: 2 }}
       />
     </div>
