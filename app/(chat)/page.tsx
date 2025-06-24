@@ -1,6 +1,7 @@
 import { Chat } from '@/components/chat';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { ChatSettingsProvider } from '@/contexts/chat-config-context';
+import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import type {
   AdminChatConfig,
   ChatConfig,
@@ -9,20 +10,20 @@ import type {
 import { EncryptionHelper } from '@/lib/config/EncryptionHelper';
 import { generateUUID } from '@/lib/utils';
 import { getChatConfigs } from '@/lib/utils/configUtils';
+import { withAuth } from '@workos-inc/authkit-nextjs';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { auth } from '../(auth)/auth';
-import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 
 const ENCRYPTED_PARAMS = ['subscriptionKey', 'subscription_key'];
 
 export default async function Page({
   searchParams,
 }: { searchParams: Promise<{ endpoint: string }> }) {
-  const session = await auth();
+  const session = await withAuth();
 
-  if (!session) {
-    redirect('/api/auth/guest');
+  // This check is handled by middleware, but adding for type safety
+  if (!session?.user) {
+    return redirect('/start');
   }
 
   const id = generateUUID();

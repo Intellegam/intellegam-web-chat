@@ -51,23 +51,42 @@ test.describe
       authPage = new AuthPage(page);
     });
 
-    test('redirect to login page when unauthenticated', async ({ page }) => {
+    test('redirect to landing page when unauthenticated', async ({ page }) => {
       await page.goto('/');
-      await expect(page.getByRole('heading')).toContainText('Sign In');
+      await expect(page).toHaveURL('/start');
     });
 
-    test('register a test account', async ({ page }) => {
+    test('redirect login to WorkOS hosted auth', async ({ page }) => {
+      await page.goto('/login');
+      // Should redirect to WorkOS AuthKit login
+      await page.waitForURL(/authkit/, { timeout: 10000 });
+      await expect(page.url()).toMatch(/authkit/);
+    });
+
+    test('redirect register to WorkOS hosted auth', async ({ page }) => {
+      await page.goto('/register');
+      // Should redirect to WorkOS AuthKit login
+      await page.waitForURL(/authkit/, { timeout: 10000 });
+      await expect(page.url()).toMatch(/authkit/);
+    });
+
+    test.skip('register a test account', async ({ page }) => {
+      // Note: This test is skipped because WorkOS handles registration
+      // Registration now happens through WorkOS hosted auth pages
       await authPage.register(testEmail, testPassword);
       await expect(page).toHaveURL('/');
       await authPage.expectToastToContain('Account created successfully!');
     });
 
-    test('register test account with existing email', async () => {
+    test.skip('register test account with existing email', async () => {
+      // Note: This test is skipped because WorkOS handles registration
       await authPage.register(testEmail, testPassword);
       await authPage.expectToastToContain('Account already exists!');
     });
 
-    test('log into account', async ({ page }) => {
+    test.skip('log into account', async ({ page }) => {
+      // Note: This test is skipped because WorkOS handles authentication
+      // Login now happens through WorkOS hosted auth pages
       await authPage.login(testEmail, testPassword);
 
       await page.waitForURL('/');
