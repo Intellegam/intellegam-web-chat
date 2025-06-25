@@ -9,16 +9,25 @@ import {
   primaryKey,
   foreignKey,
   boolean,
+  index,
 } from 'drizzle-orm/pg-core';
 
-export const user = pgTable('User', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  email: varchar('email', { length: 64 }).notNull(),
-  password: varchar('password', { length: 64 }),
-  workosId: text('workosId'),
-  createdAt: timestamp('createdAt').notNull().defaultNow(),
-  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
-});
+export const user = pgTable(
+  'User',
+  {
+    id: uuid('id').primaryKey().notNull().defaultRandom(),
+    email: varchar('email', { length: 64 }).notNull(),
+    password: varchar('password', { length: 64 }),
+    workosId: text('workosId').unique(),
+    createdAt: timestamp('createdAt').notNull().defaultNow(),
+    updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+  },
+  (table) => {
+    return {
+      workosIdIdx: index('User_workosId_idx').on(table.workosId),
+    };
+  },
+);
 
 export type User = InferSelectModel<typeof user>;
 
