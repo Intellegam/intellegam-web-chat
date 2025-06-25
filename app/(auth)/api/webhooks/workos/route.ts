@@ -7,7 +7,7 @@ const workos = new WorkOS(serverEnv.WORKOS_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.text();
+    const body = await request.json();
     const signature = request.headers.get('workos-signature');
 
     if (!signature) {
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const event = JSON.parse(body);
+    const event = body;
     const result = await processWebhookEvent(event);
 
     return NextResponse.json({
