@@ -71,7 +71,7 @@ export const ensureUserExists = async (userData: {
 }) => {
   try {
     const now = new Date();
-    
+
     // Use INSERT ... ON CONFLICT DO NOTHING to handle race conditions
     const [createdUser] = await db
       .insert(user)
@@ -103,6 +103,34 @@ export const ensureUserExists = async (userData: {
   }
 };
 
+export async function upsertUser(userData: {
+  email: string;
+  password: string | null;
+  workosId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}) {
+  try {
+    const [createdUser] = await db
+      .insert(user)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: user.workosId,
+        set: {
+          email: userData.email,
+          createdAt: userData.createdAt,
+          updatedAt: userData.updatedAt,
+        },
+      })
+      .returning();
+
+    return createdUser;
+  } catch (error) {
+    console.error('Failed to create user in database');
+    throw error;
+  }
+}
+
 export async function createUser(
   email: string,
   password: string | null,
@@ -124,7 +152,7 @@ export async function createUser(
         updatedAt: updatedAt || now,
       })
       .returning();
-    
+
     return createdUser;
   } catch (error) {
     console.error('Failed to create user in database');
