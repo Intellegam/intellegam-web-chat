@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (serverEnv.WORKOS_WEBHOOK_SECRET) {
-      const isValid = workos.webhooks.constructEvent({
+      const isValid = await workos.webhooks.constructEvent({
         payload: body,
         sigHeader: signature,
         secret: serverEnv.WORKOS_WEBHOOK_SECRET,
