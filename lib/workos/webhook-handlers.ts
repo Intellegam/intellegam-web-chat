@@ -1,90 +1,34 @@
-import {
-  createUser,
-  deleteUserByWorkOSId,
-  getUserByWorkOSId,
-} from '@/lib/db/queries';
+import { deleteUserByWorkOSId, upsertUser } from '@/lib/db/queries';
 import type {
   Event,
   UserCreatedEvent,
   UserDeletedEvent,
 } from '@workos-inc/node';
 
-async function shouldProcessUserEvent(
-  userId: string,
-  eventTimestamp: Date,
-): Promise<{ shouldProcess: boolean; reason?: string }> {
-  try {
-    const existingUser = await getUserByWorkOSId(userId);
-
-    // If event is older than last processed, it's stale
-    if (existingUser?.updatedAt && eventTimestamp <= existingUser.updatedAt) {
-      return {
-        shouldProcess: false,
-        reason: `Stale event: Last processed ${existingUser.updatedAt.toISOString()}, current ${eventTimestamp.toISOString()}`,
-      };
-    }
-
-    return { shouldProcess: true };
-  } catch (error) {
-    console.error(
-      `Error checking if user event should be processed for user ${userId}:`,
-      error,
-    );
-    return { shouldProcess: false, reason: `Error checking event: ${error}` };
-  }
-}
-
 export async function handleUserCreated(
   event: UserCreatedEvent,
 ): Promise<void> {
   const userData = event.data;
-  const eventTimestamp = new Date(event.createdAt);
 
-  // Check if this event should be processed
-  const { shouldProcess, reason } = await shouldProcessUserEvent(
-    userData.id,
-    eventTimestamp,
-  );
+  //Timestamps can be undefined because the schema defines Date.now() as a default value
+  await upsertUser({
+    email: userData.email,
+    password: null,
+    workosId: userData.id,
+    createdAt: userData.createdAt ? new Date(userData.createdAt) : undefined,
+    updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : undefined,
+  });
 
-  if (!shouldProcess) {
-    console.log(
-      `Webhook: Skipping user.created event for ${userData.email}: ${reason}`,
-    );
-    return;
-  }
-
-  await createUser(
-    userData.email,
-    null,
-    userData.id,
-    userData.createdAt ? new Date(userData.createdAt) : undefined,
-    userData.updatedAt ? new Date(userData.updatedAt) : undefined,
-  );
-
-  console.log(`Webhook: Created user ${userData.email}`);
+  console.log(`Webhook(user.created): Upserted ${userData.email}`);
 }
 
 export async function handleUserDeleted(
   event: UserDeletedEvent,
 ): Promise<void> {
   const userData = event.data;
-  const eventTimestamp = new Date(event.createdAt);
-
-  // Check if this event should be processed
-  const { shouldProcess, reason } = await shouldProcessUserEvent(
-    userData.id,
-    eventTimestamp,
-  );
-
-  if (!shouldProcess) {
-    console.log(
-      `Webhook: Skipping user.deleted event for ${userData.email}: ${reason}`,
-    );
-    return;
-  }
 
   await deleteUserByWorkOSId(userData.id);
-  console.log(`Webhook: User deleted ${userData.email}`);
+  console.log(`Webhook(user.deleted): User ${userData.email} deleted`);
 }
 
 type WebhookHandler<T extends Event> = (event: T) => Promise<void>;

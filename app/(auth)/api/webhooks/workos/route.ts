@@ -1,7 +1,7 @@
-import { type NextRequest, NextResponse } from 'next/server';
-import { WorkOS } from '@workos-inc/node';
-import { processWebhookEvent } from '@/lib/workos/webhook-handlers';
 import serverEnv from '@/lib/env.server';
+import { processWebhookEvent } from '@/lib/workos/webhook-handlers';
+import { WorkOS } from '@workos-inc/node';
+import { type NextRequest, NextResponse } from 'next/server';
 
 const workos = new WorkOS(serverEnv.WORKOS_API_KEY);
 
@@ -10,15 +10,11 @@ export async function POST(request: NextRequest) {
     const body = await request.text();
     const signature = request.headers.get('workos-signature');
 
-    // Verify webhook signature (skip in development if no secret)
-    if (serverEnv.WORKOS_WEBHOOK_SECRET) {
-      if (!signature) {
-        return NextResponse.json(
-          { error: 'Missing signature' },
-          { status: 401 },
-        );
-      }
+    if (!signature) {
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+    }
 
+    if (serverEnv.WORKOS_WEBHOOK_SECRET) {
       const isValid = workos.webhooks.constructEvent({
         payload: body,
         sigHeader: signature,
@@ -31,16 +27,14 @@ export async function POST(request: NextRequest) {
           { status: 401 },
         );
       }
-    } else if (process.env.NODE_ENV === 'production') {
+    } else {
       return NextResponse.json(
-        { error: 'Webhook secret required in production' },
+        { error: 'Webhook secret required' },
         { status: 500 },
       );
     }
 
     const event = JSON.parse(body);
-
-    // Process event using modular handlers
     const result = await processWebhookEvent(event);
 
     return NextResponse.json({
