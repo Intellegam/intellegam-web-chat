@@ -6,15 +6,8 @@ This document describes the authentication helper functions that manage the mapp
 
 The application uses WorkOS for authentication but maintains its own user database for application-specific data. The auth helpers provide a clean interface for mapping between these two systems.
 
-## Problem Solved
-
-Previously, routes scattered database lookups throughout the codebase using `session.user.id` (WorkOS ID) directly. This created:
-
-- Code duplication
-- Performance issues (multiple DB lookups per request)
-- Maintenance burden
-- Inconsistent error handling
-
+## Problem
+Previously, routes scattered database lookups throughout the codebase using `session.user.id` (WorkOS ID) directly.
 ## Solution
 
 The auth helpers provide a cached, type-safe way to:
