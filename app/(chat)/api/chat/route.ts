@@ -6,6 +6,7 @@ import { createDocument } from '@/lib/ai/tools/create-document';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { updateDocument } from '@/lib/ai/tools/update-document';
+import { getDbUserId } from '@/lib/auth/helpers';
 import { isProductionEnvironment } from '@/lib/constants';
 import {
   createStreamId,
@@ -85,8 +86,13 @@ export async function POST(request: Request) {
     // TODO: should this stay as this route should never be used for guest -meris
     const userType: UserType = 'regular';
 
+    const dbUserId = await getDbUserId(session.user);
+    if (!dbUserId) {
+      return new Response('User not found', { status: 404 });
+    }
+
     const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
+      id: dbUserId,
       differenceInHours: 24,
     });
 
@@ -108,12 +114,12 @@ export async function POST(request: Request) {
 
       await saveChat({
         id,
-        userId: session.user.id,
+        userId: dbUserId,
         title,
         visibility: selectedVisibilityType,
       });
     } else {
-      if (chat.userId !== session.user.id) {
+      if (chat.userId !== dbUserId) {
         return new Response('Forbidden', { status: 403 });
       }
     }
@@ -179,7 +185,7 @@ export async function POST(request: Request) {
             }),
           },
           onFinish: async ({ response }) => {
-            if (session.user?.id) {
+            if (dbUserId) {
               try {
                 const assistantId = getTrailingMessageId({
                   messages: response.messages.filter(

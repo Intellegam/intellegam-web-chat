@@ -1,4 +1,5 @@
 import { getSuggestionsByDocumentId } from '@/lib/db/queries';
+import { getDbUserId } from '@/lib/auth/helpers';
 import { withAuth } from '@workos-inc/authkit-nextjs';
 
 export async function GET(request: Request) {
@@ -11,8 +12,13 @@ export async function GET(request: Request) {
 
   const session = await withAuth();
 
-  if (!session || !session.user) {
+  if (!session?.user) {
     return new Response('Unauthorized', { status: 401 });
+  }
+
+  const dbUserId = await getDbUserId(session.user);
+  if (!dbUserId) {
+    return new Response('User not found', { status: 404 });
   }
 
   const suggestions = await getSuggestionsByDocumentId({
@@ -25,7 +31,7 @@ export async function GET(request: Request) {
     return Response.json([], { status: 200 });
   }
 
-  if (suggestion.userId !== session.user.id) {
+  if (suggestion.userId !== dbUserId) {
     return new Response('Unauthorized', { status: 401 });
   }
 

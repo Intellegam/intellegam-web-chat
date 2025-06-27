@@ -50,13 +50,130 @@ export async function getUser(email: string): Promise<Array<User>> {
   }
 }
 
-export async function createUser(email: string, password: string) {
-  const hashedPassword = generateHashedPassword(password);
-
+export async function getUserByWorkOSId(id: string): Promise<User | null> {
   try {
-    return await db.insert(user).values({ email, password: hashedPassword });
+    const [foundUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.workosId, id));
+    return foundUser || null;
+  } catch (error) {
+    console.error('Failed to get user by worksoId from database');
+    throw error;
+  }
+}
+
+export const ensureUserExists = async (userData: {
+  email: string;
+  workosId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}) => {
+  try {
+    const now = new Date();
+
+    // Use INSERT ... ON CONFLICT DO NOTHING to handle race conditions
+    const [createdUser] = await db
+      .insert(user)
+      .values({
+        email: userData.email,
+        workosId: userData.workosId,
+        password: null,
+        createdAt: userData.createdAt || now,
+        updatedAt: userData.updatedAt || now,
+      })
+      .onConflictDoNothing({ target: user.workosId })
+      .returning();
+
+    // If user was created, return it
+    if (createdUser) {
+      return createdUser;
+    }
+
+    // Otherwise, user already exists, fetch it
+    const [existingUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.workosId, userData.workosId));
+
+    return existingUser;
+  } catch (error) {
+    console.error('Error syncing user to database:', error);
+    throw error;
+  }
+};
+
+export async function upsertUser(userData: {
+  email: string;
+  password: string | null;
+  workosId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}) {
+  try {
+    const [createdUser] = await db
+      .insert(user)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: user.workosId,
+        set: {
+          email: userData.email,
+          createdAt: userData.createdAt,
+          updatedAt: userData.updatedAt,
+        },
+      })
+      .returning();
+
+    return createdUser;
   } catch (error) {
     console.error('Failed to create user in database');
+    throw error;
+  }
+}
+
+export async function createUser(
+  email: string,
+  password: string | null,
+  workosId?: string,
+  createdAt?: Date,
+  updatedAt?: Date,
+) {
+  const hashedPassword = password ? generateHashedPassword(password) : null;
+  const now = new Date();
+
+  try {
+    const [createdUser] = await db
+      .insert(user)
+      .values({
+        email,
+        workosId: workosId,
+        password: hashedPassword,
+        createdAt: createdAt || now,
+        updatedAt: updatedAt || now,
+      })
+      .returning();
+
+    return createdUser;
+  } catch (error) {
+    console.error('Failed to create user in database');
+    throw error;
+  }
+}
+
+export async function deleteUser(id: string) {
+  try {
+    return await db.delete(user).where(eq(user.id, id));
+  } catch (error) {
+    console.error('Failed to delete user from database');
+    throw error;
+  }
+}
+
+export async function deleteUserByWorkOSId(id: string) {
+  try {
+    return await db.delete(user).where(eq(user.workosId, id));
+  } catch (error) {
+    console.error(`Failed to delete WorkOS user ${id} from database`);
     throw error;
   }
 }
