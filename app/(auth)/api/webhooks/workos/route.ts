@@ -5,6 +5,8 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 const workos = new WorkOS(serverEnv.WORKOS_API_KEY);
 
+//We return 200 to avoid retries of the webhooks on errors that we control -Meris
+//To properly catch errors they should be logged
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -30,7 +32,7 @@ export async function POST(request: NextRequest) {
     } else {
       return NextResponse.json(
         { error: 'Webhook secret required' },
-        { status: 500 },
+        { status: 200 },
       );
     }
 
@@ -45,6 +47,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Webhook processing failed:', error);
-    return NextResponse.json({ error: 'Processing failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Processing failed' }, { status: 200 });
   }
 }
