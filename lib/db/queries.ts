@@ -17,7 +17,6 @@ import postgres from 'postgres';
 
 import type { ArtifactKind } from '@/components/artifact';
 import type { VisibilityType } from '@/components/visibility-selector';
-import { generateUUID } from '../utils';
 import {
   chat,
   type Chat,
@@ -31,7 +30,6 @@ import {
   type User,
   vote,
 } from './schema';
-import { generateHashedPassword } from './utils';
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -138,7 +136,6 @@ export async function createUser(
   createdAt?: Date,
   updatedAt?: Date,
 ) {
-  const hashedPassword = password ? generateHashedPassword(password) : null;
   const now = new Date();
 
   try {
@@ -147,7 +144,7 @@ export async function createUser(
       .values({
         email,
         workosId: workosId,
-        password: hashedPassword,
+        password: null,
         createdAt: createdAt || now,
         updatedAt: updatedAt || now,
       })
@@ -180,10 +177,9 @@ export async function deleteUserByWorkOSId(id: string) {
 
 export async function createGuestUser() {
   const email = `guest-${Date.now()}`;
-  const password = generateHashedPassword(generateUUID());
 
   try {
-    return await db.insert(user).values({ email, password }).returning({
+    return await db.insert(user).values({ email }).returning({
       id: user.id,
       email: user.email,
     });
