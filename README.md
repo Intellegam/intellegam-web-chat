@@ -1,117 +1,207 @@
-# Chat SDK
+# AI Chat Application
 
-> A production-ready AI chat application built with Next.js, TypeScript, and the Vercel AI SDK. Features streaming responses, custom artifacts, and multi-provider support.
+![Next.js Version](https://img.shields.io/badge/next.js-15-black.svg)
+![TypeScript](https://img.shields.io/badge/typescript-5.6-blue.svg)
+![License](https://img.shields.io/badge/license-Proprietary-red.svg)
 
-## 🚀 Quick Start
+Our AI chat application frontend that connects to custom backend services. Based on a fork of Vercel's AI Chatbot with extensive modifications for our specific requirements.
 
-Get up and running in 5 minutes:
+## Key Features
+
+- 🤖 **Custom Backend Integration**: Connects to our backend endpoints
+- ⚡ **Real-time Streaming**: Progressive AI responses via SSE
+- 📄 **Dynamic Artifacts**: Code editing, documents, and visualizations
+- 🔐 **Enterprise Auth**: WorkOS integration
+- 📊 **Message Annotations**: Rich metadata and custom UI components
+- 🎨 **Configurable UI**: Dynamic configuration from backend
+- 🧪 **E2E Testing**: Playwright tests with mock models
+- 🔄 **Fork Maintenance**: Systematic upstream synchronization
+
+## System Architecture
+
+The application separates frontend from backend AI processing:
+
+```mermaid
+graph TB
+    subgraph "Client/Browser"
+        UI[Chat Interface]
+    end
+
+    subgraph "Frontend (This Repo)"
+        Routes[Next.js Route Handlers]
+        Auth[WorkOS Authentication]
+        Stream[Streaming Handler]
+        Config[Configuration Layer]
+    end
+
+    subgraph "Backend Services"
+        API[Backend API]
+        ConfigEndpoint[/config Endpoint]
+        ChatEndpoint[/chat Endpoint]
+    end
+
+    subgraph "Data Storage"
+        DB[(PostgreSQL/Neon)]
+        Blob[Vercel Blob Storage]
+    end
+
+    UI -->|HTTP/SSE| Routes
+    Routes --> Auth
+    Routes --> Stream
+    Routes --> Config
+
+    Config -->|Fetch Config| ConfigEndpoint
+    Stream -->|Stream Messages| ChatEndpoint
+
+    Routes --> DB
+    Routes --> Blob
+
+    API --> ConfigEndpoint
+    API --> ChatEndpoint
+```
+
+### Core Components
+
+#### 💬 Chat Interface
+- Real-time message streaming
+- Conversation persistence
+- File attachment support
+
+#### ⚙️ Configuration System
+- `EndpointConfig`: Backend connection settings
+- `ChatConfig`: UI appearance and behavior
+- `AdminChatConfig`: Feature toggles
+
+#### 📝 Artifacts & Annotations
+- Rich content beyond text
+- Extensible content types
+- Custom UI components
+
+#### 🔒 Authentication
+- WorkOS hosted auth
+- Session management
+- SSO support
+
+## Project Structure
+
+```
+├── docs/                    # Documentation
+│   ├── architecture/        # System design
+│   ├── development/         # Development guidelines
+│   │   ├── code-standards.md
+│   │   ├── testing-guidelines.md
+│   │   ├── documentation-guidelines.md
+│   │   └── fork-maintenance.md
+│   ├── features/            # Feature documentation
+│   └── getting-started/     # Setup guides
+│
+├── app/                     # Next.js app router
+│   ├── (auth)/             # Authentication
+│   ├── (chat)/             # Chat application
+│   └── api/                # API routes
+│
+├── components/              # React components
+│   ├── ui/                 # Base components
+│   ├── chat.tsx            # Main chat
+│   └── artifact.tsx        # Artifact system
+│
+├── lib/                     # Core logic
+│   ├── ai/                 # AI setup
+│   ├── config/             # Configuration
+│   ├── db/                 # Database
+│   └── utils/              # Utilities
+│
+├── tests/                   # Test suite
+│   ├── e2e/                # E2E tests
+│   └── fixtures/           # Test utilities
+│
+└── package.json            # Dependencies
+```
+
+## Development
+
+### Prerequisites
+
+- Node.js 20+
+- pnpm
+- PostgreSQL (Neon)
+- WorkOS credentials
+- Backend endpoint access
+
+### Setup
 
 ```bash
-# Clone and install
-git clone https://github.com/yourusername/chat-sdk.git
-cd chat-sdk
+# Install dependencies
 pnpm install
 
-# Set up environment
+# Configure environment
 cp .env.example .env.local
-# Add your AI provider API keys
+# Add your credentials to .env.local
 
 # Run development server
 pnpm dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to start chatting!
+### Development Guidelines
 
-## 📚 Documentation Map
+**Before coding:**
+- [Code Standards](./docs/development/code-standards.md) - Our TypeScript/React patterns
+- [Testing Guidelines](./docs/development/testing-guidelines.md) - E2E testing approach
+- [Documentation Guidelines](./docs/development/documentation-guidelines.md) - Documentation practices
+- [Fork Maintenance](./docs/development/fork-maintenance.md) - Upstream sync process
 
-### Getting Started
-- **[Prerequisites & Setup](./docs/getting-started/prerequisites.md)** - System requirements and initial setup
-- **[Quick Start Guide](./docs/getting-started/quick-start.md)** - Build your first chat in minutes
-- **[Environment Configuration](./docs/getting-started/environment-variables.md)** - Configure API keys and services
+### Common Tasks
 
-### Architecture & Design
-- **[System Overview](./docs/architecture/overview.md)** - High-level architecture and design decisions
-- **[Project Structure](./docs/architecture/project-structure.md)** - Directory layout and organization
-- **[Data Flow](./docs/architecture/data-flow.md)** - How data moves through the system
-- **[Security Model](./docs/architecture/security.md)** - Authentication and authorization
-
-### Core Features
-- **[AI Providers](./docs/features/ai-providers/overview.md)** - Multi-model support and configuration
-  - [Adding New Providers](./docs/features/ai-providers/adding-providers.md)
-  - [Provider Configuration](./docs/features/ai-providers/provider-config.md)
-- **[Artifacts System](./docs/features/artifacts/overview.md)** - Dynamic content generation
-  - [Creating Custom Artifacts](./docs/features/artifacts/creating-artifacts.md)
-  - [Streaming Implementation](./docs/features/artifacts/streaming.md)
-- **[Message Annotations](./docs/features/annotations/overview.md)** - Extending message metadata
-  - [Custom Annotations](./docs/features/annotations/custom-annotations.md)
-
-### Development
-
-#### Core Guidelines
-- **[📖 Documentation Guidelines](./docs/development/documentation-guidelines.md)** - How we write and maintain docs
-- **[💻 Code Standards](./docs/development/code-standards.md)** - TypeScript, React, and Next.js best practices
-- **[🧪 Testing Guidelines](./docs/development/testing-guidelines.md)** - E2E testing with Playwright
-
-#### Development Guides
-- **[Local Development](./docs/development/local-development.md)** - Development environment setup
-- **[Component Patterns](./docs/development/component-patterns.md)** - React Server/Client components
-- **[State Management](./docs/development/state-management.md)** - Managing application state
-- **[Performance Optimization](./docs/development/performance.md)** - Streaming and optimization
-
-### Testing
-- **[Testing Overview](./docs/testing/overview.md)** - Testing philosophy and setup
-- **[E2E Testing](./docs/testing/e2e-testing.md)** - Writing Playwright tests
-- **[Mock Models](./docs/testing/mock-models.md)** - Creating deterministic AI mocks
-- **[CI Integration](./docs/testing/ci-integration.md)** - Automated testing pipeline
-
-### Deployment
-- **[Vercel Deployment](./docs/deployment/vercel-deployment.md)** - One-click deploy to Vercel
-- **[Self-Hosting Guide](./docs/deployment/self-hosting.md)** - Deploy to your infrastructure
-- **[Production Checklist](./docs/deployment/production-checklist.md)** - Pre-launch verification
-
-### API Reference
-- **[Chat API](./docs/api/chat-api.md)** - Core chat endpoints
-- **[Artifacts API](./docs/api/artifacts-api.md)** - Artifact creation and management
-- **[Hooks Reference](./docs/api/hooks-reference.md)** - React hooks documentation
-
-## 🏗️ Technology Stack
-
-- **Framework**: [Next.js 15+](https://nextjs.org/) with App Router
-- **Language**: [TypeScript](https://www.typescriptlang.org/) 5.6+
-- **UI**: [React 19 RC](https://react.dev/) with Server Components
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
-- **AI Integration**: [Vercel AI SDK](https://sdk.vercel.ai/)
-- **Database**: [PostgreSQL](https://www.postgresql.org/) via [Neon](https://neon.tech/)
-- **ORM**: [Drizzle](https://orm.drizzle.team/)
-- **Authentication**: [WorkOS](https://workos.com/)
-- **Testing**: [Playwright](https://playwright.dev/)
-- **Deployment**: [Vercel](https://vercel.com/)
-
-## 🌟 Key Features
-
-- **🤖 Multi-Provider AI Support** - Switch between OpenAI, Anthropic, xAI, and more
-- **⚡ Real-time Streaming** - Smooth, progressive AI responses
-- **📄 Dynamic Artifacts** - Create and edit code, documents, and visualizations
-- **🎨 Customizable UI** - Theming and component customization
-- **🔐 Enterprise Auth** - WorkOS integration for SSO and MFA
-- **📊 Message Annotations** - Rich metadata and custom UI components
-- **🧪 Comprehensive Testing** - E2E tests with AI mocking
-- **📱 Responsive Design** - Works seamlessly on all devices
-
-## 🤝 Contributing
-
-1. Read our [Code Standards](./docs/development/code-standards.md)
-2. Follow the [Testing Guidelines](./docs/development/testing-guidelines.md)
-3. Update documentation per [Documentation Guidelines](./docs/development/documentation-guidelines.md)
-4. Submit a PR with a clear description
-
-### Development Workflow
-
+**Development:**
 ```bash
-# Create a feature branch
-git checkout -b feature/your-feature
+pnpm dev                 # Development server
+pnpm build              # Production build
+pnpm test:e2e           # Run tests
+pnpm test:e2e:ui        # Debug tests
+```
 
-# Make changes and test
-pnpm test:e2e
-pnpm typecheck
-pnpm build
+**Code Quality:**
+```bash
+pnpm biome:check        # Format and lint
+pnpm typecheck          # Type checking
+```
+
+**Database:**
+```bash
+pnpm db:migrate         # Run migrations
+pnpm db:studio          # Database UI
+```
+
+### Backend Connection
+
+**Development**: Auto-connects to `localhost:8000`
+**Other Environments**: Use URL parameters:
+```
+?endpoint=https://api.example.com/chat
+?subscriptionKey=your-key
+```
+
+## Fork Maintenance
+
+We maintain this fork with systematic upstream synchronization:
+
+1. **Atomic commits** for easy rebasing
+2. **Categorized changes** (feat:, fix:)
+3. **Minimal upstream modifications**
+4. **Regular rebasing** to stay current
+
+See [Fork Maintenance Guide](./docs/development/fork-maintenance.md) for detailed practices.
+
+## Deployment
+
+Deployed via Vercel with environment-specific configurations. See internal deployment documentation for details.
+
+## Documentation
+
+- [Quick Start](./docs/development/quick-start.md) - Get running quickly
+- [Architecture Overview](./docs/architecture/overview.md) - System design
+- [Backend Integration](./docs/features/backend-integration.md) - Backend connection details
+
+---
+
+_Internal project - see team documentation for additional resources_
