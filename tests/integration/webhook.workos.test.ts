@@ -1,32 +1,36 @@
 /**
  * @jest-environment node
  */
-import { testApiHandler } from 'next-test-api-route-handler'; // Must be first import
-import { faker } from '@faker-js/faker';
-import { createTestDb } from './setup/test-db';
-import * as handler from '@/app/(auth)/api/webhooks/workos/route';
-import { eq } from 'drizzle-orm';
 import * as schema from '@/lib/db/schema';
+import { faker } from '@faker-js/faker';
+import { eq } from 'drizzle-orm';
+import { testApiHandler } from 'next-test-api-route-handler'; // Must be first import
+import { createTestDb, resetTestDb } from './setup/test-db';
 
 // Mock environment
 jest.mock('@/lib/env.server', () => ({
-  default: {
-    WORKOS_API_KEY: 'test-api-key',
-    WORKOS_WEBHOOK_SECRET: 'test-webhook-secret',
-  },
+  WORKOS_API_KEY: 'test-api-key',
+  WORKOS_WEBHOOK_SECRET: 'test-webhook-secret',
 }));
 
 // Mock WorkOS to always validate signatures
+const mockConstructEvent = jest.fn().mockResolvedValue(true);
 jest.mock('@workos-inc/node', () => ({
   WorkOS: jest.fn().mockImplementation(() => ({
     webhooks: {
-      constructEvent: jest.fn().mockResolvedValue(true),
+      constructEvent: mockConstructEvent,
     },
   })),
 }));
 
-// Mock your database connection to use PGlite
-let testDb: any;
+jest.mock('bcrypt-ts', () => ({
+  hash: jest.fn().mockResolvedValue('hashed-password'),
+  compare: jest.fn().mockResolvedValue(true),
+  genSalt: jest.fn().mockResolvedValue('salt'),
+  genSaltSync: jest.fn().mockReturnValue('salt'),
+  hashSync: jest.fn().mockReturnValue('hashed-password'),
+  compareSync: jest.fn().mockReturnValue(true),
+}));
 
 jest.mock('postgres', () => {
   return jest.fn(() => ({
@@ -39,28 +43,32 @@ jest.mock('drizzle-orm/postgres-js', () => {
   const actual = jest.requireActual('drizzle-orm/postgres-js');
   return {
     ...actual,
-    drizzle: jest.fn(() => testDb),
+    drizzle: jest.fn(),
   };
 });
 
-import { WorkOS } from '@workos-inc/node';
-
 describe('WorkOS Webhook Integration Tests with PGlite', () => {
-  let mockConstructEvent: jest.Mock;
+  let testDb: any;
+  let handler: any;
 
-  beforeEach(async () => {
-    // Create fresh test database
+  beforeAll(async () => {
     const { db } = await createTestDb();
     testDb = db;
 
-    // Update the mocked drizzle instance
-    const { drizzle } = await import('drizzle-orm/postgres-js');
-    (drizzle as jest.Mock).mockReturnValue(testDb);
+    // Import drizzle and set up mock
+    const drizzleModule = await import('drizzle-orm/postgres-js');
+    const mockDrizzle = drizzleModule.drizzle as jest.Mock;
 
-    // Set up mocks
-    jest.clearAllMocks();
-    mockConstructEvent = (WorkOS as jest.Mock).mock.results[0].value.webhooks
-      .constructEvent;
+    // Set up the mock return value
+    mockDrizzle.mockReturnValue(testDb);
+
+    // NOW import handler
+    handler = await import('@/app/(auth)/api/webhooks/workos/route');
+  });
+
+  afterEach(async () => {
+    resetTestDb(testDb);
+    mockConstructEvent.mockResolvedValue(true);
   });
 
   it('should create user in database via webhook', async () => {
@@ -184,7 +192,6 @@ describe('WorkOS Webhook Integration Tests with PGlite', () => {
       email: faker.internet.email(),
     };
 
-    // Create multiple user.created events with same user
     const events = Array.from({ length: 3 }, () => ({
       id: faker.string.uuid(),
       event: 'user.created',
@@ -197,7 +204,7 @@ describe('WorkOS Webhook Integration Tests with PGlite', () => {
       testApiHandler({
         appHandler: handler,
         test: async ({ fetch }) => {
-          return fetch({
+          const response = await fetch({
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -205,16 +212,14 @@ describe('WorkOS Webhook Integration Tests with PGlite', () => {
             },
             body: JSON.stringify(event),
           });
+
+          // Check response inside the test callback
+          expect(response.status).toBe(200);
         },
       }),
     );
 
-    const responses = await Promise.all(promises);
-
-    // All should succeed
-    responses.forEach((response) => {
-      expect(response.status).toBe(200);
-    });
+    await Promise.all(promises);
 
     // Only one user should exist in PGlite database
     const users = await testDb
@@ -258,6 +263,8 @@ describe('WorkOS Webhook Integration Tests with PGlite', () => {
             },
             body: JSON.stringify({}),
           });
+
+          console.info(response);
 
           expect(response.status).toBe(401);
           const data = await response.json();

@@ -11,6 +11,10 @@ const config: Config = {
   testEnvironment: 'node', // Different from official docs - we need node for API routes
   clearMocks: true,
 
+  testEnvironmentOptions: {
+    nodeOptions: ['--experimental-vm-modules'],
+  },
+
   // Indicates whether the coverage information should be collected while executing the test
   collectCoverage: true,
 
@@ -29,10 +33,10 @@ const config: Config = {
   coverageProvider: 'v8',
 
   // Setup files
-  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+  //setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
 
   // Test patterns - only run integration tests, not component tests
-  testMatch: ['<rootDir>/test/integration/**/*.test.ts'],
+  testMatch: ['<rootDir>/tests/integration/**/*.test.ts'],
 
   // Ignore patterns
   testPathIgnorePatterns: [
@@ -52,6 +56,8 @@ const config: Config = {
     '<rootDir>/lib/**/*.{ts,js}',
     '!<rootDir>/**/*.d.ts',
   ],
+
+  transformIgnorePatterns: ['node_modules/(?!(bcrypt-ts)/)'],
 
   // Timeout for database operations
   testTimeout: 30000,
