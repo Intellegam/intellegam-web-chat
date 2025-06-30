@@ -11,10 +11,6 @@ const config: Config = {
   testEnvironment: 'node', // Different from official docs - we need node for API routes
   clearMocks: true,
 
-  testEnvironmentOptions: {
-    nodeOptions: ['--experimental-vm-modules'],
-  },
-
   // Indicates whether the coverage information should be collected while executing the test
   collectCoverage: true,
 
