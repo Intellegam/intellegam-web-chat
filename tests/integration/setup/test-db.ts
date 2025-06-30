@@ -2,6 +2,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 import { migrate } from 'drizzle-orm/pglite/migrator';
 import * as schema from '@/lib/db/schema';
+import { sql } from 'drizzle-orm';
 
 export async function createTestDb() {
   // Create in-memory PGlite database
@@ -11,10 +12,16 @@ export async function createTestDb() {
   const db = drizzle(client, { schema });
 
   try {
-    // Run your existing migrations - they work directly with PGlite!
     await migrate(db, {
       migrationsFolder: './lib/db/migrations',
     });
+    const tables = await db.execute(sql`
+        SELECT tablename FROM pg_tables WHERE schemaname = 'public'
+      `);
+    console.log(
+      '📋 Tables created:',
+      tables.rows.map((r) => r.tablename),
+    );
     console.log('✅ Test database migrations completed');
   } catch (error) {
     console.error('❌ Test database migration failed:', error);
@@ -24,10 +31,9 @@ export async function createTestDb() {
   return { db, client };
 }
 
-// Helper to reset database between tests
 export async function resetTestDb(db: any) {
-  // Delete all data but keep schema
-  await db.execute(`
-    TRUNCATE TABLE vote, message, stream, suggestion, document, chat, "user" RESTART IDENTITY CASCADE;
+  // Use the correct table names from your schema
+  await db.execute(sql`
+    TRUNCATE TABLE "Vote_v2", "Message_v2", "Stream", "Suggestion", "Document", "Chat", "User" RESTART IDENTITY CASCADE;
   `);
 }
