@@ -1,12 +1,11 @@
-/**
- * @jest-environment node
- */
+import type { User } from '@/app/(auth)/auth';
 import * as schema from '@/lib/db/schema';
 import { faker } from '@faker-js/faker';
+import type { UserCreatedEvent, UserDeletedEvent } from '@workos-inc/node';
 import { eq } from 'drizzle-orm';
 import { createTestDb, resetTestDb } from './setup/test-db';
-import type { UserCreatedEvent, UserDeletedEvent } from '@workos-inc/node';
-import type { User } from '@/app/(auth)/auth';
+import type { PgDatabase } from 'drizzle-orm/pg-core';
+import { processWebhookEvent } from '@/lib/workos/webhook-handlers';
 
 // Mock environment
 jest.mock('@/lib/env.server', () => ({
@@ -15,14 +14,10 @@ jest.mock('@/lib/env.server', () => ({
 }));
 
 // Variables for mocks
-let testDb: any;
-let handler: any;
-
-jest.mock('drizzle-orm/postgres-js', () => {
-  const actual = jest.requireActual('drizzle-orm/postgres-js');
+let testDb: PgDatabase<any, typeof schema>;
+jest.mock('@/lib/db/db', () => {
   return {
-    ...actual,
-    drizzle: jest.fn(() => testDb),
+    getDB: jest.fn(() => testDb),
   };
 });
 
@@ -30,7 +25,6 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
   beforeAll(async () => {
     const { db } = await createTestDb();
     testDb = db;
-    handler = await import('@/lib/workos/webhook-handlers');
   });
 
   afterEach(async () => {
@@ -58,7 +52,7 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
       createdAt: faker.date.recent().toISOString(),
     };
 
-    const result = await handler.processWebhookEvent(mockEvent);
+    const result = await processWebhookEvent(mockEvent);
 
     expect(result.success).toBe(true);
     expect(result.message).toBe('Successfully processed user.created');
@@ -108,7 +102,7 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
       createdAt: faker.date.recent().toISOString(),
     };
 
-    const result = await handler.processWebhookEvent(deleteEvent);
+    const result = await processWebhookEvent(deleteEvent);
 
     expect(result.success).toBe(true);
     expect(result.message).toBe('Successfully processed user.deleted');
@@ -146,7 +140,7 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
     }));
 
     // Process all events concurrently - test real concurrency handling
-    const promises = events.map((event) => handler.processWebhookEvent(event));
+    const promises = events.map((event) => processWebhookEvent(event));
     await Promise.all(promises);
 
     // Only one user should exist in real database
@@ -167,7 +161,7 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
       createdAt: faker.date.recent().toISOString(),
     };
 
-    const result = await handler.processWebhookEvent(mockEvent as any);
+    const result = await processWebhookEvent(mockEvent as any);
 
     expect(result.success).toBe(true);
     expect(result.message).toBe(
@@ -199,9 +193,9 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
     };
 
     // Send the same event multiple times
-    const result1 = await handler.processWebhookEvent(event);
-    const result2 = await handler.processWebhookEvent(event);
-    const result3 = await handler.processWebhookEvent(event);
+    const result1 = await processWebhookEvent(event);
+    const result2 = await processWebhookEvent(event);
+    const result3 = await processWebhookEvent(event);
 
     // All should succeed
     expect(result1.success).toBe(true);
@@ -252,9 +246,9 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
     };
 
     // Send delete event multiple times
-    const result1 = await handler.processWebhookEvent(deleteEvent);
-    const result2 = await handler.processWebhookEvent(deleteEvent);
-    const result3 = await handler.processWebhookEvent(deleteEvent);
+    const result1 = await processWebhookEvent(deleteEvent);
+    const result2 = await processWebhookEvent(deleteEvent);
+    const result3 = await processWebhookEvent(deleteEvent);
 
     // All should succeed (even if user already deleted)
     expect(result1.success).toBe(true);
@@ -301,8 +295,8 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
     };
 
     // Send delete BEFORE create (out of order)
-    const deleteResult = await handler.processWebhookEvent(deleteEvent);
-    const createResult = await handler.processWebhookEvent(createEvent);
+    const deleteResult = await processWebhookEvent(deleteEvent);
+    const createResult = await processWebhookEvent(createEvent);
 
     // Both should succeed (delete should handle non-existent user gracefully)
     expect(deleteResult.success).toBe(true);
@@ -350,10 +344,10 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
 
     // Send create and delete events simultaneously (race condition)
     const promises = [
-      handler.processWebhookEvent(deleteEvent),
-      handler.processWebhookEvent(createEvent),
-      handler.processWebhookEvent(deleteEvent),
-      handler.processWebhookEvent(createEvent),
+      processWebhookEvent(deleteEvent),
+      processWebhookEvent(createEvent),
+      processWebhookEvent(deleteEvent),
+      processWebhookEvent(createEvent),
     ];
 
     const results = await Promise.all(promises);

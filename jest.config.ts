@@ -53,8 +53,6 @@ const config: Config = {
     '!<rootDir>/**/*.d.ts',
   ],
 
-  transformIgnorePatterns: ['node_modules/(?!(bcrypt-ts)/)'],
-
   // Timeout for database operations
   testTimeout: 30000,
 };
