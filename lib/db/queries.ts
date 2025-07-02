@@ -99,25 +99,28 @@ export const ensureUserExists = async (userData: {
 export async function upsertUser(userData: {
   email: string;
   password: string | null;
+  createdAt: Date;
+  updatedAt: Date;
   workosId?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
 }) {
   try {
-    const [createdUser] = await getDB()
-      .insert(user)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: user.workosId,
-        set: {
-          email: userData.email,
-          createdAt: userData.createdAt,
-          updatedAt: userData.updatedAt,
-        },
-      })
-      .returning();
+    return await getDB().transaction(async (tx) => {
+      const [createdUser] = await tx
+        .insert(user)
+        .values(userData)
+        .onConflictDoUpdate({
+          target: user.workosId,
+          set: {
+            email: userData.email,
+            createdAt: userData.createdAt,
+            updatedAt: userData.updatedAt,
+          },
+          setWhere: lt(user.updatedAt, userData.updatedAt),
+        })
+        .returning();
 
-    return createdUser;
+      return createdUser;
+    });
   } catch (error) {
     console.error('Failed to create user in database');
     throw error;
