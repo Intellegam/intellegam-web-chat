@@ -22,6 +22,9 @@ jest.mock('@workos-inc/node', () => ({
     webhooks: {
       constructEvent: jest.fn().mockResolvedValue(true),
     },
+    userManagement: {
+      getUser: jest.fn().mockResolvedValue(true),
+    },
   })),
 }));
 
@@ -97,6 +100,22 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
   });
 
   it('should process user deletion webhook end-to-end', async () => {
+    jest.mock('@workos-inc/node', () => ({
+      WorkOS: jest.fn().mockImplementation(() => ({
+        webhooks: {
+          constructEvent: jest.fn().mockResolvedValue(true),
+        },
+        userManagement: {
+          getUser: jest.fn().mockImplementation(() => {
+            throw new Error();
+          }),
+        },
+      })),
+    }));
+    jest.resetModules();
+    const handlerWithoutUser = await import(
+      '@/app/(auth)/api/webhooks/workos/route'
+    );
     const workosId = faker.string.uuid();
     const email = faker.internet.email();
 
@@ -130,7 +149,7 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
     };
 
     await testApiHandler({
-      appHandler: handler,
+      appHandler: handlerWithoutUser,
       test: async ({ fetch }) => {
         const response = await fetch({
           method: 'POST',
@@ -243,6 +262,23 @@ describe('WorkOS Webhook Edge Cases', () => {
     });
 
     it('should handle retried user.deleted events (same event ID)', async () => {
+      jest.mock('@workos-inc/node', () => ({
+        WorkOS: jest.fn().mockImplementation(() => ({
+          webhooks: {
+            constructEvent: jest.fn().mockResolvedValue(true),
+          },
+          userManagement: {
+            getUser: jest.fn().mockImplementation(() => {
+              throw new Error();
+            }),
+          },
+        })),
+      }));
+      jest.resetModules();
+      const handlerWithoutUser = await import(
+        '@/app/(auth)/api/webhooks/workos/route'
+      );
+
       const workosId = faker.string.uuid();
       const email = faker.internet.email();
 
@@ -276,7 +312,7 @@ describe('WorkOS Webhook Edge Cases', () => {
       };
 
       await testApiHandler({
-        appHandler: handler,
+        appHandler: handlerWithoutUser,
         test: async ({ fetch }) => {
           // Send original delete event
           const response1 = await fetch({
@@ -375,6 +411,22 @@ describe('WorkOS Webhook Edge Cases', () => {
 
   describe('Out-of-Order Events (Business Logic Should Make Sense)', () => {
     it('should ignore user.deleted when it arrives before user.created (chronologically delete comes after create)', async () => {
+      jest.mock('@workos-inc/node', () => ({
+        WorkOS: jest.fn().mockImplementation(() => ({
+          userManagement: {
+            webhooks: {
+              constructEvent: jest.fn().mockResolvedValue(true),
+            },
+            getUser: jest.fn().mockResolvedValue(false),
+          },
+        })),
+      }));
+
+      jest.resetModules();
+      const handlerWithoutUser = await import(
+        '@/app/(auth)/api/webhooks/workos/route'
+      );
+
       const workosId = faker.string.uuid();
       const email = faker.internet.email();
 
@@ -424,7 +476,7 @@ describe('WorkOS Webhook Edge Cases', () => {
       };
 
       await testApiHandler({
-        appHandler: handler,
+        appHandler: handlerWithoutUser,
         test: async ({ fetch }) => {
           // Send delete event FIRST (but it should be ignored since user doesn't exist)
           const deleteResponse = await fetch({

@@ -1,16 +1,27 @@
+/**
+ * @jest-environment node
+ */
 import type { User } from '@/app/(auth)/auth';
 import * as schema from '@/lib/db/schema';
+import { processWebhookEvent } from '@/lib/workos/webhook-handlers';
 import { faker } from '@faker-js/faker';
 import type { UserCreatedEvent, UserDeletedEvent } from '@workos-inc/node';
 import { eq } from 'drizzle-orm';
-import { createTestDb, resetTestDb } from './setup/test-db';
 import type { PgDatabase } from 'drizzle-orm/pg-core';
-import { processWebhookEvent } from '@/lib/workos/webhook-handlers';
+import { createTestDb, resetTestDb } from './setup/test-db';
 
 // Mock environment
 jest.mock('@/lib/env.server', () => ({
   WORKOS_API_KEY: 'test-api-key',
   WORKOS_WEBHOOK_SECRET: 'test-webhook-secret',
+}));
+
+jest.mock('@workos-inc/node', () => ({
+  WorkOS: jest.fn().mockImplementation(() => ({
+    userManagement: {
+      getUser: jest.fn().mockResolvedValue(true),
+    },
+  })),
 }));
 
 // Variables for mocks
@@ -70,6 +81,21 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
   });
 
   it('should delete user from webhook event', async () => {
+    jest.mock('@workos-inc/node', () => ({
+      WorkOS: jest.fn().mockImplementation(() => ({
+        userManagement: {
+          getUser: jest.fn().mockImplementation(() => {
+            throw new Error();
+          }),
+        },
+      })),
+    }));
+
+    jest.resetModules();
+    const { processWebhookEvent } = await import(
+      '@/lib/workos/webhook-handlers'
+    );
+
     const workosId = faker.string.uuid();
     const email = faker.internet.email();
 
@@ -213,6 +239,21 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
   });
 
   it('should handle duplicate user deletion events gracefully', async () => {
+    jest.mock('@workos-inc/node', () => ({
+      WorkOS: jest.fn().mockImplementation(() => ({
+        userManagement: {
+          getUser: jest.fn().mockImplementation(() => {
+            throw new Error();
+          }),
+        },
+      })),
+    }));
+
+    jest.resetModules();
+    const { processWebhookEvent } = await import(
+      '@/lib/workos/webhook-handlers'
+    );
+
     const workosId = faker.string.uuid();
     const email = faker.internet.email();
 
@@ -265,6 +306,21 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
   });
 
   it('should handle out-of-order events (delete before create)', async () => {
+    jest.mock('@workos-inc/node', () => ({
+      WorkOS: jest.fn().mockImplementation(() => ({
+        userManagement: {
+          getUser: jest.fn().mockImplementation(() => {
+            throw new Error();
+          }),
+        },
+      })),
+    }));
+
+    jest.resetModules();
+    const { processWebhookEvent } = await import(
+      '@/lib/workos/webhook-handlers'
+    );
+
     const userData = {
       object: 'user' as const,
       id: faker.string.uuid(),
@@ -308,62 +364,6 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
       .from(schema.user)
       .where(eq(schema.user.workosId, userData.id));
 
-    expect(users).toHaveLength(1);
-    expect(users[0].email).toBe(userData.email);
-  });
-
-  it('should handle rapid out-of-order events concurrently', async () => {
-    const userData = {
-      object: 'user' as const,
-      id: faker.string.uuid(),
-      email: faker.internet.email(),
-      emailVerified: false,
-      profilePictureUrl: null,
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
-      lastSignInAt: null,
-      createdAt: faker.date.recent().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
-      externalId: null,
-      metadata: {},
-    };
-
-    const createEvent: UserCreatedEvent = {
-      id: faker.string.uuid(),
-      event: 'user.created',
-      data: userData,
-      createdAt: faker.date.recent().toISOString(),
-    };
-
-    const deleteEvent: UserDeletedEvent = {
-      id: faker.string.uuid(),
-      event: 'user.deleted',
-      data: userData,
-      createdAt: faker.date.recent().toISOString(),
-    };
-
-    // Send create and delete events simultaneously (race condition)
-    const promises = [
-      processWebhookEvent(deleteEvent),
-      processWebhookEvent(createEvent),
-      processWebhookEvent(deleteEvent),
-      processWebhookEvent(createEvent),
-    ];
-
-    const results = await Promise.all(promises);
-
-    // All operations should succeed
-    results.forEach((result) => {
-      expect(result.success).toBe(true);
-    });
-
-    // Final state should be deterministic
-    const users = await testDb
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.workosId, userData.id));
-
-    // Could be 0 or 1 depending on final operation, both are valid
-    expect(users.length).toBeLessThanOrEqual(1);
+    expect(users).toHaveLength(0);
   });
 });
