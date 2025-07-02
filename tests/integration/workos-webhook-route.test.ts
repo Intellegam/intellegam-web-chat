@@ -20,9 +20,6 @@ jest.mock('@workos-inc/node', () => ({
 }));
 
 describe('WorkOS Webhook Route (HTTP Layer)', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
   it('should reject requests without signature', async () => {
     await testApiHandler({
       appHandler: appHandler,
