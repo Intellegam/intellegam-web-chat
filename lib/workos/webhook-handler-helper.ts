@@ -11,6 +11,8 @@ export async function doesUserExistInWorkOS(workosId: string, workos: WorkOS) {
     if (error instanceof NotFoundException) {
       //UserNotFoundException so we dont create the user in our DB because it was already deleted
       doesUserExist = false;
+    } else {
+      throw error;
     }
   }
   return doesUserExist;
