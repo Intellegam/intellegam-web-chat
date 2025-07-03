@@ -6,6 +6,7 @@ import {
   type UserCreatedEvent,
   type UserDeletedEvent,
 } from '@workos-inc/node';
+import { doesUserExistInWorkOS } from './webhook-handler-helper';
 
 const workos = new WorkOS(serverEnv.WORKOS_API_KEY);
 
@@ -13,48 +14,31 @@ export async function handleUserCreated(
   event: UserCreatedEvent,
 ): Promise<void> {
   const userData = event.data;
-  let isUserNotFound = false;
-  try {
-    //we just call the api to check if there is a user
-    // if not then it was deleted and the user.created webhook came after that event
-    await workos.userManagement.getUser(event.data.id);
-  } catch (error: any) {
-    //UserNotFoundException so we dont create the user in our DB because it was already deleted
-    isUserNotFound = true;
-  }
-  if (isUserNotFound) {
+
+  if (await doesUserExistInWorkOS(userData.id, workos)) {
+    // if the user exists we use that information because it is the latest one
+    await upsertUser({
+      email: userData.email,
+      password: null,
+      workosId: userData.id,
+      createdAt: new Date(userData.createdAt),
+      updatedAt: new Date(userData.updatedAt),
+    });
+
+    console.log(`Webhook(user.created): Upserted ${userData.email}`);
+  } else {
     console.log(
-      `Webhook(user.created): User does not exists in WorkOS anymore ${userData.email} and was not created`,
+      `Webhook(user.created): User does not exists in WorkOS ${userData.email} and was not created`,
     );
-    return;
   }
-
-  // if the user exists we use that information because it is the latest one
-  await upsertUser({
-    email: userData.email,
-    password: null,
-    workosId: userData.id,
-    createdAt: new Date(userData.createdAt),
-    updatedAt: new Date(userData.updatedAt),
-  });
-
-  console.log(`Webhook(user.created): Upserted ${userData.email}`);
 }
 
 export async function handleUserDeleted(
   event: UserDeletedEvent,
 ): Promise<void> {
   const userData = event.data;
-  let isUserNotFound = false;
-  try {
-    //we just call the api to check if there is a user
-    // if a user still exists in workos then this event should be ignored
-    await workos.userManagement.getUser(event.data.id);
-  } catch (error: any) {
-    // UserNotFoundException means the user is deleted in workos so we can safely delete him here
-    isUserNotFound = true;
-  }
-  if (isUserNotFound) {
+
+  if (!(await doesUserExistInWorkOS(userData.id, workos))) {
     await deleteUserByWorkOSId(userData.id);
     console.log(`Webhook(user.deleted): User ${userData.email} deleted`);
   } else {

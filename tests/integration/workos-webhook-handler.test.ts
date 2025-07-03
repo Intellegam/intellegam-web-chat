@@ -16,12 +16,8 @@ jest.mock('@/lib/env.server', () => ({
   WORKOS_WEBHOOK_SECRET: 'test-webhook-secret',
 }));
 
-jest.mock('@workos-inc/node', () => ({
-  WorkOS: jest.fn().mockImplementation(() => ({
-    userManagement: {
-      getUser: jest.fn().mockResolvedValue(true),
-    },
-  })),
+jest.mock('@/lib/workos/webhook-handler-helper', () => ({
+  doesUserExistInWorkOS: jest.fn().mockResolvedValue(true),
 }));
 
 // Variables for mocks
@@ -81,14 +77,8 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
   });
 
   it('should delete user from webhook event', async () => {
-    jest.mock('@workos-inc/node', () => ({
-      WorkOS: jest.fn().mockImplementation(() => ({
-        userManagement: {
-          getUser: jest.fn().mockImplementation(() => {
-            throw new Error();
-          }),
-        },
-      })),
+    jest.mock('@/lib/workos/webhook-handler-helper', () => ({
+      doesUserExistInWorkOS: jest.fn().mockResolvedValue(false),
     }));
 
     jest.resetModules();
@@ -239,14 +229,8 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
   });
 
   it('should handle duplicate user deletion events gracefully', async () => {
-    jest.mock('@workos-inc/node', () => ({
-      WorkOS: jest.fn().mockImplementation(() => ({
-        userManagement: {
-          getUser: jest.fn().mockImplementation(() => {
-            throw new Error();
-          }),
-        },
-      })),
+    jest.mock('@/lib/workos/webhook-handler-helper', () => ({
+      doesUserExistInWorkOS: jest.fn().mockResolvedValue(false),
     }));
 
     jest.resetModules();
@@ -306,14 +290,8 @@ describe('WorkOS Webhook Handlers (Business Logic)', () => {
   });
 
   it('should handle out-of-order events (delete before create)', async () => {
-    jest.mock('@workos-inc/node', () => ({
-      WorkOS: jest.fn().mockImplementation(() => ({
-        userManagement: {
-          getUser: jest.fn().mockImplementation(() => {
-            throw new Error();
-          }),
-        },
-      })),
+    jest.mock('@/lib/workos/webhook-handler-helper', () => ({
+      doesUserExistInWorkOS: jest.fn().mockResolvedValue(false),
     }));
 
     jest.resetModules();
