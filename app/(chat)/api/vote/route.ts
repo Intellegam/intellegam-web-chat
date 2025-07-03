@@ -1,4 +1,5 @@
 import { getChatById, getVotesByChatId, voteMessage } from '@/lib/db/queries';
+import { getDbUserId } from '@/lib/auth/helpers';
 import { initLangfuseWeb } from '@/lib/utils/langfuse';
 import { withAuth } from '@workos-inc/authkit-nextjs';
 
@@ -12,8 +13,13 @@ export async function GET(request: Request) {
 
   const session = await withAuth();
 
-  if (!session || !session.user || !session.user.email) {
+  if (!session?.user) {
     return new Response('Unauthorized', { status: 401 });
+  }
+
+  const dbUserId = await getDbUserId(session.user);
+  if (!dbUserId) {
+    return new Response('User not found', { status: 404 });
   }
 
   const chat = await getChatById({ id: chatId });
@@ -22,7 +28,7 @@ export async function GET(request: Request) {
     return new Response('Chat not found', { status: 404 });
   }
 
-  if (chat.userId !== session.user.id) {
+  if (chat.userId !== dbUserId) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -52,8 +58,13 @@ export async function PATCH(request: Request) {
 
   const session = await withAuth();
 
-  if (!session || !session.user || !session.user.email) {
+  if (!session?.user) {
     return new Response('Unauthorized', { status: 401 });
+  }
+
+  const dbUserId = await getDbUserId(session.user);
+  if (!dbUserId) {
+    return new Response('User not found', { status: 404 });
   }
 
   const chat = await getChatById({ id: chatId });
@@ -62,7 +73,7 @@ export async function PATCH(request: Request) {
     return new Response('Chat not found', { status: 404 });
   }
 
-  if (chat.userId !== session.user.id) {
+  if (chat.userId !== dbUserId) {
     return new Response('Unauthorized', { status: 401 });
   }
 

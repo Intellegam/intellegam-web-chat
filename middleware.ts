@@ -3,6 +3,9 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { WORKOS_REDIRECT_URI } from './lib/constants';
 import { isDevelopment } from './lib/utils/environmentUtils';
 
+// Public routes that don't require authentication
+const publicRoutes = ['/start', '/api/auth', '/api/webhooks', '/iframe'];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -21,9 +24,6 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/login' || pathname === '/register') {
     return NextResponse.redirect(new URL('/api/auth/login', request.url));
   }
-
-  // Public routes that don't require authentication
-  const publicRoutes = ['/start', '/api/auth', '/iframe'];
 
   // Check if the current path is public
   const isPublicRoute = publicRoutes.some(

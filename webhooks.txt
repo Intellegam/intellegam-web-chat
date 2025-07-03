@@ -1,0 +1,17 @@
+High Priority:
+  1. Transaction Support: Wrap user operations in database transactions
+  2. Rate Limiting: Add rate limiting to webhook endpoint to prevent abuse
+  3. Event Deduplication: Store processed event IDs to prevent replay attacks
+  4. Better Error Handling: The ensureUserExists ON CONFLICT clause needs the unique constraint to work properly (now fixed)
+
+  Medium Priority:
+  1. Webhook Event Logging: Create audit trail table for processed events
+  2. Monitoring: Add alerts for webhook failures and sync issues
+  3. Retry Mechanism: Implement exponential backoff for failed sync operations
+  4. Email Updates: Handle user email changes via webhooks
+
+  Testing Improvements:
+  1. Add integration tests with real database
+  2. Test concurrent webhook scenarios
+  3. Test rollback scenarios
+  4. Add performance tests for bulk webhook processing

@@ -6,6 +6,7 @@ const serverEnvironmentVariables = z.object({
   WORKOS_CLIENT_ID: z.string(),
   WORKOS_API_KEY: z.string(),
   WORKOS_COOKIE_PASSWORD: z.string(),
+  WORKOS_WEBHOOK_SECRET: z.string().optional(),
 
   // Database
   POSTGRES_URL: z.string(),
