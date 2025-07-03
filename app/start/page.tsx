@@ -51,14 +51,16 @@ export default function WelcomePage() {
           <div className="space-y-8 text-center lg:text-left backdrop-blur-[1px] mt-16 md:mt-0">
             <div className="space-y-6">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[0.9] animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                <span className="block text-foreground mb-2">Made for</span>
+                <span className="block text-foreground mb-2">Your AI</span>
                 <span className="block bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent pb-1">
-                  Knowledge
+                  Assistants Await You
                 </span>
               </h1>
 
               <p className="text-lg md:text-xl text-muted-foreground/80 leading-relaxed max-w-xl font-medium">
-                Chat with your knowledge base using plain language.
+                Access your custom AI assistants and unlock your organization's
+                knowledge instantly. Your personalized digital experts are ready
+                to help.
               </p>
             </div>
 
