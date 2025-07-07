@@ -3,23 +3,36 @@
  */
 import { testApiHandler } from 'next-test-api-route-handler';
 
+// biome-ignore lint/style/noVar: we need var so the hoisting works -> https://github.com/kulshekhar/ts-jest/issues/3292#issuecomment-1221105233
+var mockConstructEvent: jest.Mock;
+jest.mock('@workos-inc/node', () => {
+  mockConstructEvent = jest.fn();
+  return {
+    WorkOS: jest.fn().mockImplementation(() => ({
+      webhooks: {
+        constructEvent: mockConstructEvent,
+      },
+    })),
+  };
+});
+
 import * as appHandler from '@/app/(auth)/api/webhooks/workos/route';
+import serverEnv from '@/lib/env.server';
 
 // Mock environment
 jest.mock('@/lib/env.server', () => ({
-  WORKOS_API_KEY: 'test-api-key',
-  WORKOS_WEBHOOK_SECRET: 'test-webhook-secret',
-}));
-
-jest.mock('@workos-inc/node', () => ({
-  WorkOS: jest.fn().mockImplementation(() => ({
-    webhooks: {
-      constructEvent: jest.fn().mockResolvedValue(true),
-    },
-  })),
+  __esModule: true,
+  default: {
+    WORKOS_API_KEY: 'test-api-key',
+    WORKOS_WEBHOOK_SECRET: 'test-webhook-secret',
+  },
 }));
 
 describe('WorkOS Webhook Route (HTTP Layer)', () => {
+  beforeEach(() => {
+    mockConstructEvent.mockResolvedValue(true);
+  });
+
   it('should reject requests without signature', async () => {
     await testApiHandler({
       appHandler: appHandler,
@@ -38,22 +51,9 @@ describe('WorkOS Webhook Route (HTTP Layer)', () => {
   });
 
   it('should reject invalid signatures', async () => {
-    jest.doMock('@workos-inc/node', () => ({
-      WorkOS: jest.fn().mockImplementation(() => ({
-        webhooks: {
-          constructEvent: jest.fn().mockResolvedValue(false), // <- false for this test
-        },
-      })),
-    }));
-
-    // Reset and re-import like you already do in test 3
-    jest.resetModules();
-    const handlerWithInvalidSig = await import(
-      '@/app/(auth)/api/webhooks/workos/route'
-    );
-
+    mockConstructEvent.mockResolvedValue(false);
     await testApiHandler({
-      appHandler: handlerWithInvalidSig,
+      appHandler: appHandler,
       test: async ({ fetch }) => {
         const response = await fetch({
           method: 'POST',
@@ -72,20 +72,10 @@ describe('WorkOS Webhook Route (HTTP Layer)', () => {
   });
 
   it('should handle webhook secret missing', async () => {
-    // Temporarily mock env without webhook secret
-    jest.doMock('@/lib/env.server', () => ({
-      WORKOS_API_KEY: 'test-api-key',
-      WORKOS_WEBHOOK_SECRET: undefined,
-    }));
-
-    // Re-import appHandler to use new env mock
-    jest.resetModules();
-    const handlerWithoutSecret = await import(
-      '@/app/(auth)/api/webhooks/workos/route'
-    );
+    serverEnv.WORKOS_WEBHOOK_SECRET = undefined;
 
     await testApiHandler({
-      appHandler: handlerWithoutSecret,
+      appHandler: appHandler,
       test: async ({ fetch }) => {
         const response = await fetch({
           method: 'POST',
