@@ -15,8 +15,9 @@ export async function handleUserCreated(
 ): Promise<void> {
   const userData = event.data;
 
+  // only if the user exists in WorkOS we upsert the user, so we always have the latest state and
+  // dont need to be wary of out-of-order Events messing up our db state
   if (await doesUserExistInWorkOS(userData.id, workos)) {
-    // if the user exists we use that information because it is the latest one
     await upsertUser({
       email: userData.email,
       password: null,
@@ -38,6 +39,8 @@ export async function handleUserDeleted(
 ): Promise<void> {
   const userData = event.data;
 
+  // only if the user does not exist in WorkOS we delete the user, so we always have the latest state and
+  // dont need to be wary of out-of-order Events messing up our db state
   if (!(await doesUserExistInWorkOS(userData.id, workos))) {
     await deleteUserByWorkOSId(userData.id);
     console.log(`Webhook(user.deleted): User ${userData.email} deleted`);

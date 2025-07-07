@@ -21,7 +21,7 @@ jest.mock('@/lib/workos/webhook-handler-helper', () => ({
 }));
 
 // Variables for mocks
-let testDb: PgDatabase<any, typeof schema>;
+let testDb: any;
 jest.mock('@/lib/db/db', () => {
   return {
     getDB: jest.fn(() => testDb),

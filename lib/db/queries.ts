@@ -15,7 +15,6 @@ import {
 
 import type { ArtifactKind } from '@/components/artifact';
 import type { VisibilityType } from '@/components/visibility-selector';
-import { getDB } from './db';
 import {
   chat,
   type Chat,
@@ -29,6 +28,7 @@ import {
   type User,
   vote,
 } from './schema';
+import { getDB } from './db';
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
