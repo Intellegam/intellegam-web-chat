@@ -7,7 +7,6 @@ import { processWebhookEvent } from '@/lib/workos/webhook-handlers';
 import { faker } from '@faker-js/faker';
 import type { UserCreatedEvent, UserDeletedEvent } from '@workos-inc/node';
 import { eq } from 'drizzle-orm';
-import type { PgDatabase } from 'drizzle-orm/pg-core';
 import { createTestDb, resetTestDb } from './setup/test-db';
 
 // Mock environment
