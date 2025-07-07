@@ -1,17 +1,15 @@
 import { deleteUserByWorkOSId, upsertUser } from '@/lib/db/queries';
-import serverEnv from '@/lib/env.server';
-import {
+import type {
   WorkOS,
-  type Event,
-  type UserCreatedEvent,
-  type UserDeletedEvent,
+  Event,
+  UserCreatedEvent,
+  UserDeletedEvent,
 } from '@workos-inc/node';
 import { doesUserExistInWorkOS } from './webhook-handler-helper';
 
-const workos = new WorkOS(serverEnv.WORKOS_API_KEY);
-
 export async function handleUserCreated(
   event: UserCreatedEvent,
+  workos: WorkOS,
 ): Promise<void> {
   const userData = event.data;
 
@@ -36,6 +34,7 @@ export async function handleUserCreated(
 
 export async function handleUserDeleted(
   event: UserDeletedEvent,
+  workos: WorkOS,
 ): Promise<void> {
   const userData = event.data;
 
@@ -51,7 +50,10 @@ export async function handleUserDeleted(
   }
 }
 
-type WebhookHandler<T extends Event> = (event: T) => Promise<void>;
+type WebhookHandler<T extends Event> = (
+  event: T,
+  workos: WorkOS,
+) => Promise<void>;
 
 const webhookHandlers: Record<string, WebhookHandler<any>> = {
   'user.created': handleUserCreated,
@@ -60,6 +62,7 @@ const webhookHandlers: Record<string, WebhookHandler<any>> = {
 
 export async function processWebhookEvent(
   event: Event,
+  workos: WorkOS,
 ): Promise<{ success: boolean; message: string }> {
   try {
     const handler = webhookHandlers[event.event];
@@ -70,7 +73,7 @@ export async function processWebhookEvent(
       return { success: true, message };
     }
 
-    await handler(event);
+    await handler(event, workos);
     return { success: true, message: `Successfully processed ${event.event}` };
   } catch (error) {
     const message = `Failed to process event ${event.event}: ${error}`;

@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const event = body;
-    const result = await processWebhookEvent(event);
+    const result = await processWebhookEvent(event, workos);
 
     return NextResponse.json({
       success: result.success,
