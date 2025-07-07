@@ -2,18 +2,19 @@
  * @jest-environment node
  */
 import { testApiHandler } from 'next-test-api-route-handler';
+
+import * as handler from '@/app/(auth)/api/webhooks/workos/route';
+import * as schema from '@/lib/db/schema';
+import { doesUserExistInWorkOS } from '@/lib/workos/webhook-handler-helper';
+import type { PGlite } from '@electric-sql/pglite';
 import { eq } from 'drizzle-orm';
 import type { PgDatabase } from 'drizzle-orm/pg-core';
-
-import * as schema from '@/lib/db/schema';
-import * as handler from '@/app/(auth)/api/webhooks/workos/route';
 import { createTestDb, resetTestDb } from './setup/test-db';
 import {
   createUserCreatedEvent,
   createUserDeletedEvent,
   type TestUserData,
 } from './utils/webhook-test-helpers';
-import { doesUserExistInWorkOS } from '@/lib/workos/webhook-handler-helper';
 
 // Mock environment
 jest.mock('@/lib/env.server', () => ({
@@ -40,6 +41,7 @@ const mockDoesUserExistInWorkOS = doesUserExistInWorkOS as jest.MockedFunction<
 >;
 
 let testDb: PgDatabase<any, typeof schema>;
+let testClient: PGlite;
 
 // Mock database
 jest.mock('@/lib/db/db', () => ({
@@ -48,16 +50,19 @@ jest.mock('@/lib/db/db', () => ({
 
 describe('WorkOS Webhook Integration (End-to-End)', () => {
   beforeAll(async () => {
-    const { db } = await createTestDb();
+    const { db, client } = await createTestDb();
     testDb = db;
-  });
-
-  beforeEach(() => {
-    jest.clearAllMocks();
+    testClient = client;
   });
 
   afterEach(async () => {
     await resetTestDb(testDb);
+  });
+
+  afterAll(async () => {
+    if (testClient) {
+      await testClient.close();
+    }
   });
 
   describe('User Creation', () => {

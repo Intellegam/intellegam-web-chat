@@ -15,13 +15,11 @@ import {
   createUserDeletedEvent,
 } from './utils/webhook-test-helpers';
 
-// Mock environment
 jest.mock('@/lib/env.server', () => ({
   WORKOS_API_KEY: 'test-api-key',
   WORKOS_WEBHOOK_SECRET: 'test-webhook-secret',
 }));
 
-// Mock WorkOS helper - moved to top and setup before importing processWebhookEvent
 jest.mock('@/lib/workos/webhook-handler-helper', () => ({
   doesUserExistInWorkOS: jest.fn(),
 }));
@@ -29,30 +27,22 @@ jest.mock('@/lib/workos/webhook-handler-helper', () => ({
 let testDb: any;
 let testClient: PGlite;
 
-// Mock database
 jest.mock('@/lib/db/db', () => ({
   getDB: jest.fn(() => testDb),
 }));
 
-// Get the mocked function
+// Get the mocked function to set the return value based on the test
 const mockDoesUserExistInWorkOS = doesUserExistInWorkOS as jest.MockedFunction<
   typeof doesUserExistInWorkOS
 >;
 
 describe('WorkOS Webhook Handler', () => {
-  let mockWorkOS: WorkOS;
+  const mockWorkOS: WorkOS = {} as WorkOS;
 
   beforeAll(async () => {
     const { db, client } = await createTestDb();
     testDb = db;
     testClient = client;
-
-    // Create simple WorkOS object to pass to the function
-    mockWorkOS = {} as WorkOS;
-  });
-
-  beforeEach(() => {
-    jest.clearAllMocks();
   });
 
   afterEach(async () => {
