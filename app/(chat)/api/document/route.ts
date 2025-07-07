@@ -1,10 +1,10 @@
 import type { ArtifactKind } from '@/components/artifact';
+import { getDbUserId } from '@/lib/auth/user-helpers';
 import {
   deleteDocumentsByIdAfterTimestamp,
   getDocumentsById,
   saveDocument,
 } from '@/lib/db/queries';
-import { getDbUserId } from '@/lib/auth/helpers';
 import { withAuth } from '@workos-inc/authkit-nextjs';
 
 export async function GET(request: Request) {

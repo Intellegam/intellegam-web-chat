@@ -1,5 +1,5 @@
+import { getDbUserId } from '@/lib/auth/user-helpers';
 import { getChatById, getVotesByChatId, voteMessage } from '@/lib/db/queries';
-import { getDbUserId } from '@/lib/auth/helpers';
 import { initLangfuseWeb } from '@/lib/utils/langfuse';
 import { withAuth } from '@workos-inc/authkit-nextjs';
 

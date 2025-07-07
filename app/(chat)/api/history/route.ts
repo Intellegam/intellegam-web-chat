@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { getChatsByUserId } from '@/lib/db/queries';
-import { getDbUserId } from '@/lib/auth/helpers';
 import { withAuth } from '@workos-inc/authkit-nextjs';
+import { getDbUserId } from '@/lib/auth/user-helpers';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;

@@ -1,5 +1,6 @@
+import { getDbUserId } from '@/lib/auth/user-helpers';
 import { getSuggestionsByDocumentId } from '@/lib/db/queries';
-import { getDbUserId } from '@/lib/auth/helpers';
+
 import { withAuth } from '@workos-inc/authkit-nextjs';
 
 export async function GET(request: Request) {
