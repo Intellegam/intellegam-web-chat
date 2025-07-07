@@ -210,7 +210,7 @@ Reference: See updated routes in `app/(chat)/api/` for implementation patterns
 
 For each API route requiring authentication:
 
-1. **Import Helper**: `import { getDbUserId } from '@/lib/auth/helpers'`
+1. **Import Helper**: `import { getDbUserId } from '@/lib/auth/user-helpers'`
 2. **Update Auth Check**: Use `withAuth()` instead of legacy auth functions
 3. **Add ID Lookup**: Replace direct WorkOS ID usage with database ID
 4. **Error Handling**: Handle user sync failures gracefully
@@ -223,7 +223,7 @@ Example transformation available in updated route files.
 
 ```typescript
 import { withAuth } from '@workos-inc/authkit-nextjs';
-import { getDbUserId } from '@/lib/auth/helpers';
+import { getDbUserId } from '@/lib/auth/user-helpers';
 
 export async function POST(request: Request) {
   // 1. Authenticate
