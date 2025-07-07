@@ -432,6 +432,66 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
   });
 
   describe('Out-of-Order Events', () => {
+    it('should handle (retried) latest create event arriving before older event', async () => {
+      const userDataOld: TestUserData = {
+        workosId: 'test-workos-id',
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+      };
+      const mockEventOld = createUserCreatedEvent(userDataOld);
+
+      const newUpdateAt = new Date(mockEventOld.data.updatedAt);
+      newUpdateAt.setMinutes(newUpdateAt.getMinutes() + 3);
+      const userDataNew: TestUserData = {
+        workosId: 'test-workos-id',
+        email: 'test-new@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        updatedAt: newUpdateAt.toISOString(),
+      };
+      const mockEventNew = createUserCreatedEvent(userDataNew);
+
+      await testApiHandler({
+        appHandler: handler,
+        test: async ({ fetch }) => {
+          const headers = {
+            'Content-Type': 'application/json',
+            'workos-signature': 'valid-signature',
+          };
+
+          // Send original event
+          const response1 = await fetch({
+            method: 'POST',
+            headers,
+            body: JSON.stringify(mockEventNew),
+          });
+
+          expect(response1.status).toBe(200);
+
+          // Send exact same event again (retry scenario)
+          const response2 = await fetch({
+            method: 'POST',
+            headers,
+            body: JSON.stringify(mockEventOld),
+          });
+
+          expect(response2.status).toBe(200);
+
+          // Verify only one user exists (upsert should handle the duplicate)
+          const users = await testDb
+            .select()
+            .from(schema.user)
+            .where(eq(schema.user.workosId, userDataOld.workosId));
+          console.info(users);
+
+          expect(users).toHaveLength(1);
+          expect(users[0].email).toBe(userDataNew.email);
+          expect(users[0].updatedAt.toISOString()).toBe(userDataNew.updatedAt);
+        },
+      });
+    });
+
     it('should handle delete event arriving before create event', async () => {
       const userData: TestUserData = {
         workosId: 'out-of-order-id',

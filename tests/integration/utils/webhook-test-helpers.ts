@@ -7,6 +7,7 @@ export interface TestUserData {
   email: string;
   firstName: string;
   lastName: string;
+  updatedAt?: string;
 }
 
 export function createTestUserData(
@@ -17,6 +18,7 @@ export function createTestUserData(
     email: faker.internet.email(),
     firstName: faker.person.firstName(),
     lastName: faker.person.lastName(),
+    updatedAt: faker.date.recent().toISOString(),
     ...overrides,
   };
 }
@@ -38,7 +40,7 @@ export function createUserCreatedEvent(
       firstName: user.firstName,
       lastName: user.lastName,
       createdAt: faker.date.recent().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
+      updatedAt: user.updatedAt || faker.date.recent().toISOString(),
       lastSignInAt: null,
       externalId: null,
       metadata: {},

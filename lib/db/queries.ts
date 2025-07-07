@@ -10,11 +10,13 @@ import {
   gte,
   inArray,
   lt,
+  sql,
   type SQL,
 } from 'drizzle-orm';
 
 import type { ArtifactKind } from '@/components/artifact';
 import type { VisibilityType } from '@/components/visibility-selector';
+import { getDB } from './db';
 import {
   chat,
   type Chat,
@@ -28,7 +30,6 @@ import {
   type User,
   vote,
 } from './schema';
-import { getDB } from './db';
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -104,6 +105,7 @@ export async function upsertUser(userData: {
   workosId?: string;
 }) {
   try {
+    const excludedUpdatetAt = sql.raw(`excluded.${user.updatedAt.name}`);
     return await getDB().transaction(async (tx) => {
       const [createdUser] = await tx
         .insert(user)
@@ -111,11 +113,10 @@ export async function upsertUser(userData: {
         .onConflictDoUpdate({
           target: user.workosId,
           set: {
-            email: userData.email,
-            createdAt: userData.createdAt,
-            updatedAt: userData.updatedAt,
+            email: sql.raw(`excluded.${user.email.name}`),
+            updatedAt: excludedUpdatetAt,
           },
-          setWhere: lt(user.updatedAt, userData.updatedAt),
+          setWhere: sql`${user.updatedAt} < ${excludedUpdatetAt}`,
         })
         .returning();
 
