@@ -4,6 +4,7 @@
 import type { User } from '@/app/(auth)/auth';
 import * as schema from '@/lib/db/schema';
 import { processWebhookEvent } from '@/lib/workos/webhook-handlers';
+import type { PGlite } from '@electric-sql/pglite';
 import { faker } from '@faker-js/faker';
 import type { UserCreatedEvent, UserDeletedEvent } from '@workos-inc/node';
 import { eq } from 'drizzle-orm';
@@ -20,7 +21,8 @@ jest.mock('@/lib/workos/webhook-handler-helper', () => ({
 }));
 
 // Variables for mocks
-let testDb: any;
+let testDb: any = undefined;
+let testClient: PGlite | undefined = undefined;
 jest.mock('@/lib/db/db', () => {
   return {
     getDB: jest.fn(() => testDb),
@@ -29,12 +31,21 @@ jest.mock('@/lib/db/db', () => {
 
 describe('WorkOS Webhook Handlers (Business Logic)', () => {
   beforeAll(async () => {
-    const { db } = await createTestDb();
-    testDb = db;
+    if (!testDb) {
+      const { db, client } = await createTestDb();
+      testDb = db;
+      testClient = client;
+    }
   });
 
   afterEach(async () => {
     resetTestDb(testDb);
+  });
+
+  afterAll(async () => {
+    if (testClient) {
+      testClient.close();
+    }
   });
 
   it('should create user from webhook event', async () => {
