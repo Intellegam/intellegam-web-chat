@@ -57,6 +57,13 @@
       "when": 1750678865403,
       "tag": "0007_typical_fallen_one",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1751901118015,
+      "tag": "0008_gifted_bullseye",
+      "breakpoints": true
     }
   ]
 }
