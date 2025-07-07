@@ -1,14 +1,19 @@
+// tests/integration/workos-webhook-handler.test.ts
 /**
  * @jest-environment node
  */
-import type { User } from '@/app/(auth)/auth';
+
 import * as schema from '@/lib/db/schema';
+import { doesUserExistInWorkOS } from '@/lib/workos/webhook-handler-helper';
 import { processWebhookEvent } from '@/lib/workos/webhook-handlers';
 import type { PGlite } from '@electric-sql/pglite';
-import { faker } from '@faker-js/faker';
-import type { UserCreatedEvent, UserDeletedEvent } from '@workos-inc/node';
+import type { WorkOS } from '@workos-inc/node';
 import { eq } from 'drizzle-orm';
 import { createTestDb, resetTestDb } from './setup/test-db';
+import {
+  createUserCreatedEvent,
+  createUserDeletedEvent,
+} from './utils/webhook-test-helpers';
 
 // Mock environment
 jest.mock('@/lib/env.server', () => ({
@@ -16,342 +21,229 @@ jest.mock('@/lib/env.server', () => ({
   WORKOS_WEBHOOK_SECRET: 'test-webhook-secret',
 }));
 
+// Mock WorkOS helper - moved to top and setup before importing processWebhookEvent
 jest.mock('@/lib/workos/webhook-handler-helper', () => ({
-  doesUserExistInWorkOS: jest.fn().mockResolvedValue(true),
+  doesUserExistInWorkOS: jest.fn(),
 }));
 
-// Variables for mocks
-let testDb: any = undefined;
-let testClient: PGlite | undefined = undefined;
-jest.mock('@/lib/db/db', () => {
-  return {
-    getDB: jest.fn(() => testDb),
-  };
-});
+let testDb: any;
+let testClient: PGlite;
 
-describe('WorkOS Webhook Handlers (Business Logic)', () => {
+// Mock database
+jest.mock('@/lib/db/db', () => ({
+  getDB: jest.fn(() => testDb),
+}));
+
+// Get the mocked function
+const mockDoesUserExistInWorkOS = doesUserExistInWorkOS as jest.MockedFunction<
+  typeof doesUserExistInWorkOS
+>;
+
+describe('WorkOS Webhook Handler', () => {
+  let mockWorkOS: WorkOS;
+
   beforeAll(async () => {
-    if (!testDb) {
-      const { db, client } = await createTestDb();
-      testDb = db;
-      testClient = client;
-    }
+    const { db, client } = await createTestDb();
+    testDb = db;
+    testClient = client;
+
+    // Create simple WorkOS object to pass to the function
+    mockWorkOS = {} as WorkOS;
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   afterEach(async () => {
-    resetTestDb(testDb);
+    await resetTestDb(testDb);
   });
 
   afterAll(async () => {
     if (testClient) {
-      testClient.close();
+      await testClient.close();
     }
   });
 
-  it('should create user from webhook event', async () => {
-    const mockEvent: UserCreatedEvent = {
-      id: faker.string.uuid(),
-      event: 'user.created',
-      data: {
-        object: 'user',
-        id: faker.string.uuid(),
-        email: faker.internet.email(),
-        emailVerified: false,
-        profilePictureUrl: null,
-        firstName: faker.person.firstName(),
-        lastName: faker.person.lastName(),
-        createdAt: faker.date.recent().toISOString(),
-        updatedAt: faker.date.recent().toISOString(),
-        lastSignInAt: null,
-        externalId: null,
-        metadata: {},
-      },
-      createdAt: faker.date.recent().toISOString(),
-    };
+  describe('User Creation', () => {
+    it('should create user successfully', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(true);
 
-    const result = await processWebhookEvent(mockEvent);
+      const event = createUserCreatedEvent();
+      const result = await processWebhookEvent(event, mockWorkOS);
 
-    expect(result.success).toBe(true);
-    expect(result.message).toBe('Successfully processed user.created');
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Successfully processed user.created');
 
-    // Verify user was created in real database
-    const users = await testDb
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.workosId, mockEvent.data.id));
+      const users = await testDb
+        .select()
+        .from(schema.user)
+        .where(eq(schema.user.workosId, event.data.id));
 
-    expect(users).toHaveLength(1);
-    expect(users[0].email).toBe(mockEvent.data.email);
-    expect(users[0].workosId).toBe(mockEvent.data.id);
-    expect(users[0].password).toBeNull();
-  });
-
-  it('should delete user from webhook event', async () => {
-    jest.mock('@/lib/workos/webhook-handler-helper', () => ({
-      doesUserExistInWorkOS: jest.fn().mockResolvedValue(false),
-    }));
-
-    jest.resetModules();
-    const { processWebhookEvent } = await import(
-      '@/lib/workos/webhook-handlers'
-    );
-
-    const workosId = faker.string.uuid();
-    const email = faker.internet.email();
-
-    // Create user first using real database
-    await testDb.insert(schema.user).values({
-      email: email,
-      workosId: workosId,
-      password: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      expect(users).toHaveLength(1);
+      expect(users[0].email).toBe(event.data.email);
+      expect(users[0].workosId).toBe(event.data.id);
+      expect(users[0].password).toBeNull();
     });
 
-    const deleteEvent: UserDeletedEvent = {
-      id: faker.string.uuid(),
-      event: 'user.deleted',
-      data: {
-        object: 'user',
-        id: workosId,
-        email: email,
-        emailVerified: false,
-        profilePictureUrl: null,
-        firstName: faker.person.firstName(),
-        lastName: faker.person.lastName(),
-        createdAt: faker.date.recent().toISOString(),
-        updatedAt: faker.date.recent().toISOString(),
-        lastSignInAt: null,
-        externalId: null,
-        metadata: {},
-      },
-      createdAt: faker.date.recent().toISOString(),
-    };
+    it('should handle idempotent user creation', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(true);
 
-    const result = await processWebhookEvent(deleteEvent);
+      const event = createUserCreatedEvent();
 
-    expect(result.success).toBe(true);
-    expect(result.message).toBe('Successfully processed user.deleted');
+      // Create user multiple times
+      await processWebhookEvent(event, mockWorkOS);
+      await processWebhookEvent(event, mockWorkOS);
+      const result = await processWebhookEvent(event, mockWorkOS);
 
-    // Verify user was deleted from real database
-    const users = await testDb
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.workosId, workosId));
+      expect(result.success).toBe(true);
 
-    expect(users).toHaveLength(0);
-  });
+      // Should only have one user
+      const users = await testDb
+        .select()
+        .from(schema.user)
+        .where(eq(schema.user.workosId, event.data.id));
 
-  it('should handle concurrent user creation events correctly', async () => {
-    const userData: User = {
-      object: 'user',
-      id: faker.string.uuid(),
-      email: faker.internet.email(),
-      emailVerified: false,
-      profilePictureUrl: null,
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
-      createdAt: faker.date.recent().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
-      lastSignInAt: null,
-      externalId: null,
-      metadata: {},
-    };
-
-    const events: UserCreatedEvent[] = Array.from({ length: 3 }, () => ({
-      id: faker.string.uuid(),
-      event: 'user.created',
-      data: userData,
-      createdAt: faker.date.recent().toISOString(),
-    }));
-
-    // Process all events concurrently - test real concurrency handling
-    const promises = events.map((event) => processWebhookEvent(event));
-    await Promise.all(promises);
-
-    // Only one user should exist in real database
-    const users = await testDb
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.workosId, userData.id));
-
-    expect(users).toHaveLength(1);
-    expect(users[0].email).toBe(userData.email);
-  });
-
-  it('should handle unknown event types gracefully', async () => {
-    const mockEvent = {
-      id: faker.string.uuid(),
-      event: 'unknown.event' as any,
-      data: {},
-      createdAt: faker.date.recent().toISOString(),
-    };
-
-    const result = await processWebhookEvent(mockEvent as any);
-
-    expect(result.success).toBe(true);
-    expect(result.message).toBe(
-      'No handler found for event type: unknown.event',
-    );
-  });
-
-  it('should handle duplicate user creation events idempotently', async () => {
-    const userData = {
-      object: 'user' as const,
-      id: faker.string.uuid(),
-      email: faker.internet.email(),
-      emailVerified: false,
-      profilePictureUrl: null,
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
-      lastSignInAt: null,
-      createdAt: faker.date.recent().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
-      externalId: null,
-      metadata: {},
-    };
-
-    const event: UserCreatedEvent = {
-      id: faker.string.uuid(),
-      event: 'user.created',
-      data: userData,
-      createdAt: faker.date.recent().toISOString(),
-    };
-
-    // Send the same event multiple times
-    const result1 = await processWebhookEvent(event);
-    const result2 = await processWebhookEvent(event);
-    const result3 = await processWebhookEvent(event);
-
-    // All should succeed
-    expect(result1.success).toBe(true);
-    expect(result2.success).toBe(true);
-    expect(result3.success).toBe(true);
-
-    // But only one user should exist
-    const users = await testDb
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.workosId, userData.id));
-
-    expect(users).toHaveLength(1);
-    expect(users[0].email).toBe(userData.email);
-  });
-
-  it('should handle duplicate user deletion events gracefully', async () => {
-    jest.mock('@/lib/workos/webhook-handler-helper', () => ({
-      doesUserExistInWorkOS: jest.fn().mockResolvedValue(false),
-    }));
-
-    jest.resetModules();
-    const { processWebhookEvent } = await import(
-      '@/lib/workos/webhook-handlers'
-    );
-
-    const workosId = faker.string.uuid();
-    const email = faker.internet.email();
-
-    // Create user first
-    await testDb.insert(schema.user).values({
-      email: email,
-      workosId: workosId,
-      password: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      expect(users).toHaveLength(1);
     });
 
-    const deleteEvent: UserDeletedEvent = {
-      id: faker.string.uuid(),
-      event: 'user.deleted',
-      data: {
-        object: 'user',
-        id: workosId,
-        email: email,
-        emailVerified: false,
-        profilePictureUrl: null,
-        firstName: faker.person.firstName(),
-        lastName: faker.person.lastName(),
-        lastSignInAt: null,
-        createdAt: faker.date.recent().toISOString(),
-        updatedAt: faker.date.recent().toISOString(),
-        externalId: null,
-        metadata: {},
-      },
-      createdAt: faker.date.recent().toISOString(),
-    };
+    it('should not create user when user does not exist in WorkOS', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(false);
 
-    // Send delete event multiple times
-    const result1 = await processWebhookEvent(deleteEvent);
-    const result2 = await processWebhookEvent(deleteEvent);
-    const result3 = await processWebhookEvent(deleteEvent);
+      const event = createUserCreatedEvent();
+      const result = await processWebhookEvent(event, mockWorkOS);
 
-    // All should succeed (even if user already deleted)
-    expect(result1.success).toBe(true);
-    expect(result2.success).toBe(true);
-    expect(result3.success).toBe(true);
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Successfully processed user.created');
 
-    // User should not exist
-    const users = await testDb
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.workosId, workosId));
+      const users = await testDb
+        .select()
+        .from(schema.user)
+        .where(eq(schema.user.workosId, event.data.id));
 
-    expect(users).toHaveLength(0);
+      expect(users).toHaveLength(0);
+    });
   });
 
-  it('should handle out-of-order events (delete before create)', async () => {
-    jest.mock('@/lib/workos/webhook-handler-helper', () => ({
-      doesUserExistInWorkOS: jest.fn().mockResolvedValue(false),
-    }));
+  describe('User Deletion', () => {
+    it('should delete user successfully', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(false);
 
-    jest.resetModules();
-    const { processWebhookEvent } = await import(
-      '@/lib/workos/webhook-handlers'
-    );
+      const userData = {
+        workosId: 'test-workos-id',
+        email: 'test@example.com',
+      };
+      const event = createUserDeletedEvent(userData);
 
-    const userData = {
-      object: 'user' as const,
-      id: faker.string.uuid(),
-      email: faker.internet.email(),
-      emailVerified: false,
-      profilePictureUrl: null,
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
-      lastSignInAt: null,
-      createdAt: faker.date.recent().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
-      externalId: null,
-      metadata: {},
-    };
+      // Create user first
+      await testDb.insert(schema.user).values({
+        email: userData.email,
+        workosId: userData.workosId,
+        password: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
-    const createEvent: UserCreatedEvent = {
-      id: faker.string.uuid(),
-      event: 'user.created',
-      data: userData,
-      createdAt: faker.date.recent().toISOString(),
-    };
+      const result = await processWebhookEvent(event, mockWorkOS);
 
-    const deleteEvent: UserDeletedEvent = {
-      id: faker.string.uuid(),
-      event: 'user.deleted',
-      data: userData,
-      createdAt: faker.date.recent().toISOString(),
-    };
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Successfully processed user.deleted');
 
-    // Send delete BEFORE create (out of order)
-    const deleteResult = await processWebhookEvent(deleteEvent);
-    const createResult = await processWebhookEvent(createEvent);
+      const users = await testDb
+        .select()
+        .from(schema.user)
+        .where(eq(schema.user.workosId, userData.workosId));
 
-    // Both should succeed (delete should handle non-existent user gracefully)
-    expect(deleteResult.success).toBe(true);
-    expect(createResult.success).toBe(true);
+      expect(users).toHaveLength(0);
+    });
 
-    // User should exist after create
-    const users = await testDb
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.workosId, userData.id));
+    it('should handle deletion of non-existent user', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(false);
 
-    expect(users).toHaveLength(0);
+      const event = createUserDeletedEvent();
+      const result = await processWebhookEvent(event, mockWorkOS);
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Successfully processed user.deleted');
+    });
+
+    it('should not delete user when user still exists in WorkOS', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(true);
+
+      const userData = {
+        workosId: 'test-workos-id',
+        email: 'test@example.com',
+      };
+      const event = createUserDeletedEvent(userData);
+
+      // Create user first
+      await testDb.insert(schema.user).values({
+        email: userData.email,
+        workosId: userData.workosId,
+        password: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await processWebhookEvent(event, mockWorkOS);
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Successfully processed user.deleted');
+
+      // User should still exist
+      const users = await testDb
+        .select()
+        .from(schema.user)
+        .where(eq(schema.user.workosId, userData.workosId));
+
+      expect(users).toHaveLength(1);
+    });
+  });
+
+  describe('Concurrent Operations', () => {
+    it('should handle concurrent user creation', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(true);
+
+      const userData = {
+        workosId: 'test-workos-id',
+        email: 'test@example.com',
+      };
+      const events = Array.from({ length: 3 }, () =>
+        createUserCreatedEvent(userData),
+      );
+
+      const results = await Promise.all(
+        events.map((event) => processWebhookEvent(event, mockWorkOS)),
+      );
+
+      results.forEach((result) => {
+        expect(result.success).toBe(true);
+      });
+
+      const users = await testDb
+        .select()
+        .from(schema.user)
+        .where(eq(schema.user.workosId, userData.workosId));
+
+      expect(users).toHaveLength(1);
+    });
+  });
+
+  describe('Unknown Events', () => {
+    it('should handle unknown event types', async () => {
+      const unknownEvent: any = {
+        id: 'test-id',
+        event: 'unknown.event',
+        data: {},
+        createdAt: new Date().toISOString(),
+      };
+
+      const result = await processWebhookEvent(unknownEvent, mockWorkOS);
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe(
+        'No handler found for event type: unknown.event',
+      );
+    });
   });
 });
