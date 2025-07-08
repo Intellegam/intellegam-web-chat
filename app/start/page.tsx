@@ -58,9 +58,9 @@ export default function WelcomePage() {
               </h1>
 
               <p className="text-lg md:text-xl text-muted-foreground/80 leading-relaxed max-w-xl font-medium">
-                Access your custom AI assistants and unlock your organization's
+                {`Access your custom AI assistants and unlock your organization's
                 knowledge instantly. Your personalized digital experts are ready
-                to help.
+                to help.`}
               </p>
             </div>
 
@@ -90,7 +90,7 @@ export default function WelcomePage() {
 
           {/* Right Side - Simple CTA or Visual Element */}
           <div className="flex justify-center lg:justify-end">
-            <div className="text-center space-y-4"></div>
+            <div className="text-center space-y-4" />
           </div>
         </div>
 
