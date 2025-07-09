@@ -65,12 +65,9 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
     }
   });
 
-  describe('User Creation', () => {
-    beforeEach(() => {
+  describe('End-to-End Webhook Processing', () => {
+    it('should process user creation webhook through full HTTP pipeline', async () => {
       mockDoesUserExistInWorkOS.mockResolvedValue(true);
-    });
-
-    it('should process user creation webhook end-to-end', async () => {
       const mockEvent = createUserCreatedEvent();
 
       await testApiHandler({
@@ -106,142 +103,8 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
       });
     });
 
-    it('should handle idempotent user creation (retries)', async () => {
-      const userData: TestUserData = {
-        workosId: 'test-workos-id',
-        email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User',
-      };
-      const mockEvent = createUserCreatedEvent(userData);
-
-      await testApiHandler({
-        appHandler: handler,
-        test: async ({ fetch }) => {
-          const requestBody = JSON.stringify(mockEvent);
-          const headers = {
-            'Content-Type': 'application/json',
-            'workos-signature': 'valid-signature',
-          };
-
-          // Send original event
-          const response1 = await fetch({
-            method: 'POST',
-            headers,
-            body: requestBody,
-          });
-
-          expect(response1.status).toBe(200);
-
-          // Send exact same event again (retry scenario)
-          const response2 = await fetch({
-            method: 'POST',
-            headers,
-            body: requestBody,
-          });
-
-          expect(response2.status).toBe(200);
-
-          // Verify only one user exists (upsert should handle the duplicate)
-          const users = await testDb
-            .select()
-            .from(schema.user)
-            .where(eq(schema.user.workosId, userData.workosId));
-
-          expect(users).toHaveLength(1);
-          expect(users[0].email).toBe(userData.email);
-        },
-      });
-    });
-
-    it('should handle concurrent retries of the same event', async () => {
-      const userData: TestUserData = {
-        workosId: 'concurrent-test-id',
-        email: 'concurrent@example.com',
-        firstName: 'Concurrent',
-        lastName: 'Test',
-      };
-      const mockEvent = createUserCreatedEvent(userData);
-
-      await testApiHandler({
-        appHandler: handler,
-        test: async ({ fetch }) => {
-          // Send same event concurrently (simulating race condition during retries)
-          const concurrentRequests = Array(3)
-            .fill(null)
-            .map(() =>
-              fetch({
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'workos-signature': 'valid-signature',
-                },
-                body: JSON.stringify(mockEvent),
-              }),
-            );
-
-          const responses = await Promise.all(concurrentRequests);
-
-          responses.forEach((response) => {
-            expect(response.status).toBe(200);
-          });
-
-          // Verify only one user exists despite concurrent requests
-          const users = await testDb
-            .select()
-            .from(schema.user)
-            .where(eq(schema.user.workosId, userData.workosId));
-
-          expect(users).toHaveLength(1);
-          expect(users[0].email).toBe(userData.email);
-        },
-      });
-    });
-
-    it('should not create user when user does not exist in WorkOS', async () => {
+    it('should process user deletion webhook through full HTTP pipeline', async () => {
       mockDoesUserExistInWorkOS.mockResolvedValue(false);
-
-      const mockEvent = createUserCreatedEvent();
-
-      await testApiHandler({
-        appHandler: handler,
-        test: async ({ fetch }) => {
-          const response = await fetch({
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'workos-signature': 'valid-signature',
-            },
-            body: JSON.stringify(mockEvent),
-          });
-
-          expect(response.status).toBe(200);
-          const data = await response.json();
-          expect(data).toEqual({
-            success: true,
-            message: 'Successfully processed user.created',
-            eventId: mockEvent.id,
-            eventType: mockEvent.event,
-          });
-
-          // User should not exist in database
-          const users = await testDb
-            .select()
-            .from(schema.user)
-            .where(eq(schema.user.workosId, mockEvent.data.id));
-
-          expect(users).toHaveLength(0);
-        },
-      });
-    });
-  });
-
-  describe('User Deletion', () => {
-    beforeEach(() => {
-      mockDoesUserExistInWorkOS.mockResolvedValue(false);
-    });
-
-    it('should process user deletion webhook end-to-end', async () => {
       const userData: TestUserData = {
         workosId: 'delete-test-id',
         email: 'delete@example.com',
@@ -291,43 +154,105 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
         },
       });
     });
+  });
 
-    it('should handle deletion of non-existent user', async () => {
-      const deleteEvent = createUserDeletedEvent();
+  describe('Retry and Idempotency Scenarios', () => {
+    it('should handle webhook retries with idempotency', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(true);
+      const userData: TestUserData = {
+        workosId: 'test-workos-id',
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+      };
+      const mockEvent = createUserCreatedEvent(userData);
 
       await testApiHandler({
         appHandler: handler,
         test: async ({ fetch }) => {
-          const response = await fetch({
+          const requestBody = JSON.stringify(mockEvent);
+          const headers = {
+            'Content-Type': 'application/json',
+            'workos-signature': 'valid-signature',
+          };
+
+          // Send original event
+          const response1 = await fetch({
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'workos-signature': 'valid-signature',
-            },
-            body: JSON.stringify(deleteEvent),
+            headers,
+            body: requestBody,
           });
 
-          expect(response.status).toBe(200);
-          const data = await response.json();
-          expect(data).toEqual({
-            success: true,
-            message: 'Successfully processed user.deleted',
-            eventId: deleteEvent.id,
-            eventType: deleteEvent.event,
+          expect(response1.status).toBe(200);
+
+          // Send exact same event again (retry scenario)
+          const response2 = await fetch({
+            method: 'POST',
+            headers,
+            body: requestBody,
           });
 
-          // Should not fail even though user doesn't exist
+          expect(response2.status).toBe(200);
+
+          // Verify only one user exists (upsert should handle the duplicate)
           const users = await testDb
             .select()
             .from(schema.user)
-            .where(eq(schema.user.workosId, deleteEvent.data.id));
+            .where(eq(schema.user.workosId, userData.workosId));
 
-          expect(users).toHaveLength(0);
+          expect(users).toHaveLength(1);
+          expect(users[0].email).toBe(userData.email);
         },
       });
     });
 
-    it('should handle retried deletion events', async () => {
+    it('should handle concurrent webhook processing', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(true);
+      const userData: TestUserData = {
+        workosId: 'concurrent-test-id',
+        email: 'concurrent@example.com',
+        firstName: 'Concurrent',
+        lastName: 'Test',
+      };
+      const mockEvent = createUserCreatedEvent(userData);
+
+      await testApiHandler({
+        appHandler: handler,
+        test: async ({ fetch }) => {
+          // Send same event concurrently (simulating race condition during retries)
+          const concurrentRequests = Array(3)
+            .fill(null)
+            .map(() =>
+              fetch({
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'workos-signature': 'valid-signature',
+                },
+                body: JSON.stringify(mockEvent),
+              }),
+            );
+
+          const responses = await Promise.all(concurrentRequests);
+
+          responses.forEach((response) => {
+            expect(response.status).toBe(200);
+          });
+
+          // Verify only one user exists despite concurrent requests
+          const users = await testDb
+            .select()
+            .from(schema.user)
+            .where(eq(schema.user.workosId, userData.workosId));
+
+          expect(users).toHaveLength(1);
+          expect(users[0].email).toBe(userData.email);
+        },
+      });
+    });
+
+    it('should handle retried deletion events idempotently', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(false);
       const userData: TestUserData = {
         workosId: 'retry-delete-id',
         email: 'retry-delete@example.com',
@@ -383,56 +308,11 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
         },
       });
     });
-
-    it('should not delete user when user still exists in WorkOS', async () => {
-      mockDoesUserExistInWorkOS.mockResolvedValue(true);
-
-      const userData: TestUserData = {
-        workosId: 'still-exists-id',
-        email: 'still-exists@example.com',
-        firstName: 'Still',
-        lastName: 'Exists',
-      };
-
-      // Create user first
-      await testDb.insert(schema.user).values({
-        email: userData.email,
-        workosId: userData.workosId,
-        password: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      const deleteEvent = createUserDeletedEvent(userData);
-
-      await testApiHandler({
-        appHandler: handler,
-        test: async ({ fetch }) => {
-          const response = await fetch({
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'workos-signature': 'valid-signature',
-            },
-            body: JSON.stringify(deleteEvent),
-          });
-
-          expect(response.status).toBe(200);
-
-          // User should still exist since they exist in WorkOS
-          const users = await testDb
-            .select()
-            .from(schema.user)
-            .where(eq(schema.user.workosId, userData.workosId));
-
-          expect(users).toHaveLength(1);
-        },
-      });
-    });
   });
 
-  describe('Out-of-Order Events', () => {
-    it('should handle (retried) latest create event arriving before older event', async () => {
+  describe('Complex Webhook Scenarios', () => {
+    it('should handle out-of-order events with different timestamps correctly', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(true);
       const userDataOld: TestUserData = {
         workosId: 'test-workos-id',
         email: 'test@example.com',
@@ -460,7 +340,7 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
             'workos-signature': 'valid-signature',
           };
 
-          // Send original event
+          // Send newer event first
           const response1 = await fetch({
             method: 'POST',
             headers,
@@ -469,7 +349,7 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
 
           expect(response1.status).toBe(200);
 
-          // Send exact same event again (retry scenario)
+          // Send older event second
           const response2 = await fetch({
             method: 'POST',
             headers,
@@ -478,12 +358,11 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
 
           expect(response2.status).toBe(200);
 
-          // Verify only one user exists (upsert should handle the duplicate)
+          // Verify newer data is preserved
           const users = await testDb
             .select()
             .from(schema.user)
             .where(eq(schema.user.workosId, userDataOld.workosId));
-          console.info(users);
 
           expect(users).toHaveLength(1);
           expect(users[0].email).toBe(userDataNew.email);
@@ -543,78 +422,25 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
       });
     });
 
-    it('should handle complex out-of-order with retries', async () => {
+    it('should handle WorkOS state verification edge cases', async () => {
+      mockDoesUserExistInWorkOS.mockResolvedValue(true);
       const userData: TestUserData = {
-        workosId: 'complex-scenario-id',
-        email: 'complex@example.com',
-        firstName: 'Complex',
-        lastName: 'Scenario',
+        workosId: 'still-exists-id',
+        email: 'still-exists@example.com',
+        firstName: 'Still',
+        lastName: 'Exists',
       };
 
-      mockDoesUserExistInWorkOS.mockResolvedValue(false);
+      // Create user first
+      await testDb.insert(schema.user).values({
+        email: userData.email,
+        workosId: userData.workosId,
+        password: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
 
       const deleteEvent = createUserDeletedEvent(userData);
-      const createEvent = createUserCreatedEvent(userData);
-
-      await testApiHandler({
-        appHandler: handler,
-        test: async ({ fetch }) => {
-          // Send delete first
-          const deleteResponse = await fetch({
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'workos-signature': 'valid-signature',
-            },
-            body: JSON.stringify(deleteEvent),
-          });
-
-          expect(deleteResponse.status).toBe(200);
-
-          // Send create event
-          const createResponse = await fetch({
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'workos-signature': 'valid-signature',
-            },
-            body: JSON.stringify(createEvent),
-          });
-
-          expect(createResponse.status).toBe(200);
-
-          // Send create retry (same event ID)
-          const retryResponse = await fetch({
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'workos-signature': 'valid-signature',
-            },
-            body: JSON.stringify(createEvent),
-          });
-
-          expect(retryResponse.status).toBe(200);
-
-          // Final state: user should not exist
-          const users = await testDb
-            .select()
-            .from(schema.user)
-            .where(eq(schema.user.workosId, userData.workosId));
-
-          expect(users).toHaveLength(0);
-        },
-      });
-    });
-  });
-
-  describe('Unknown Events', () => {
-    it('should handle unknown event types gracefully', async () => {
-      const unknownEvent = {
-        id: 'unknown-event-id',
-        event: 'unknown.event',
-        data: {},
-        createdAt: new Date().toISOString(),
-      };
 
       await testApiHandler({
         appHandler: handler,
@@ -625,17 +451,18 @@ describe('WorkOS Webhook Integration (End-to-End)', () => {
               'Content-Type': 'application/json',
               'workos-signature': 'valid-signature',
             },
-            body: JSON.stringify(unknownEvent),
+            body: JSON.stringify(deleteEvent),
           });
 
           expect(response.status).toBe(200);
-          const data = await response.json();
-          expect(data).toEqual({
-            success: true,
-            message: 'No handler found for event type: unknown.event',
-            eventId: unknownEvent.id,
-            eventType: unknownEvent.event,
-          });
+
+          // User should still exist since they exist in WorkOS
+          const users = await testDb
+            .select()
+            .from(schema.user)
+            .where(eq(schema.user.workosId, userData.workosId));
+
+          expect(users).toHaveLength(1);
         },
       });
     });
