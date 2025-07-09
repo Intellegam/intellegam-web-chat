@@ -105,7 +105,7 @@ export async function upsertUser(userData: {
   workosId?: string;
 }) {
   try {
-    const excludedUpdatetAt = sql.raw(`excluded.${user.updatedAt.name}`);
+    const excludedUpdatedAt = sql.raw(`excluded.${user.updatedAt.name}`);
     return await getDB().transaction(async (tx) => {
       const [createdUser] = await tx
         .insert(user)
@@ -114,9 +114,9 @@ export async function upsertUser(userData: {
           target: user.workosId,
           set: {
             email: sql.raw(`excluded.${user.email.name}`),
-            updatedAt: excludedUpdatetAt,
+            updatedAt: excludedUpdatedAt,
           },
-          setWhere: sql`${user.updatedAt} < ${excludedUpdatetAt}`,
+          setWhere: sql`${user.updatedAt} < ${excludedUpdatedAt}`,
         })
         .returning();
 
