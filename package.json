@@ -17,7 +17,8 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "test": "export PLAYWRIGHT=True && pnpm exec playwright test"
+    "test": "export PLAYWRIGHT=True && pnpm exec playwright test",
+    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
   },
   "dependencies": {
     "@ai-sdk/react": "^1.2.11",
@@ -47,6 +48,7 @@
     "@vercel/functions": "^2.0.0",
     "@vercel/postgres": "^0.10.0",
     "@workos-inc/authkit-nextjs": "^2.3.3",
+    "@workos-inc/node": "^7.54.0",
     "ai": "4.3.13",
     "bcrypt-ts": "^5.0.2",
     "class-variance-authority": "^0.7.0",
@@ -95,9 +97,12 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "@electric-sql/pglite": "^0.3.3",
+    "@faker-js/faker": "^9.8.0",
     "@playwright/test": "^1.50.1",
     "@tailwindcss/typography": "^0.5.15",
     "@types/d3-scale": "^4.0.8",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.8.6",
     "@types/papaparse": "^5.3.15",
     "@types/pdf-parse": "^1.1.4",
@@ -109,8 +114,11 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-tailwindcss": "^3.17.5",
+    "jest": "^30.0.3",
+    "next-test-api-route-handler": "^4.0.16",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3"
   },

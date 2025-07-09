@@ -32,7 +32,7 @@ export const login = async (
     'Login action disabled during WorkOS hosted auth migration. Middleware should redirect /login to WorkOS.',
   );
 
-  // biome-ignore lint/correctness/noUnreachable: <explanation>
+  // biome-ignore lint/correctness/noUnreachable: legacy action
   try {
     // Validate form data for UI feedback purposes only
     authFormSchema.parse({
@@ -65,7 +65,6 @@ export interface RegisterActionState {
 // Legacy action: Registration is now handled by WorkOS hosted auth
 // This action is maintained for component compatibility but creates security risk
 // Actual registration should happen via WorkOS AuthKit only
-// TODO: Remove user creation logic when fully migrated to WorkOS
 export const register = async (
   _: RegisterActionState,
   formData: FormData,
@@ -76,7 +75,7 @@ export const register = async (
     'Register action disabled during WorkOS hosted auth migration. Middleware should redirect /register to WorkOS.',
   );
 
-  // biome-ignore lint/correctness/noUnreachable: <explanation>
+  // biome-ignore lint/correctness/noUnreachable: legacy action
   try {
     // Validate form data for UI feedback purposes
     const validatedData = authFormSchema.parse({

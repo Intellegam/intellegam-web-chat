@@ -1,0 +1,83 @@
+import { deleteUserByWorkOSId, upsertUser } from '@/lib/db/queries';
+import type {
+  WorkOS,
+  Event,
+  UserCreatedEvent,
+  UserDeletedEvent,
+} from '@workos-inc/node';
+import { doesUserExistInWorkOS } from './webhook-handler-helper';
+
+export async function handleUserCreated(
+  event: UserCreatedEvent,
+  workos: WorkOS,
+): Promise<void> {
+  const userData = event.data;
+
+  // only if the user exists in WorkOS we upsert the user, so we always have the latest state and
+  // dont need to be wary of out-of-order Events messing up our db state
+  if (await doesUserExistInWorkOS(userData.id, workos)) {
+    await upsertUser({
+      email: userData.email,
+      password: null,
+      workosId: userData.id,
+      createdAt: new Date(userData.createdAt),
+      updatedAt: new Date(userData.updatedAt),
+    });
+
+    console.log(`Webhook(user.created): Upserted ${userData.email}`);
+  } else {
+    console.log(
+      `Webhook(user.created): User does not exists in WorkOS ${userData.email} and was not created`,
+    );
+  }
+}
+
+export async function handleUserDeleted(
+  event: UserDeletedEvent,
+  workos: WorkOS,
+): Promise<void> {
+  const userData = event.data;
+
+  // only if the user does not exist in WorkOS we delete the user, so we always have the latest state and
+  // dont need to be wary of out-of-order Events messing up our db state
+  if (!(await doesUserExistInWorkOS(userData.id, workos))) {
+    await deleteUserByWorkOSId(userData.id);
+    console.log(`Webhook(user.deleted): User ${userData.email} deleted`);
+  } else {
+    console.log(
+      `Webhook(user.deleted): User still exists in WorkOS {userData.email} and was not deleted`,
+    );
+  }
+}
+
+type WebhookHandler<T extends Event> = (
+  event: T,
+  workos: WorkOS,
+) => Promise<void>;
+
+const webhookHandlers: Record<string, WebhookHandler<any>> = {
+  'user.created': handleUserCreated,
+  'user.deleted': handleUserDeleted,
+};
+
+export async function processWebhookEvent(
+  event: Event,
+  workos: WorkOS,
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const handler = webhookHandlers[event.event];
+
+    if (!handler) {
+      const message = `No handler found for event type: ${event.event}`;
+      console.log(`Webhook: ${message}`);
+      return { success: true, message };
+    }
+
+    await handler(event, workos);
+    return { success: true, message: `Successfully processed ${event.event}` };
+  } catch (error) {
+    const message = `Failed to process event ${event.event}: ${error}`;
+    console.error(`Webhook: ${message}`);
+    throw new Error(message);
+  }
+}

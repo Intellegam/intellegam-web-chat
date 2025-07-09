@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { getChatsByUserId } from '@/lib/db/queries';
 import { withAuth } from '@workos-inc/authkit-nextjs';
+import { getDbUserId } from '@/lib/auth/user-helpers';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -18,13 +19,18 @@ export async function GET(request: NextRequest) {
 
   const session = await withAuth();
 
-  if (!session?.user?.id) {
+  if (!session?.user) {
     return Response.json('Unauthorized!', { status: 401 });
+  }
+
+  const dbUserId = await getDbUserId(session.user);
+  if (!dbUserId) {
+    return Response.json('User not found!', { status: 404 });
   }
 
   try {
     const chats = await getChatsByUserId({
-      id: session.user.id,
+      id: dbUserId,
       limit,
       startingAfter,
       endingBefore,

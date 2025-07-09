@@ -5,10 +5,15 @@
 {
   "languages": {
     "TSX": {
-      "language_servers": ["vtsls", "biome", "!eslint"],
+      "language_servers": [
+        "vtsls",
+        "biome",
+        "tailwindcss-language-server",
+        "!eslint"
+      ],
+
       "formatter": { "language_server": { "name": "biome" } },
       "inlay_hints": {
-        "enabled": true,
         "show_type_hints": true,
         // "show_parameter_hints": true
         "show_other_hints": true
@@ -18,7 +23,6 @@
       "language_servers": ["vtsls", "biome", "!eslint"],
       "formatter": { "language_server": { "name": "biome" } },
       "inlay_hints": {
-        "enabled": true,
         "show_type_hints": true,
         // "show_parameter_hints": true
         "show_other_hints": true

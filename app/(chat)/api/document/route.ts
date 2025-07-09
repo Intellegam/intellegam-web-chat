@@ -1,4 +1,5 @@
 import type { ArtifactKind } from '@/components/artifact';
+import { getDbUserId } from '@/lib/auth/user-helpers';
 import {
   deleteDocumentsByIdAfterTimestamp,
   getDocumentsById,
@@ -16,8 +17,13 @@ export async function GET(request: Request) {
 
   const session = await withAuth();
 
-  if (!session?.user?.id) {
+  if (!session?.user) {
     return new Response('Unauthorized', { status: 401 });
+  }
+
+  const dbUserId = await getDbUserId(session.user);
+  if (!dbUserId) {
+    return new Response('User not found', { status: 404 });
   }
 
   const documents = await getDocumentsById({ id });
@@ -28,7 +34,7 @@ export async function GET(request: Request) {
     return new Response('Not found', { status: 404 });
   }
 
-  if (document.userId !== session.user.id) {
+  if (document.userId !== dbUserId) {
     return new Response('Forbidden', { status: 403 });
   }
 
@@ -45,8 +51,13 @@ export async function POST(request: Request) {
 
   const session = await withAuth();
 
-  if (!session?.user?.id) {
+  if (!session?.user) {
     return new Response('Unauthorized', { status: 401 });
+  }
+
+  const dbUserId = await getDbUserId(session.user);
+  if (!dbUserId) {
+    return new Response('User not found', { status: 404 });
   }
 
   const {
@@ -61,7 +72,7 @@ export async function POST(request: Request) {
   if (documents.length > 0) {
     const [document] = documents;
 
-    if (document.userId !== session.user.id) {
+    if (document.userId !== dbUserId) {
       return new Response('Forbidden', { status: 403 });
     }
   }
@@ -71,7 +82,7 @@ export async function POST(request: Request) {
     content,
     title,
     kind,
-    userId: session.user.id,
+    userId: dbUserId,
   });
 
   return Response.json(document, { status: 200 });
@@ -92,8 +103,13 @@ export async function DELETE(request: Request) {
 
   const session = await withAuth();
 
-  if (!session?.user?.id) {
+  if (!session?.user) {
     return new Response('Unauthorized', { status: 401 });
+  }
+
+  const dbUserId = await getDbUserId(session.user);
+  if (!dbUserId) {
+    return new Response('User not found', { status: 404 });
   }
 
   const documents = await getDocumentsById({ id });
